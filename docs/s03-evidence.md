@@ -1,6 +1,8 @@
 # S03 progression and reference evidence
 
-Status: local gates pass; exact-head CI acceptance is pending.
+Status: accepted at `c6816694a3c2d2e069ed11127cea8cbbc4e7a04d`; [GitHub Actions run
+34286752529](https://github.com/e308js/e308/actions/runs/34286752529) passed the exact implementation
+head.
 
 S03 adds normal, static, and custom prestige policies; scope resets with typed retention; upgrades,
 milestones, achievements, win state, scope deactivation, challenges, and fixed-clock automation.
