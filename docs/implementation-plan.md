@@ -31,7 +31,7 @@ The [quality gates](quality-gates.md) apply to every slice, and [slice specifica
 | S10 | Three complete games, independent consumers and whole-game correctness | S09 green | D2–D6, complete reference demonstrations |
 | S11 | Full parity audit, release evidence and installable candidates | S10 green | All gates including D1R/D8 |
 
-All slices currently have status **PLANNED**. Summaries above do not themselves satisfy parity cases. Some behavioral evidence precedes browser evidence: S04 proves recovery through fault-injectable storage, while S07 proves actual browser integration. S04 cannot claim that later result.
+Exact slice state is recorded in [status.md](status.md). Summaries above do not themselves satisfy parity cases. Some behavioral evidence precedes browser evidence: S04 proves recovery through fault-injectable storage, while S07 proves actual browser integration. S04 cannot claim that later result.
 
 AD06 is staged: S03 establishes controlled source tick-schedule equivalence, S04 adds save/offline integration, S09 adds performance evidence, and S10 supplies interactive demonstrations. KG05's redshift policy uses the S04 extension contract in S05. Full D1R closes only when all required artifacts exist.
 
@@ -68,7 +68,7 @@ Use a pnpm workspace with two public ESM packages, `@e308/core` and `@e308/ux`, 
 | `pnpm quality` | Full formatting/lint/types/structure/coverage/build/package validation |
 | `pnpm verify:slice -- Sxx` | Shared quality plus the slice's reference/browser/evidence jobs |
 
-These scripts do not exist yet. An unintroduced suite is marked accordingly in the slice manifest; introduced required suites cannot become successful no-ops. Browser/source suites supplement coverage, rather than masking missing unit tests.
+S00 established the shared commands. An unintroduced suite is marked accordingly in the slice manifest; introduced required suites cannot become successful no-ops. Browser/source suites supplement coverage, rather than masking missing unit tests.
 
 ## CI policy
 

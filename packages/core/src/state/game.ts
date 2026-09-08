@@ -1,57 +1,22 @@
+import type { AllocationDefinition } from "../economy/allocations.js";
+import { validateAllocations } from "../economy/allocations.js";
+import type { BuyableDefinition } from "../economy/buyables.js";
+import { runFlows } from "../economy/flows.js";
+import type { FlowDefinition } from "../economy/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import { definitionOwner } from "../model/definition.js";
 import type { Resource } from "../model/handles.js";
-import { ownerOf } from "../model/handles.js";
-import { NumericFault } from "../numbers/types.js";
 import { planAdvance } from "../simulation/clock.js";
-
-export type Result<T, E> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: E };
-
-export type CommandFailure =
-  | { readonly code: "stale-revision"; readonly expected: bigint; readonly current: bigint }
-  | { readonly code: "invalid-target"; readonly id: string }
-  | { readonly code: "numeric-fault"; readonly message: string }
-  | { readonly code: "transaction-failed"; readonly message: string };
-
-export interface Snapshot<N> {
-  readonly revision: bigint;
-  readonly gameTimeMs: number;
-  readonly remainderMs: number;
-  readonly resources: Readonly<Record<string, N>>;
-}
-
-export interface Transaction<N> {
-  get(resource: Resource<N>): N;
-  set(resource: Resource<N>, value: N): void;
-  add(resource: Resource<N>, amount: N): void;
-}
-
-export interface Command<N> {
-  readonly id: string;
-  readonly expectedRevision?: bigint;
-  execute(transaction: Transaction<N>): void;
-}
-
-export interface CommandReceipt {
-  readonly commandId: string;
-  readonly revision: bigint;
-}
-
-export interface Game<N> {
-  getSnapshot(): Snapshot<N>;
-  dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure>;
-  advance(
-    elapsedMs: number,
-    step: (transaction: Transaction<N>, stepSeconds: number) => void,
-  ): Result<Snapshot<N>, CommandFailure>;
-  subscribe<T>(
-    selector: (snapshot: Snapshot<N>) => T,
-    listener: (value: T) => void,
-    equal?: (left: T, right: T) => boolean,
-  ): () => void;
-}
+import { failureFrom, makeTransaction } from "./transaction.js";
+import type {
+  Command,
+  CommandFailure,
+  CommandReceipt,
+  Game,
+  Result,
+  Snapshot,
+  Transaction,
+} from "./types.js";
 
 interface Subscriber<N> {
   readonly select: (snapshot: Snapshot<N>) => unknown;
@@ -63,6 +28,9 @@ interface Subscriber<N> {
 type CompleteDefinition<N> = GameDefinition<N> & {
   readonly numbers: NonNullable<GameDefinition<N>["numbers"]>;
   readonly resources: readonly Resource<N>[];
+  readonly flows: readonly FlowDefinition<N>[];
+  readonly buyables: readonly BuyableDefinition<N>[];
+  readonly allocations: readonly AllocationDefinition<N>[];
 };
 
 export function createGame<N>(definition: GameDefinition<N>): Game<N> {
@@ -87,6 +55,18 @@ class GameRuntime<N> implements Game<N> {
       Object.fromEntries(
         this.#definition.resources.map((resource) => [resource.id, resource.initial]),
       ),
+      Object.fromEntries(
+        this.#definition.buyables.map((buyable) => [buyable.id, buyable.initialCount]),
+      ),
+      Object.fromEntries(
+        this.#definition.allocations.map((allocation) => [allocation.id, allocation.initial]),
+      ),
+      Object.fromEntries(
+        this.#definition.resources.map((resource) => [
+          resource.id,
+          this.#definition.numbers.fromNumber(0),
+        ]),
+      ),
     );
   }
 
@@ -94,7 +74,7 @@ class GameRuntime<N> implements Game<N> {
     return this.#snapshot;
   }
 
-  dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure> {
+  dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure<N>> {
     if (
       command.expectedRevision !== undefined &&
       command.expectedRevision !== this.#snapshot.revision
@@ -116,8 +96,8 @@ class GameRuntime<N> implements Game<N> {
 
   advance(
     elapsedMs: number,
-    step: (transaction: Transaction<N>, stepSeconds: number) => void,
-  ): Result<Snapshot<N>, CommandFailure> {
+    step?: (transaction: Transaction<N>, stepSeconds: number) => void,
+  ): Result<Snapshot<N>, CommandFailure<N>> {
     const plan = planAdvance(this.#snapshot, elapsedMs, this.#definition.stepMs);
     if (
       plan.gameTimeMs === this.#snapshot.gameTimeMs &&
@@ -132,7 +112,9 @@ class GameRuntime<N> implements Game<N> {
     return this.transact(
       (transaction) => {
         for (let index = 0; index < plan.steps; index += 1) {
-          step(transaction, this.#definition.stepMs / 1000);
+          const seconds = this.#definition.stepMs / 1000;
+          runFlows(transaction, this.#definition.flows, this.#definition.numbers, seconds);
+          step?.(transaction, seconds);
         }
       },
       plan.gameTimeMs,
@@ -159,14 +141,31 @@ class GameRuntime<N> implements Game<N> {
     execute: (transaction: Transaction<N>) => void,
     gameTimeMs = this.#snapshot.gameTimeMs,
     remainderMs = this.#snapshot.remainderMs,
-  ): Result<Snapshot<N>, CommandFailure> {
+  ): Result<Snapshot<N>, CommandFailure<N>> {
     const working = { ...this.#snapshot.resources };
+    const purchaseCounts = { ...this.#snapshot.purchaseCounts };
+    const allocations = Object.fromEntries(
+      Object.entries(this.#snapshot.allocations).map(([id, assignments]) => [
+        id,
+        { ...assignments },
+      ]),
+    );
+    const productionTotals = { ...this.#snapshot.productionTotals };
     try {
-      execute(makeTransaction(this.#owner, working, this.#definition.numbers));
+      const transaction = makeTransaction(
+        this.#owner,
+        working,
+        purchaseCounts,
+        allocations,
+        productionTotals,
+        this.#definition.numbers,
+      );
+      execute(transaction);
+      validateAllocations(transaction, this.#definition.allocations);
     } catch (error) {
       return { ok: false, error: failureFrom(error) };
     }
-    this.commit(working, gameTimeMs, remainderMs);
+    this.commit(working, gameTimeMs, remainderMs, purchaseCounts, allocations, productionTotals);
     return { ok: true, value: this.#snapshot };
   }
 
@@ -174,8 +173,19 @@ class GameRuntime<N> implements Game<N> {
     resources: Readonly<Record<string, N>>,
     gameTimeMs: number,
     remainderMs: number,
+    purchaseCounts: Readonly<Record<string, N>> = this.#snapshot.purchaseCounts,
+    allocations: Readonly<Record<string, Readonly<Record<string, N>>>> = this.#snapshot.allocations,
+    productionTotals: Readonly<Record<string, N>> = this.#snapshot.productionTotals,
   ): void {
-    this.#snapshot = makeSnapshot(this.#snapshot.revision + 1n, gameTimeMs, remainderMs, resources);
+    this.#snapshot = makeSnapshot(
+      this.#snapshot.revision + 1n,
+      gameTimeMs,
+      remainderMs,
+      resources,
+      purchaseCounts,
+      allocations,
+      productionTotals,
+    );
     publish(this.#subscribers, this.#snapshot);
   }
 }
@@ -185,48 +195,22 @@ function makeSnapshot<N>(
   gameTimeMs: number,
   remainderMs: number,
   resources: Readonly<Record<string, N>>,
+  purchaseCounts: Readonly<Record<string, N>>,
+  allocations: Readonly<Record<string, Readonly<Record<string, N>>>>,
+  productionTotals: Readonly<Record<string, N>>,
 ): Snapshot<N> {
-  return Object.freeze({ revision, gameTimeMs, remainderMs, resources: Object.freeze(resources) });
-}
-
-function makeTransaction<N>(
-  owner: object,
-  working: Record<string, N>,
-  numbers: NonNullable<GameDefinition<N>["numbers"]>,
-): Transaction<N> {
-  const assertResource = (resource: Resource<N>): void => {
-    if (ownerOf(resource) !== owner || !(resource.id in working))
-      throw new InvalidTarget(resource.id);
-  };
-  return {
-    get: (resource) => {
-      assertResource(resource);
-      return working[resource.id] as N;
-    },
-    set: (resource, value) => {
-      assertResource(resource);
-      if (!numbers.isFinite(value)) throw new NumericFault(`Invalid value for ${resource.id}`);
-      working[resource.id] = value;
-    },
-    add(resource, amount) {
-      this.set(resource, numbers.add(this.get(resource), amount));
-    },
-  };
-}
-
-class InvalidTarget extends Error {
-  constructor(readonly id: string) {
-    super(`Invalid target: ${id}`);
-  }
-}
-
-function failureFrom(error: unknown): CommandFailure {
-  if (error instanceof InvalidTarget) return { code: "invalid-target", id: error.id };
-  if (error instanceof NumericFault) return { code: "numeric-fault", message: error.message };
-  return {
-    code: "transaction-failed",
-    message: error instanceof Error ? error.message : String(error),
-  };
+  const frozenAllocations = Object.fromEntries(
+    Object.entries(allocations).map(([id, assignments]) => [id, Object.freeze(assignments)]),
+  );
+  return Object.freeze({
+    revision,
+    gameTimeMs,
+    remainderMs,
+    resources: Object.freeze(resources),
+    purchaseCounts: Object.freeze(purchaseCounts),
+    allocations: Object.freeze(frozenAllocations),
+    productionTotals: Object.freeze(productionTotals),
+  });
 }
 
 function publish<N>(subscribers: Set<Subscriber<N>>, snapshot: Snapshot<N>): void {

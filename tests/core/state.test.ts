@@ -59,6 +59,52 @@ describe("transactional game state", () => {
     if (!result.ok) expect(result.error.code).toBe("numeric-fault");
   });
 
+  it("enforces transaction domains for capped state and auxiliary ledgers", () => {
+    const kit = createGameKit({ numbers: nativeNumbers });
+    const scope = kit.scope("run");
+    const value = kit.resource("value", {
+      scope,
+      initial: 1,
+      capacity: 5,
+      overflow: "clamp",
+    });
+    const game = createGame(
+      kit.defineGame({
+        id: "transaction-domains",
+        simulationVersion: 1,
+        stepMs: 50,
+        resources: [value],
+      }),
+    );
+    expect(
+      game.dispatch({
+        id: "clamp",
+        execute: (tx) => {
+          tx.set(value, 10);
+          tx.setPurchase("manual", 2);
+          tx.addProduction("value", 7);
+        },
+      }).ok,
+    ).toBe(true);
+    expect(game.getSnapshot()).toMatchObject({
+      resources: { value: 5 },
+      purchaseCounts: { manual: 2 },
+      productionTotals: { value: 7 },
+    });
+    expect(
+      game.dispatch({ id: "bad-purchase", execute: (tx) => tx.setPurchase("manual", Number.NaN) }),
+    ).toMatchObject({ ok: false, error: { code: "numeric-fault" } });
+    expect(
+      game.dispatch({
+        id: "bad-production",
+        execute: (tx) => tx.addProduction("value", Number.NaN),
+      }),
+    ).toMatchObject({ ok: false, error: { code: "numeric-fault" } });
+    expect(
+      game.dispatch({ id: "bad-allocation", execute: (tx) => tx.setAllocation("missing", "x", 1) }),
+    ).toEqual({ ok: false, error: { code: "invalid-target", id: "missing:x" } });
+  });
+
   it("advances in fixed steps in one committed publication", () => {
     const { game, value } = fixture();
     const listener = vi.fn();

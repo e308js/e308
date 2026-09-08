@@ -1,6 +1,6 @@
 # Quality gates for implementation slices
 
-Status: planned enforcement, not configured tooling. These gates implement the user's requirements for 80% minimum coverage, Biome lint/format enforcement, manageable files, DRY domain logic, good DX, and tested/committed/pushed/CI-validated capability slices.
+Status: enforced since S00. These gates implement the user's requirements for 80% minimum coverage, Biome lint/format enforcement, manageable files, DRY domain logic, good DX, and tested/committed/pushed/CI-validated capability slices.
 
 ## Coverage
 

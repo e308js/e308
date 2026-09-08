@@ -1,0 +1,79 @@
+import type { GameDefinition } from "../model/definition.js";
+import type { Resource } from "../model/handles.js";
+
+export type Result<T, E> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly error: E };
+
+export type CommandFailure<N = never> =
+  | { readonly code: "stale-revision"; readonly expected: bigint; readonly current: bigint }
+  | { readonly code: "invalid-target"; readonly id: string }
+  | { readonly code: "numeric-fault"; readonly message: string }
+  | { readonly code: "transaction-failed"; readonly message: string }
+  | {
+      readonly code: "insufficient";
+      readonly resourceId: string;
+      readonly required: N;
+      readonly available: N;
+    }
+  | {
+      readonly code: "capacity-blocked";
+      readonly resourceId: string;
+      readonly attempted: N;
+      readonly capacity: N;
+    }
+  | { readonly code: "invalid-count"; readonly requested: N | number }
+  | {
+      readonly code: "allocation-exceeded";
+      readonly allocationId: string;
+      readonly assigned: N;
+      readonly budget: N;
+    };
+
+export interface Snapshot<N> {
+  readonly revision: bigint;
+  readonly gameTimeMs: number;
+  readonly remainderMs: number;
+  readonly resources: Readonly<Record<string, N>>;
+  readonly purchaseCounts: Readonly<Record<string, N>>;
+  readonly allocations: Readonly<Record<string, Readonly<Record<string, N>>>>;
+  readonly productionTotals: Readonly<Record<string, N>>;
+}
+
+export interface Transaction<N> {
+  readonly numbers: NonNullable<GameDefinition<N>["numbers"]>;
+  get(resource: Resource<N>): N;
+  set(resource: Resource<N>, value: N): void;
+  add(resource: Resource<N>, amount: N): void;
+  getPurchase(id: string): N;
+  setPurchase(id: string, value: N): void;
+  getAllocation(id: string, targetId: string): N;
+  setAllocation(id: string, targetId: string, value: N): void;
+  addProduction(id: string, executions: N): void;
+  reject(error: CommandFailure<N>): never;
+}
+
+export interface Command<N> {
+  readonly id: string;
+  readonly expectedRevision?: bigint;
+  execute(transaction: Transaction<N>): void;
+}
+
+export interface CommandReceipt {
+  readonly commandId: string;
+  readonly revision: bigint;
+}
+
+export interface Game<N> {
+  getSnapshot(): Snapshot<N>;
+  dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure<N>>;
+  advance(
+    elapsedMs: number,
+    step?: (transaction: Transaction<N>, stepSeconds: number) => void,
+  ): Result<Snapshot<N>, CommandFailure<N>>;
+  subscribe<T>(
+    selector: (snapshot: Snapshot<N>) => T,
+    listener: (value: T) => void,
+    equal?: (left: T, right: T) => boolean,
+  ): () => void;
+}
