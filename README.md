@@ -8,7 +8,7 @@ The intended fit is games with the variety of Universal Paperclips, Antimatter D
 
 The proposed scope has four parts: deterministic simulation (ticks, big numbers, offline progress, saves); composable mechanics (producers, buyables, prestige layers, challenges, allocations, markets); a headless bot-player and pacing-report harness; and an optional, replaceable renderer backed by the separate UX library.
 
-This repository currently contains research and design documents, not an implemented or published library. Package structure and API examples are proposals.
+The repository now contains the implementation workspace and its governing research/design documents. `@e308/core` has its deterministic foundation under active development; no package has been published to npm yet. See [implementation status](docs/status.md) for exact commits and CI evidence.
 
 - [Definition of done](docs/definition-of-done.md): the v1 release gate and required evidence; all implementation results remain NOT RUN.
 - [TMT parity register](docs/tmt-parity.md): pinned feature coverage, source reconciliation, and acceptance rules.
@@ -19,6 +19,7 @@ This repository currently contains research and design documents, not an impleme
 - [Interface decisions and review disposition](docs/interfaces.md): numeric adapter, typed rates, snapshots, failures, PRNG/save format, and deferred interface/tooling gates.
 - [Offline progress specification](docs/offline.md): developer policies, exactness, elapsed-time accounting, and recovery.
 - [Implementation and validation plan](docs/implementation-plan.md): twelve substantial AI-sized slices and the test, commit, push, and CI workflow.
+- [Implementation status](docs/status.md): accepted slice SHAs, CI runs, and active work.
 - [Slice specifications](docs/implementation-slices.md): deliverables, acceptance tests, and evidence for each capability.
 - [Quality gates](docs/quality-gates.md): 80% coverage floors, Biome, file sizes, DRY, and consumer DX.
 - [Source manifest](docs/source-manifest.json): pinned repository revisions and inspected public source hashes.

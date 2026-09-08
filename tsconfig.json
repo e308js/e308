@@ -4,7 +4,12 @@
     "composite": false,
     "declaration": false,
     "declarationMap": false,
+    "baseUrl": ".",
     "lib": ["ES2024", "DOM"],
+    "paths": {
+      "@e308/core": ["packages/core/src/index.ts"],
+      "@e308/ux": ["packages/ux/src/index.ts"]
+    },
     "rootDir": ".",
     "types": ["node", "vitest/globals"]
   },

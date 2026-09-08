@@ -1,11 +1,18 @@
+import type { NumericAdapter } from "../numbers/types.js";
+
 declare const gameIdBrand: unique symbol;
+
+import type { Resource } from "./handles.js";
+import { owned, ownerOf } from "./handles.js";
 
 export type GameId = string & { readonly [gameIdBrand]: true };
 
-export interface GameDefinition {
+export interface GameDefinition<N = never> {
   readonly id: GameId;
   readonly simulationVersion: number;
   readonly stepMs: number;
+  readonly numbers?: NumericAdapter<N>;
+  readonly resources?: readonly Resource<N>[];
 }
 
 export interface GameDefinitionInput {
@@ -31,4 +38,35 @@ export function defineGame(input: GameDefinitionInput): GameDefinition {
     simulationVersion: input.simulationVersion,
     stepMs: input.stepMs,
   });
+}
+
+export function defineOwnedGame<N>(
+  input: GameDefinitionInput & {
+    readonly numbers: NumericAdapter<N>;
+    readonly resources: readonly Resource<N>[];
+  },
+  owner: object,
+): GameDefinition<N> {
+  const base = defineGame(input);
+  const seen = new Set<string>();
+  for (const resource of input.resources) {
+    if (ownerOf(resource) !== owner)
+      throw new TypeError(`Resource ${resource.id} belongs to another game kit`);
+    if (seen.has(resource.id)) throw new TypeError(`Duplicate resource id: ${resource.id}`);
+    seen.add(resource.id);
+  }
+  return owned(
+    {
+      ...base,
+      numbers: input.numbers,
+      resources: Object.freeze([...input.resources]),
+    },
+    owner,
+  );
+}
+
+export function definitionOwner<N>(definition: GameDefinition<N>): object {
+  const owner = ownerOf(definition);
+  if (!owner) throw new TypeError("Game definition has no owner");
+  return owner;
 }

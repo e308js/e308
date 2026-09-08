@@ -7,7 +7,7 @@
     "build": "pnpm -r build",
     "check:structure": "node --experimental-strip-types tools/quality/structure.ts",
     "format": "biome check --write .",
-    "lint": "biome ci .",
+    "lint": "biome ci --error-on-warnings .",
     "quality": "pnpm lint && pnpm typecheck && pnpm check:structure && pnpm build && pnpm test:coverage && pnpm test:packages",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.4",
     "@types/node": "24.10.1",
+    "@types/semver": "7.8.0",
     "@vitest/coverage-v8": "4.0.18",
     "fast-check": "4.9.0",
     "typescript": "5.9.3",

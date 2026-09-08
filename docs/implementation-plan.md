@@ -1,6 +1,6 @@
 # e308 implementation plan
 
-Status: **PLAN ONLY**. No engine, package setup, repository creation, commits, pushes, or CI runs have been performed by this planning revision.
+Status: **ACTIVE IMPLEMENTATION**. [status.md](status.md) records accepted commits and CI evidence; this file remains the governing execution plan.
 
 This plan implements the [definition of done](definition-of-done.md), including TMT capability parity, required Antimatter Dimensions/Kittens Game reference slices, Paperclips coverage, and three complete distinct games. Test-only clones/ports of reference mechanics are allowed. The independently implemented e308 subject must not delegate its answers to the reference runner.
 
@@ -86,4 +86,4 @@ S00–S11 replace the former six milestones. Foundation maps to S00–S02; persi
 
 ## Scope of this action
 
-This revision creates documentation only. Executable tooling, package files, workflows, remotes, commits and pushes belong to the later implementation workflow. Cloud accounts, monetization, multiplayer, automatic graph layout, a general visual editor and npm publication remain outside initial engine acceptance work.
+The original revision of this plan created documentation only; implementation now follows the slices above. Cloud accounts, monetization, multiplayer, automatic graph layout, a general visual editor and npm publication remain outside initial engine acceptance work.

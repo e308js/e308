@@ -8,12 +8,21 @@ trap 'rm -rf -- "$consumer_dir"' EXIT
 cd "$workspace_root"
 pnpm --filter @e308/core pack --pack-destination "$consumer_dir" >/dev/null
 pnpm --filter @e308/ux pack --pack-destination "$consumer_dir" >/dev/null
+npm pack "$workspace_root/packages/core/node_modules/break_eternity.js" \
+  --pack-destination "$consumer_dir" --cache "$consumer_dir/.npm-cache" --silent >/dev/null
+npm pack "$workspace_root/packages/core/node_modules/@noble/hashes" \
+  --pack-destination "$consumer_dir" --cache "$consumer_dir/.npm-cache" --silent >/dev/null
+npm pack "$workspace_root/packages/core/node_modules/semver" \
+  --pack-destination "$consumer_dir" --cache "$consumer_dir/.npm-cache" --silent >/dev/null
 
 cd "$consumer_dir"
 printf '%s\n' '{"name":"e308-clean-consumer","private":true,"type":"module"}' > package.json
-npm install --save-exact --ignore-scripts --no-audit --cache "$consumer_dir/.npm-cache" \
+npm install --save-exact --ignore-scripts --no-audit --offline --cache "$consumer_dir/.npm-cache" \
   "$consumer_dir/e308-core-0.0.0.tgz" \
-  "$consumer_dir/e308-ux-0.0.0.tgz" >/dev/null
+  "$consumer_dir/e308-ux-0.0.0.tgz" \
+  "$consumer_dir/break_eternity.js-2.1.3.tgz" \
+  "$consumer_dir/noble-hashes-2.4.0.tgz" \
+  "$consumer_dir/semver-7.8.5.tgz" >/dev/null
 
 node --input-type=module -e '
   import { defineGame } from "@e308/core";
