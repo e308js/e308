@@ -5,13 +5,15 @@ import type { BuyableDefinition } from "../economy/buyables.js";
 import { runFlows } from "../economy/flows.js";
 import type { FlowDefinition } from "../economy/types.js";
 import type { GameDefinition } from "../model/definition.js";
-import { definitionOwner } from "../model/definition.js";
+import { definitionOwner, definitionScopes } from "../model/definition.js";
 import type { Resource } from "../model/handles.js";
 import type { ScopeActivationDefinition } from "../progression/activation.js";
 import { resolveTriggers, resolveWin, type TriggerDefinition } from "../progression/features.js";
+import { RandomStreams } from "../random/xoshiro.js";
 import { planAdvance } from "../simulation/clock.js";
 import { runSteppedRules, type SteppedRuleDefinition } from "../simulation/rules.js";
 import { cloneProgression, freezeProgression, initialProgression } from "./progression-state.js";
+import { restoreSnapshot } from "./restore.js";
 import { failureFrom, makeTransaction, setTransactionTime } from "./transaction.js";
 import type {
   Command,
@@ -42,10 +44,13 @@ type CompleteDefinition<N> = GameDefinition<N> & {
   readonly steppedRules: readonly SteppedRuleDefinition<N>[];
 };
 
-export function createGame<N>(definition: GameDefinition<N>): Game<N> {
+export function createGame<N>(
+  definition: GameDefinition<N>,
+  options: { readonly snapshot?: Snapshot<N> } = {},
+): Game<N> {
   if (!definition.numbers || !definition.resources)
     throw new TypeError("Game definition was not created by createGameKit");
-  return Object.freeze(new GameRuntime(definition));
+  return Object.freeze(new GameRuntime(definition, options.snapshot));
 }
 
 class GameRuntime<N> implements Game<N> {
@@ -54,7 +59,7 @@ class GameRuntime<N> implements Game<N> {
   readonly #subscribers = new Set<Subscriber<N>>();
   #snapshot: Snapshot<N>;
 
-  constructor(definition: GameDefinition<N>) {
+  constructor(definition: GameDefinition<N>, restored?: Snapshot<N>) {
     this.#definition = definition as CompleteDefinition<N>;
     this.#owner = definitionOwner(definition);
     this.#snapshot = makeSnapshot(
@@ -76,9 +81,11 @@ class GameRuntime<N> implements Game<N> {
           this.#definition.numbers.fromNumber(0),
         ]),
       ),
-      {},
+      initialScopeGenerations(this.#definition),
       initialProgression(),
+      new RandomStreams(this.#definition.rootSeed ?? "00").snapshot(),
     );
+    if (restored) this.#snapshot = restoreSnapshot(this.#definition, restored);
   }
 
   getSnapshot(): Snapshot<N> {
@@ -146,6 +153,27 @@ class GameRuntime<N> implements Game<N> {
     );
   }
 
+  advanceCustom(
+    elapsedMs: number,
+    apply: (transaction: Transaction<N>, advancedGameMs: number) => void,
+  ): Result<Snapshot<N>, CommandFailure<N>> {
+    const plan = planAdvance(this.#snapshot, elapsedMs, this.#definition.stepMs);
+    const advancedGameMs = plan.gameTimeMs - this.#snapshot.gameTimeMs;
+    if (advancedGameMs === 0) {
+      if (plan.remainderMs !== this.#snapshot.remainderMs)
+        this.commit(this.#snapshot.resources, this.#snapshot.gameTimeMs, plan.remainderMs);
+      return { ok: true, value: this.#snapshot };
+    }
+    return this.transact(
+      (transaction) => {
+        setTransactionTime(transaction, plan.gameTimeMs);
+        apply(transaction, advancedGameMs);
+      },
+      plan.gameTimeMs,
+      plan.remainderMs,
+    );
+  }
+
   subscribe<T>(
     selector: (snapshot: Snapshot<N>) => T,
     listener: (value: T) => void,
@@ -177,6 +205,7 @@ class GameRuntime<N> implements Game<N> {
     const productionTotals = { ...this.#snapshot.productionTotals };
     const scopeGenerations = { ...this.#snapshot.scopeGenerations };
     const progression = cloneProgression(this.#snapshot.progression);
+    const random = new RandomStreams(this.#snapshot.random.rootSeed, this.#snapshot.random.streams);
     try {
       const transaction = makeTransaction(
         this.#owner,
@@ -187,6 +216,7 @@ class GameRuntime<N> implements Game<N> {
         scopeGenerations,
         this.#definition,
         progression,
+        random,
         this.#snapshot.gameTimeMs,
         this.#definition.numbers,
       );
@@ -206,6 +236,7 @@ class GameRuntime<N> implements Game<N> {
       productionTotals,
       scopeGenerations,
       progression,
+      random.snapshot(),
     );
     return { ok: true, value: this.#snapshot };
   }
@@ -219,6 +250,7 @@ class GameRuntime<N> implements Game<N> {
     productionTotals: Readonly<Record<string, N>> = this.#snapshot.productionTotals,
     scopeGenerations: Readonly<Record<string, bigint>> = this.#snapshot.scopeGenerations,
     progression = cloneProgression(this.#snapshot.progression),
+    random = this.#snapshot.random,
   ): void {
     this.#snapshot = makeSnapshot(
       this.#snapshot.revision + 1n,
@@ -230,9 +262,14 @@ class GameRuntime<N> implements Game<N> {
       productionTotals,
       scopeGenerations,
       progression,
+      random,
     );
     publish(this.#subscribers, this.#snapshot);
   }
+}
+
+function initialScopeGenerations<N>(definition: CompleteDefinition<N>): Record<string, bigint> {
+  return Object.fromEntries(definitionScopes(definition).map((scope) => [scope.id, 0n]));
 }
 
 function makeSnapshot<N>(
@@ -245,6 +282,7 @@ function makeSnapshot<N>(
   productionTotals: Readonly<Record<string, N>>,
   scopeGenerations: Readonly<Record<string, bigint>>,
   progression: ReturnType<typeof initialProgression<N>>,
+  random: Snapshot<N>["random"],
 ): Snapshot<N> {
   const frozenAllocations = Object.fromEntries(
     Object.entries(allocations).map(([id, assignments]) => [id, Object.freeze(assignments)]),
@@ -259,6 +297,7 @@ function makeSnapshot<N>(
     productionTotals: Object.freeze(productionTotals),
     scopeGenerations: Object.freeze(scopeGenerations),
     progression: freezeProgression(progression),
+    random,
   });
 }
 

@@ -39,7 +39,29 @@ node --input-type=module -e '
   if (!game.dispatch(upgradeCommand(upgrade)).ok || !game.getSnapshot().progression.upgrades.first) process.exit(1);
 '
 node --input-type=module -e '
+  import { createGame, createGameKit, nativeNumbers } from "@e308/core";
+  import { beginCatchup, processCatchupChunk } from "@e308/core/offline";
+  import { createSaveCodec } from "@e308/core/persistence";
+  import { MemorySaveStore } from "@e308/core/storage";
+  const kit = createGameKit({ numbers: nativeNumbers });
+  const run = kit.scope("run");
+  const points = kit.resource("points", { scope: run, initial: 1 });
+  const definition = kit.defineGame({ id: "save-consumer", simulationVersion: 1, stepMs: 50, resources: [points] });
+  const game = createGame(definition);
+  const entitlement = { policyVersion: "1", enabled: true, capMs: null, excess: "discard" };
+  const codec = createSaveCodec(definition, { stateSchemaVersion: 1, contentVersion: "1", contentDigest: "one" });
+  const loaded = codec.decode(codec.encode(game.getSnapshot(), { wallAnchorMs: 0, entitlement, catchup: null }));
+  const started = beginCatchup(definition, loaded, 50, "consumer");
+  const result = processCatchupChunk(definition, createGame(definition, { snapshot: started.snapshot }), started.catchup, 1);
+  if (!result.ok || result.value.snapshot.gameTimeMs !== 50) process.exit(1);
+  const store = new MemorySaveStore();
+  const written = await store.compareAndSwap("main", null, codec.encode(result.value.snapshot, { ...started, catchup: result.value.session }));
+  if (!written.ok) process.exit(1);
+'
+node --input-type=module -e '
   import { readFile } from "node:fs/promises";
   const pkg = JSON.parse(await readFile("node_modules/@e308/ux/package.json", "utf8"));
   if (pkg.dependencies?.["@e308/core"] !== "0.0.0") process.exit(1);
+  const schema = JSON.parse(await readFile("node_modules/@e308/core/schema/save-v1.schema.json", "utf8"));
+  if (schema.title !== "e308 save envelope v1") process.exit(1);
 '

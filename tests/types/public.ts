@@ -6,6 +6,9 @@ import {
   normalPrestige,
   type Resource,
 } from "@e308/core";
+import { type CatchupExecution, processCatchupChunk } from "@e308/core/offline";
+import { createSaveCodec, type SaveEnvelope } from "@e308/core/persistence";
+import { MemorySaveStore, type TransactionalSaveStore } from "@e308/core/storage";
 import type { ActionView } from "@e308/ux";
 
 const kit = createGameKit({ numbers: nativeNumbers });
@@ -62,3 +65,10 @@ const action = {
 
 void adapter;
 void action;
+const execution: CatchupExecution<number> = { kind: "canonical" };
+const store: TransactionalSaveStore = new MemorySaveStore();
+void createSaveCodec;
+void processCatchupChunk;
+void execution;
+void store;
+void (undefined as SaveEnvelope | undefined);

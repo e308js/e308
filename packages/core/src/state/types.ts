@@ -1,6 +1,7 @@
 import type { GameDefinition } from "../model/definition.js";
 import type { Resource, Scope } from "../model/handles.js";
 import type { ResetManifest } from "../progression/resets.js";
+import type { RandomStreamsSnapshot, Xoshiro128 } from "../random/xoshiro.js";
 
 export type Result<T, E> =
   | { readonly ok: true; readonly value: T }
@@ -43,6 +44,7 @@ export interface Snapshot<N> {
   readonly productionTotals: Readonly<Record<string, N>>;
   readonly scopeGenerations: Readonly<Record<string, bigint>>;
   readonly progression: ProgressionSnapshot<N>;
+  readonly random: RandomStreamsSnapshot;
 }
 
 export interface AutomationState {
@@ -59,6 +61,14 @@ export interface ProgressionSnapshot<N> {
   readonly rewardLedger: readonly string[];
   readonly automation: Readonly<Record<string, AutomationState>>;
   readonly won: boolean;
+  readonly events: readonly ProgressionEvent[];
+}
+
+export interface ProgressionEvent {
+  readonly sequence: bigint;
+  readonly kind: "upgrade" | "milestone" | "achievement" | "challenge-reward" | "win";
+  readonly id: string;
+  readonly atGameMs: number;
 }
 
 export type ProgressionFlagKind = "upgrade" | "milestone" | "achievement";
@@ -66,6 +76,7 @@ export type ProgressionFlagKind = "upgrade" | "milestone" | "achievement";
 export interface Transaction<N> {
   readonly numbers: NonNullable<GameDefinition<N>["numbers"]>;
   gameTimeMs(): number;
+  random(path: readonly string[]): Xoshiro128;
   isScopeActive(scope: Scope): boolean;
   get(resource: Resource<N>): N;
   set(resource: Resource<N>, value: N): void;
@@ -108,6 +119,10 @@ export interface Game<N> {
   advance(
     elapsedMs: number,
     step?: (transaction: Transaction<N>, stepSeconds: number) => void,
+  ): Result<Snapshot<N>, CommandFailure<N>>;
+  advanceCustom(
+    elapsedMs: number,
+    apply: (transaction: Transaction<N>, advancedGameMs: number) => void,
   ): Result<Snapshot<N>, CommandFailure<N>>;
   subscribe<T>(
     selector: (snapshot: Snapshot<N>) => T,

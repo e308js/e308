@@ -1,4 +1,4 @@
-import type { AutomationState, ProgressionSnapshot } from "./types.js";
+import type { AutomationState, ProgressionEvent, ProgressionSnapshot } from "./types.js";
 
 export interface MutableProgression<N> {
   upgrades: Record<string, true>;
@@ -9,6 +9,7 @@ export interface MutableProgression<N> {
   rewardLedger: Set<string>;
   automation: Record<string, AutomationState>;
   won: boolean;
+  events: ProgressionEvent[];
 }
 
 export function initialProgression<N>(): MutableProgression<N> {
@@ -21,6 +22,7 @@ export function initialProgression<N>(): MutableProgression<N> {
     rewardLedger: new Set(),
     automation: {},
     won: false,
+    events: [],
   };
 }
 
@@ -36,6 +38,7 @@ export function cloneProgression<N>(source: ProgressionSnapshot<N>): MutableProg
       Object.entries(source.automation).map(([id, state]) => [id, { ...state }]),
     ),
     won: source.won,
+    events: [...source.events],
   };
 }
 
@@ -53,5 +56,6 @@ export function freezeProgression<N>(source: MutableProgression<N>): Progression
       ),
     ),
     won: source.won,
+    events: Object.freeze(source.events.map((event) => Object.freeze({ ...event }))),
   });
 }

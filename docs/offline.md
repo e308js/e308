@@ -1,6 +1,7 @@
 # Offline progress: proposed contract
 
-Status: proposed semantics and acceptance requirements, not implemented functionality.
+Status: core persistence and catch-up semantics implemented in S04; browser ownership and worker
+integration remain assigned to S07, and optimized advancement remains assigned to S09.
 
 The [resolved contracts](contracts.md) specify canonical production behavior and update compatibility in greater detail.
 

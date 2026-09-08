@@ -6,6 +6,17 @@ export interface RandomState {
   readonly draws: bigint;
 }
 
+export interface RandomStreamSnapshot extends RandomState {
+  readonly path: readonly string[];
+}
+
+export interface RandomStreamsSnapshot {
+  readonly algorithm: "xoshiro128ss-v1";
+  readonly derivation: "sha256-path-v1";
+  readonly rootSeed: string;
+  readonly streams: readonly RandomStreamSnapshot[];
+}
+
 function rotateLeft(value: number, shift: number): number {
   return ((value << shift) | (value >>> (32 - shift))) >>> 0;
 }
@@ -90,9 +101,14 @@ export class RandomStreams {
   readonly #rootSeed: string;
   readonly #streams = new Map<string, Xoshiro128>();
 
-  constructor(rootSeed: string) {
+  constructor(rootSeed: string, restored: readonly RandomStreamSnapshot[] = []) {
     deriveRandomState(rootSeed, ["validation"]);
     this.#rootSeed = rootSeed;
+    for (const stream of restored) {
+      const key = JSON.stringify(stream.path);
+      if (this.#streams.has(key)) throw new TypeError(`Duplicate random stream: ${key}`);
+      this.#streams.set(key, new Xoshiro128(stream));
+    }
   }
 
   open(path: readonly string[]): Xoshiro128 {
@@ -103,5 +119,24 @@ export class RandomStreams {
       this.#streams.set(key, stream);
     }
     return stream;
+  }
+
+  snapshot(): RandomStreamsSnapshot {
+    const streams = [...this.#streams.entries()]
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([path, random]) =>
+        Object.freeze({ path: Object.freeze(JSON.parse(path) as string[]), ...random.snapshot() }),
+      );
+    return Object.freeze({
+      algorithm: "xoshiro128ss-v1",
+      derivation: "sha256-path-v1",
+      rootSeed: this.#rootSeed,
+      streams: Object.freeze(streams),
+    });
+  }
+
+  clone(): RandomStreams {
+    const snapshot = this.snapshot();
+    return new RandomStreams(snapshot.rootSeed, snapshot.streams);
   }
 }

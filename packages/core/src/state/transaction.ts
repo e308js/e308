@@ -4,8 +4,14 @@ import { ownerOf } from "../model/handles.js";
 import { NumericFault } from "../numbers/types.js";
 import { progressionContext } from "../progression/context.js";
 import type { ResetManifest } from "../progression/resets.js";
+import type { RandomStreams } from "../random/xoshiro.js";
 import type { MutableProgression } from "./progression-state.js";
-import type { CommandFailure, ProgressionFlagKind, Transaction } from "./types.js";
+import type {
+  CommandFailure,
+  ProgressionEvent,
+  ProgressionFlagKind,
+  Transaction,
+} from "./types.js";
 
 export function makeTransaction<N>(
   owner: object,
@@ -16,6 +22,7 @@ export function makeTransaction<N>(
   scopeGenerations: Record<string, bigint>,
   definition: GameDefinition<N>,
   progression: MutableProgression<N>,
+  random: RandomStreams,
   gameTimeMs: number,
   numbers: NonNullable<GameDefinition<N>["numbers"]>,
 ): Transaction<N> {
@@ -29,6 +36,7 @@ export function makeTransaction<N>(
   Object.assign(transaction, {
     numbers,
     gameTimeMs: () => clock.value,
+    random: (path) => random.open(path),
     isScopeActive: (scope) => {
       if (ownerOf(scope) !== owner) throw new InvalidTarget(scope.id);
       return (definition.scopeActivations ?? [])
@@ -88,7 +96,7 @@ export function makeTransaction<N>(
         progression,
         clock.value,
       ),
-    ...progressionMethods(progression, numbers),
+    ...progressionMethods(progression, numbers, () => clock.value),
     reject: (error) => {
       throw new OperationRejected(error);
     },
@@ -108,6 +116,7 @@ export function setTransactionTime<N>(transaction: Transaction<N>, gameTimeMs: n
 function progressionMethods<N>(
   progression: MutableProgression<N>,
   numbers: NonNullable<GameDefinition<N>["numbers"]>,
+  gameTimeMs: () => number,
 ): Pick<
   Transaction<N>,
   | "hasProgress"
@@ -125,7 +134,9 @@ function progressionMethods<N>(
   return {
     hasProgress: (kind, id) => Object.hasOwn(progressFlags(progression, kind), id),
     setProgress: (kind, id) => {
+      if (Object.hasOwn(progressFlags(progression, kind), id)) return;
       progressFlags(progression, kind)[id] = true;
+      recordProgressionEvent(progression, kind, id, gameTimeMs());
     },
     isChallengeActive: (id) => progression.activeChallenges.has(id),
     setChallengeActive: (id, active) => {
@@ -138,7 +149,11 @@ function progressionMethods<N>(
       progression.challengeCompletions[id] = value;
     },
     hasReward: (id) => progression.rewardLedger.has(id),
-    addReward: (id) => void progression.rewardLedger.add(id),
+    addReward: (id) => {
+      if (progression.rewardLedger.has(id)) return;
+      progression.rewardLedger.add(id);
+      recordProgressionEvent(progression, "challenge-reward", id, gameTimeMs());
+    },
     getAutomation: (id) => progression.automation[id],
     setAutomation: (id, state) => {
       if (!Number.isSafeInteger(state.nextRunMs) || state.nextRunMs < 0)
@@ -146,9 +161,21 @@ function progressionMethods<N>(
       progression.automation[id] = Object.freeze({ ...state });
     },
     setWon: (value) => {
+      if (value && !progression.won)
+        recordProgressionEvent(progression, "win", "game", gameTimeMs());
       progression.won = value;
     },
   };
+}
+
+function recordProgressionEvent<N>(
+  progression: MutableProgression<N>,
+  kind: ProgressionEvent["kind"],
+  id: string,
+  atGameMs: number,
+): void {
+  const sequence = (progression.events.at(-1)?.sequence ?? 0n) + 1n;
+  progression.events.push(Object.freeze({ sequence, kind, id, atGameMs }));
 }
 
 function progressFlags<N>(

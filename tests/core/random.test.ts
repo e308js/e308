@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  createGame,
+  createGameKit,
   deriveRandomState,
+  nativeNumbers,
   type RandomState,
   RandomStreams,
   Xoshiro128,
@@ -34,6 +37,14 @@ describe("xoshiro128**", () => {
     const streams = new RandomStreams("0123456789abcdef");
     expect(streams.open(["market"]).nextUint32()).not.toBe(streams.open(["weather"]).nextUint32());
     expect(streams.open(["market"])).toBe(streams.open(["market"]));
+    const cloned = streams.clone();
+    expect(cloned.snapshot()).toEqual(streams.snapshot());
+    expect(cloned.open(["market"]).nextUint32()).toBe(streams.open(["market"]).nextUint32());
+  });
+
+  it("rejects duplicate restored stream paths", () => {
+    const state = { path: ["same"], words: [1, 2, 3, 4] as const, draws: 0n };
+    expect(() => new RandomStreams("00", [state, state])).toThrow("Duplicate random stream");
   });
 
   it.each([
@@ -52,5 +63,42 @@ describe("xoshiro128**", () => {
   it("rejects invalid seed paths", () => {
     expect(() => deriveRandomState("ABC", ["path"])).toThrow(TypeError);
     expect(() => deriveRandomState("00", [""])).toThrow(TypeError);
+  });
+
+  it("rolls random streams back with a rejected transaction", () => {
+    const kit = createGameKit({ numbers: nativeNumbers });
+    const run = kit.scope("run");
+    const points = kit.resource("points", { scope: run, initial: 0 });
+    const definition = kit.defineGame({
+      id: "random-rollback",
+      simulationVersion: 1,
+      rootSeed: "00",
+      stepMs: 100,
+      resources: [points],
+    });
+    const game = createGame(definition);
+    const control = createGame(definition);
+    game.dispatch({
+      id: "failed-draw",
+      execute: (transaction) => {
+        transaction.random(["events"]).nextUint32();
+        transaction.reject({ code: "disabled", actionId: "draw", reasonKey: "test" });
+      },
+    });
+    let actual = 0;
+    let expected = 0;
+    game.dispatch({
+      id: "actual",
+      execute: (transaction) => {
+        actual = transaction.random(["events"]).nextUint32();
+      },
+    });
+    control.dispatch({
+      id: "expected",
+      execute: (transaction) => {
+        expected = transaction.random(["events"]).nextUint32();
+      },
+    });
+    expect(actual).toBe(expected);
   });
 });

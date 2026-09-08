@@ -13,7 +13,7 @@ import type { SteppedRuleDefinition } from "../simulation/rules.js";
 
 declare const gameIdBrand: unique symbol;
 
-import type { Resource } from "./handles.js";
+import type { Resource, Scope } from "./handles.js";
 import { owned, ownerOf } from "./handles.js";
 
 export type GameId = string & { readonly [gameIdBrand]: true };
@@ -22,6 +22,7 @@ export interface GameDefinition<N = never> {
   readonly id: GameId;
   readonly simulationVersion: number;
   readonly stepMs: number;
+  readonly rootSeed?: string;
   readonly numbers?: NumericAdapter<N>;
   readonly resources?: readonly Resource<N>[];
   readonly flows?: readonly FlowDefinition<N>[];
@@ -42,6 +43,7 @@ export interface GameDefinitionInput {
   readonly id: string;
   readonly simulationVersion: number;
   readonly stepMs: number;
+  readonly rootSeed?: string;
 }
 
 export interface GameContentInput<N> extends GameDefinitionInput {
@@ -118,6 +120,7 @@ export function defineOwnedGame<N>(
       id: base.id,
       simulationVersion: base.simulationVersion,
       stepMs: base.stepMs,
+      rootSeed: input.rootSeed ?? "00",
       numbers: input.numbers,
       resources: Object.freeze([...input.resources]),
       flows: Object.freeze([...(input.flows ?? [])]),
@@ -155,4 +158,30 @@ export function definitionOwner<N>(definition: GameDefinition<N>): object {
   const owner = ownerOf(definition);
   if (!owner) throw new TypeError("Game definition has no owner");
   return owner;
+}
+
+export function definitionScopes<N>(definition: GameDefinition<N>): readonly Scope[] {
+  const groups: readonly (readonly { readonly scope: Scope }[])[] = [
+    definition.resources ?? [],
+    definition.flows ?? [],
+    definition.buyables ?? [],
+    definition.recipes ?? [],
+    definition.allocations ?? [],
+    definition.prestiges ?? [],
+    definition.upgrades ?? [],
+    definition.triggers ?? [],
+    definition.challenges ?? [],
+    definition.automation ?? [],
+    definition.scopeActivations ?? [],
+    definition.steppedRules ?? [],
+  ];
+  const scopes = new Map<string, Scope>();
+  for (const group of groups) {
+    for (const value of group) scopes.set(value.scope.id, value.scope);
+  }
+  return Object.freeze(
+    [...scopes.values()].sort((left, right) =>
+      left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+    ),
+  );
 }

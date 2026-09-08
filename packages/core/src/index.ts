@@ -25,6 +25,8 @@ export { eternityNumbers } from "./numbers/eternity.js";
 export { nativeNumbers } from "./numbers/native.js";
 export type { NumericAdapter, NumericCodec } from "./numbers/types.js";
 export { NumericFault } from "./numbers/types.js";
+export * from "./offline/index.js";
+export * from "./persistence/index.js";
 export type { ScopeActivationDefinition } from "./progression/activation.js";
 export type { ChallengeDefinition } from "./progression/challenges.js";
 export {
@@ -44,7 +46,7 @@ export type {
   ResetRetention,
 } from "./progression/resets.js";
 export { prestigeCommand } from "./progression/resets.js";
-export type { RandomState } from "./random/xoshiro.js";
+export type { RandomState, RandomStreamSnapshot, RandomStreamsSnapshot } from "./random/xoshiro.js";
 export { deriveRandomState, RandomStreams, Xoshiro128 } from "./random/xoshiro.js";
 export type { AdvancePlan, TimeState } from "./simulation/clock.js";
 export { planAdvance } from "./simulation/clock.js";
@@ -55,8 +57,10 @@ export type {
   CommandFailure,
   CommandReceipt,
   Game,
+  ProgressionEvent,
   ProgressionSnapshot,
   Result,
   Snapshot,
   Transaction,
 } from "./state/types.js";
+export * from "./storage/index.js";

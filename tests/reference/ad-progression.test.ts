@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  beginCatchup,
   createGame,
   createGameKit,
+  createSaveCodec,
   eternityNumbers,
+  processCatchupChunk,
   type Resource,
 } from "../../packages/core/src/index.js";
 import { createAdSubject, resourceValue, subjectState } from "../../reference/ad/subject.js";
@@ -171,5 +174,51 @@ describe("Antimatter Dimensions AD04-AD06", () => {
     expect(eternityNumbers.cmp(value, kit.q("7.99e1000"))).toBe(1);
     expect(eternityNumbers.cmp(value, kit.q("8.01e1000"))).toBe(-1);
     expect(eternityNumbers.codec.serialize(eternityNumbers.codec.parse(encoded))).toBe(encoded);
+  });
+
+  it("AD06 preserves enabled and disabled automation through save and offline replay", () => {
+    for (const enabled of [false, true]) {
+      const live = createAdSubject({
+        challenge: 2,
+        antimatter: Number.MAX_VALUE,
+        dimensions: [1, 0, 0, 0, 0, 0, 0, 0],
+      });
+      live.game.dispatch(live.completeChallenge());
+      if (enabled) live.game.dispatch(live.enableDimensionAutobuyer(true));
+      const codec = createSaveCodec(live.model.definition, {
+        stateSchemaVersion: 1,
+        contentVersion: "ad-lab-s03",
+        contentDigest: "ad06-save-offline",
+      });
+      const entitlement = {
+        policyVersion: "ad06",
+        enabled: true,
+        capMs: null,
+        excess: "discard" as const,
+      };
+      const loaded = codec.decode(
+        codec.encode(live.game.getSnapshot(), {
+          wallAnchorMs: 0,
+          entitlement,
+          catchup: null,
+        }),
+      );
+      const started = beginCatchup(live.model.definition, loaded, 600, `ad06-${enabled}`);
+      const replayed = processCatchupChunk(
+        live.model.definition,
+        createGame(live.model.definition, { snapshot: started.snapshot }),
+        started.catchup as NonNullable<typeof started.catchup>,
+        6,
+      );
+      if (!replayed.ok) throw new TypeError("Expected AD06 catch-up completion");
+      live.game.advance(600);
+      expect(replayed.value.snapshot.resources).toEqual(live.game.getSnapshot().resources);
+      expect(replayed.value.snapshot.purchaseCounts).toEqual(
+        live.game.getSnapshot().purchaseCounts,
+      );
+      expect(replayed.value.snapshot.progression.automation).toEqual(
+        live.game.getSnapshot().progression.automation,
+      );
+    }
   });
 });

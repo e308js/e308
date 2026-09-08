@@ -1,0 +1,125 @@
+{
+  "format": "e308-save",
+  "formatVersion": 1,
+  "gameId": "save-example",
+  "stateSchemaVersion": 1,
+  "content": {
+    "version": "1.0.0",
+    "digest": "save-example-v1",
+    "modules": []
+  },
+  "simulation": {
+    "version": 1,
+    "stepMs": 100,
+    "scheduleVersion": 1,
+    "numericAdapter": "native",
+    "numericImplementationVersion": "1",
+    "numericCodec": {
+      "id": "native-decimal",
+      "version": 1
+    }
+  },
+  "revision": "1",
+  "state": {
+    "scopes": {
+      "run": {
+        "generation": "0",
+        "resources": {
+          "points": "10.799999999999997"
+        },
+        "purchaseCounts": {},
+        "allocations": {},
+        "automation": {},
+        "upgrades": [],
+        "milestones": ["started"],
+        "achievements": [],
+        "activeChallenges": [],
+        "challengeCompletions": {}
+      }
+    },
+    "productionTotals": {
+      "points": "0.8"
+    },
+    "rewardLedger": [],
+    "won": false,
+    "progressionEvents": [
+      {
+        "sequence": "1",
+        "kind": "milestone",
+        "id": "started",
+        "atGameMs": 100
+      }
+    ]
+  },
+  "clock": {
+    "wallAnchorMs": 2000,
+    "gameTimeMs": 400,
+    "remainderMs": 0,
+    "entitlement": {
+      "policyVersion": "1",
+      "enabled": true,
+      "capMs": 1000,
+      "excess": "discard"
+    }
+  },
+  "rng": {
+    "algorithm": "xoshiro128ss-v1",
+    "derivation": "sha256-path-v1",
+    "rootSeed": "0123456789abcdef",
+    "streams": []
+  },
+  "catchup": {
+    "sessionId": "fixture-pending-v1",
+    "startWallMs": 1000,
+    "endWallMs": 2000,
+    "entitlement": {
+      "policyVersion": "1",
+      "enabled": true,
+      "capMs": 1000,
+      "excess": "discard"
+    },
+    "eligibleRealMs": 1000,
+    "processedRealMs": 400,
+    "pendingRealMs": 600,
+    "discardedRealMs": 0,
+    "bankedRealMs": 0,
+    "segments": [
+      {
+        "simulationVersion": 1,
+        "processedRealMs": 400
+      }
+    ],
+    "report": {
+      "sessionId": "fixture-pending-v1",
+      "elapsedRealMs": 1000,
+      "eligibleRealMs": 1000,
+      "processedRealMs": 400,
+      "pendingRealMs": 600,
+      "discardedRealMs": 0,
+      "bankedRealMs": 0,
+      "advancedGameMs": 400,
+      "fidelity": "canonical",
+      "resources": [
+        {
+          "id": "points",
+          "before": "10",
+          "after": "10.799999999999997",
+          "produced": "0.8"
+        }
+      ],
+      "progression": [
+        {
+          "eventId": "fixture-pending-v1:1",
+          "kind": "milestone",
+          "id": "started",
+          "atGameMs": 100
+        }
+      ],
+      "stopReason": "budget-exceeded"
+    },
+    "deliveryCursor": "0"
+  },
+  "migrationLedger": [],
+  "lastDeliveredEvent": "0",
+  "checksum": "28c971aabf23d18754792a1cc182eadf3d37e6e806f080265010d3930cc120f0"
+}

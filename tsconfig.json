@@ -8,6 +8,9 @@
     "lib": ["ES2024", "DOM"],
     "paths": {
       "@e308/core": ["packages/core/src/index.ts"],
+      "@e308/core/offline": ["packages/core/src/offline/index.ts"],
+      "@e308/core/persistence": ["packages/core/src/persistence/index.ts"],
+      "@e308/core/storage": ["packages/core/src/storage/index.ts"],
       "@e308/ux": ["packages/ux/src/index.ts"]
     },
     "rootDir": ".",

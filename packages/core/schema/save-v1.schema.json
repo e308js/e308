@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://e308.dev/schema/save-v1.schema.json",
+  "title": "e308 save envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "formatVersion",
+    "gameId",
+    "stateSchemaVersion",
+    "content",
+    "simulation",
+    "revision",
+    "state",
+    "clock",
+    "rng",
+    "catchup",
+    "migrationLedger",
+    "lastDeliveredEvent",
+    "checksum"
+  ],
+  "properties": {
+    "format": { "const": "e308-save" },
+    "formatVersion": { "const": 1 },
+    "gameId": { "$ref": "#/$defs/nonempty" },
+    "stateSchemaVersion": { "$ref": "#/$defs/positiveInteger" },
+    "content": {
+      "type": "object",
+      "required": ["version", "digest", "modules"],
+      "properties": {
+        "version": { "$ref": "#/$defs/nonempty" },
+        "digest": { "$ref": "#/$defs/nonempty" },
+        "modules": { "type": "array", "items": { "$ref": "#/$defs/module" } }
+      }
+    },
+    "simulation": {
+      "type": "object",
+      "required": [
+        "version",
+        "stepMs",
+        "scheduleVersion",
+        "numericAdapter",
+        "numericImplementationVersion",
+        "numericCodec"
+      ],
+      "properties": {
+        "version": { "$ref": "#/$defs/positiveInteger" },
+        "stepMs": { "$ref": "#/$defs/positiveInteger" },
+        "scheduleVersion": { "$ref": "#/$defs/positiveInteger" },
+        "numericAdapter": { "$ref": "#/$defs/nonempty" },
+        "numericImplementationVersion": { "$ref": "#/$defs/nonempty" },
+        "numericCodec": {
+          "type": "object",
+          "required": ["id", "version"],
+          "properties": {
+            "id": { "$ref": "#/$defs/nonempty" },
+            "version": { "$ref": "#/$defs/positiveInteger" }
+          }
+        }
+      }
+    },
+    "revision": { "$ref": "#/$defs/decimalInteger" },
+    "state": {
+      "type": "object",
+      "required": ["scopes", "productionTotals", "rewardLedger", "won", "progressionEvents"],
+      "properties": {
+        "scopes": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/scope" }
+        },
+        "productionTotals": { "$ref": "#/$defs/quantityMap" },
+        "rewardLedger": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "won": { "type": "boolean" },
+        "progressionEvents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/progressionEvent" }
+        }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "required": ["wallAnchorMs", "gameTimeMs", "remainderMs", "entitlement"],
+      "properties": {
+        "wallAnchorMs": { "$ref": "#/$defs/duration" },
+        "gameTimeMs": { "$ref": "#/$defs/duration" },
+        "remainderMs": { "$ref": "#/$defs/duration" },
+        "entitlement": { "$ref": "#/$defs/entitlement" }
+      }
+    },
+    "rng": {
+      "type": "object",
+      "required": ["algorithm", "derivation", "rootSeed", "streams"],
+      "properties": {
+        "algorithm": { "const": "xoshiro128ss-v1" },
+        "derivation": { "const": "sha256-path-v1" },
+        "rootSeed": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "streams": { "type": "array", "items": { "$ref": "#/$defs/randomStream" } }
+      }
+    },
+    "catchup": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/catchup" }] },
+    "migrationLedger": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonempty" },
+      "uniqueItems": true
+    },
+    "lastDeliveredEvent": { "$ref": "#/$defs/decimalInteger" },
+    "checksum": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "$defs": {
+    "nonempty": { "type": "string", "minLength": 1 },
+    "duration": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "positiveInteger": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "decimalInteger": { "type": "string", "pattern": "^(?:0|[1-9][0-9]*)$" },
+    "quantityMap": { "type": "object", "additionalProperties": { "type": "string" } },
+    "module": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonempty" },
+        "version": { "$ref": "#/$defs/nonempty" },
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/moduleRequirement" } }
+      }
+    },
+    "moduleRequirement": {
+      "type": "object",
+      "required": ["id", "range"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonempty" },
+        "range": { "$ref": "#/$defs/nonempty" }
+      }
+    },
+    "automation": {
+      "type": "object",
+      "required": ["enabled", "nextRunMs"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "nextRunMs": { "$ref": "#/$defs/duration" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "generation",
+        "resources",
+        "purchaseCounts",
+        "allocations",
+        "automation",
+        "upgrades",
+        "milestones",
+        "achievements",
+        "activeChallenges",
+        "challengeCompletions"
+      ],
+      "properties": {
+        "generation": { "$ref": "#/$defs/decimalInteger" },
+        "resources": { "$ref": "#/$defs/quantityMap" },
+        "purchaseCounts": { "$ref": "#/$defs/quantityMap" },
+        "allocations": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/quantityMap" }
+        },
+        "automation": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/automation" }
+        },
+        "upgrades": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "milestones": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "achievements": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "activeChallenges": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "challengeCompletions": { "$ref": "#/$defs/quantityMap" }
+      }
+    },
+    "entitlement": {
+      "type": "object",
+      "required": ["policyVersion", "enabled", "capMs", "excess"],
+      "properties": {
+        "policyVersion": { "$ref": "#/$defs/nonempty" },
+        "enabled": { "type": "boolean" },
+        "capMs": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/duration" }] },
+        "excess": { "enum": ["discard", "bank"] }
+      }
+    },
+    "progressionEvent": {
+      "type": "object",
+      "required": ["sequence", "kind", "id", "atGameMs"],
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "kind": { "enum": ["upgrade", "milestone", "achievement", "challenge-reward", "win"] },
+        "id": { "$ref": "#/$defs/nonempty" },
+        "atGameMs": { "$ref": "#/$defs/duration" }
+      }
+    },
+    "randomStream": {
+      "type": "object",
+      "required": ["path", "words", "draws"],
+      "properties": {
+        "path": { "type": "array", "items": { "type": "string" } },
+        "words": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+        },
+        "draws": { "$ref": "#/$defs/decimalInteger" }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "required": ["simulationVersion", "processedRealMs"],
+      "properties": {
+        "simulationVersion": { "$ref": "#/$defs/positiveInteger" },
+        "processedRealMs": { "$ref": "#/$defs/positiveInteger" }
+      }
+    },
+    "catchup": {
+      "type": "object",
+      "required": [
+        "sessionId",
+        "startWallMs",
+        "endWallMs",
+        "entitlement",
+        "eligibleRealMs",
+        "processedRealMs",
+        "pendingRealMs",
+        "discardedRealMs",
+        "bankedRealMs",
+        "segments",
+        "report",
+        "deliveryCursor"
+      ],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/nonempty" },
+        "startWallMs": { "$ref": "#/$defs/duration" },
+        "endWallMs": { "$ref": "#/$defs/duration" },
+        "entitlement": { "$ref": "#/$defs/entitlement" },
+        "eligibleRealMs": { "$ref": "#/$defs/duration" },
+        "processedRealMs": { "$ref": "#/$defs/duration" },
+        "pendingRealMs": { "$ref": "#/$defs/duration" },
+        "discardedRealMs": { "$ref": "#/$defs/duration" },
+        "bankedRealMs": { "$ref": "#/$defs/duration" },
+        "segments": { "type": "array", "items": { "$ref": "#/$defs/segment" } },
+        "report": { "$ref": "#/$defs/report" },
+        "deliveryCursor": { "$ref": "#/$defs/decimalInteger" }
+      }
+    },
+    "resourceReport": {
+      "type": "object",
+      "required": ["id", "before", "after"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonempty" },
+        "before": { "type": "string" },
+        "after": { "type": "string" },
+        "produced": { "type": "string" }
+      }
+    },
+    "offlineEvent": {
+      "type": "object",
+      "required": ["eventId", "kind", "id", "atGameMs"],
+      "properties": {
+        "eventId": { "$ref": "#/$defs/nonempty" },
+        "kind": { "enum": ["upgrade", "milestone", "achievement", "challenge-reward", "win"] },
+        "id": { "$ref": "#/$defs/nonempty" },
+        "atGameMs": { "$ref": "#/$defs/duration" }
+      }
+    },
+    "report": {
+      "type": "object",
+      "required": [
+        "sessionId",
+        "elapsedRealMs",
+        "eligibleRealMs",
+        "processedRealMs",
+        "pendingRealMs",
+        "discardedRealMs",
+        "bankedRealMs",
+        "advancedGameMs",
+        "fidelity",
+        "resources",
+        "progression"
+      ],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/nonempty" },
+        "elapsedRealMs": { "$ref": "#/$defs/duration" },
+        "eligibleRealMs": { "$ref": "#/$defs/duration" },
+        "processedRealMs": { "$ref": "#/$defs/duration" },
+        "pendingRealMs": { "$ref": "#/$defs/duration" },
+        "discardedRealMs": { "$ref": "#/$defs/duration" },
+        "bankedRealMs": { "$ref": "#/$defs/duration" },
+        "advancedGameMs": { "$ref": "#/$defs/duration" },
+        "fidelity": { "enum": ["canonical", "validated-bulk", "approximate", "custom-reward"] },
+        "resources": { "type": "array", "items": { "$ref": "#/$defs/resourceReport" } },
+        "progression": { "type": "array", "items": { "$ref": "#/$defs/offlineEvent" } },
+        "stopReason": { "enum": ["choice", "cancelled", "error", "budget-exceeded"] }
+      }
+    }
+  }
+}

@@ -65,3 +65,54 @@ and automation schedules.
 `segmentedCurve` joins backend-compatible curves at explicit count milestones. Buyable counts remain
 numeric-backed even when they exceed JavaScript's safe integer range. Instant recipe request counts
 are bounded safe integers because they represent executable iterations.
+
+## Saves and offline progress
+
+Persistence is opt-in and headless. A save records the numeric codec, fixed-step schedule, RNG
+streams, automation clocks, progression event ledger, resolved offline entitlement, and any pending
+catch-up session. Decode rejects corrupt, future, mismatched, and structurally unknown state.
+
+```ts
+import { createSaveCodec } from "@e308/core/persistence";
+import { beginCatchup, processCatchupChunk } from "@e308/core/offline";
+
+const codec = createSaveCodec(definition, {
+  stateSchemaVersion: 1,
+  contentVersion: "1.0.0",
+  contentDigest: "replace-with-your-build-digest",
+});
+const entitlement = {
+  policyVersion: "1",
+  enabled: true,
+  capMs: 8 * 60 * 60 * 1_000,
+  excess: "discard" as const,
+};
+const raw = codec.encode(game.getSnapshot(), {
+  wallAnchorMs: Date.now(),
+  entitlement,
+  catchup: null,
+});
+
+const loaded = codec.decode(raw);
+const returned = beginCatchup(definition, loaded, Date.now(), crypto.randomUUID());
+if (returned.catchup) {
+  const candidate = createGame(definition, { snapshot: returned.snapshot });
+  const chunk = processCatchupChunk(definition, candidate, returned.catchup, 10_000);
+  // Persist chunk.value or chunk.error state and session together before processing more.
+}
+```
+
+The work budget above limits computation per checkpoint; it does not reduce credited time. The cap
+is resolved and saved before an absence. It is applied once even if catch-up needs many chunks or
+restarts. `MemorySaveStore` and `commitCatchupChunk` in `@e308/core/storage` demonstrate atomic
+compare-and-swap recovery. Browser storage ownership arrives in the browser host package.
+
+Games with intentionally different away-time rules can pass `{ kind: "custom-reward", apply }` as
+the final `processCatchupChunk` argument. The callback runs in one transaction and the report labels
+the result `custom-reward`; cap and recovery accounting remain unchanged. Canonical mode always runs
+the ordinary fixed-step rules and enabled automation.
+
+Schema migrations and pending simulation-rule transitions are explicit and carry stable IDs in the
+migration ledger. A pending session cannot cross a simulation version without its declared
+transition. The published JSON Schema is `schema/save-v1.schema.json`; a complete interrupted save is
+kept in the repository as a compatibility fixture.

@@ -9,7 +9,8 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S01 | ACCEPTED | `13267fc88bb5778d1a43cec55a4e2d6f0f881d64` | quality | [run 34276333405](https://github.com/e308js/e308/actions/runs/34276333405) |
 | S02 | ACCEPTED | `17181ca6507c4374a805340d58775b8710c9ff2d` | quality | [run 34280350593](https://github.com/e308js/e308/actions/runs/34280350593) |
 | S03 | ACCEPTED | `c6816694a3c2d2e069ed11127cea8cbbc4e7a04d` | quality + reference | [run 34286752529](https://github.com/e308js/e308/actions/runs/34286752529), [details](s03-evidence.md) |
-| S04–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
+| S04 | IN PROGRESS | — | quality + reference | [details](s04-evidence.md) |
+| S05–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
