@@ -1,0 +1,25 @@
+{
+  "name": "e308-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "check:structure": "node --experimental-strip-types tools/quality/structure.ts",
+    "format": "biome check --write .",
+    "lint": "biome ci .",
+    "quality": "pnpm lint && pnpm typecheck && pnpm check:structure && pnpm build && pnpm test:coverage && pnpm test:packages",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:packages": "bash tests/packages/consumer.sh",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.4",
+    "@types/node": "24.10.1",
+    "@vitest/coverage-v8": "4.0.18",
+    "fast-check": "4.9.0",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18"
+  }
+}

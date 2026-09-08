@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "lib": ["ES2024", "DOM"],
+    "rootDir": ".",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["packages/**/*.ts", "tests/**/*.ts", "tools/**/*.ts", "vitest.config.ts"]
+}
