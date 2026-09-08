@@ -1,6 +1,7 @@
 # S02 economic primitives evidence
 
-Status: **IN PROGRESS** until the exact pushed commit passes GitHub Actions.
+Status: **ACCEPTED**. Implementation commit `17181ca6507c4374a805340d58775b8710c9ff2d`
+passed [GitHub Actions run 34280350593](https://github.com/e308js/e308/actions/runs/34280350593).
 
 S02 implements inspectable constant, proportional, allocation, and product rates plus a custom rate
 escape hatch; fixed-step flows with deterministic reservation; instant recipes; capacities and three
@@ -33,4 +34,6 @@ oracles; it does not claim complete TMT parity.
 Local acceptance on September 8, 2026: 100 tests across 15 files; aggregate statements 97.09%,
 branches 92.60%, functions 100%, lines 97.54%; zero per-file threshold, size, function-size,
 duplication, or core dependency violations. The final accepted SHA, CI URL, and archive artifact are
-recorded after remote validation.
+The accepted CI job also built both ESM packages, installed their archives into clean JavaScript and
+strict TypeScript consumers, and uploaded the package and coverage artifacts. No coverage, structure,
+or dependency exceptions were used.
