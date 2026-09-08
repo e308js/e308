@@ -28,6 +28,7 @@ export function runFlows<N>(
   };
 
   for (const flow of [...flows].sort(compareFlows)) {
+    if (!transaction.isScopeActive(flow.scope)) continue;
     const perSecond = evaluateRate(flow.rate, readStart, numbers);
     let executions = numbers.mul(perSecond, numbers.fromNumber(stepSeconds));
     if (numbers.cmp(executions, zero) < 0 || !numbers.isFinite(executions)) {

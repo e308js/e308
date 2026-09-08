@@ -5,11 +5,29 @@ import { createRateBuilders, type RateBuilders } from "../economy/rates.js";
 import type { RecipeDefinition } from "../economy/recipes.js";
 import type { FlowDefinition, Rate } from "../economy/types.js";
 import type { NumericAdapter } from "../numbers/types.js";
+import type { ScopeActivationDefinition } from "../progression/activation.js";
+import type { SteppedRuleDefinition } from "../simulation/rules.js";
 import { defineOwnedGame, type GameContentInput } from "./definition.js";
 import type { Resource, Scope } from "./handles.js";
-import { owned, ownerOf } from "./handles.js";
-
-const ID_PATTERN = /^[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)*$/;
+import { owned } from "./handles.js";
+import {
+  type AutomationDefinition,
+  type AutomationOptions,
+  type ChallengeDefinition,
+  type ChallengeOptions,
+  createAutomation,
+  createChallenge,
+  createPrestige,
+  createTrigger,
+  createUpgrade,
+  type PrestigeDefinition,
+  type PrestigeOptions,
+  type TriggerDefinition,
+  type TriggerOptions,
+  type UpgradeDefinition,
+  type UpgradeOptions,
+} from "./progression-builders.js";
+import { assertOwner, freezeEntries, safePriority, validId } from "./validation.js";
 
 interface ResourceOptions<N> {
   readonly scope: Scope;
@@ -58,6 +76,20 @@ export interface GameKit<N> {
   buyable(id: string, options: BuyableOptions<N>): BuyableDefinition<N>;
   recipe(id: string, options: RecipeOptions<N>): RecipeDefinition<N>;
   allocation(id: string, options: AllocationOptions<N>): AllocationDefinition<N>;
+  prestige(id: string, options: PrestigeOptions<N>): PrestigeDefinition<N>;
+  upgrade(id: string, options: UpgradeOptions<N>): UpgradeDefinition<N>;
+  milestone(id: string, options: Omit<TriggerOptions<N>, "kind">): TriggerDefinition<N>;
+  achievement(id: string, options: Omit<TriggerOptions<N>, "kind">): TriggerDefinition<N>;
+  challenge(id: string, options: ChallengeOptions<N>): ChallengeDefinition<N>;
+  automation(id: string, options: AutomationOptions<N>): AutomationDefinition<N>;
+  scopeActivation(
+    id: string,
+    options: Omit<ScopeActivationDefinition<N>, "id">,
+  ): ScopeActivationDefinition<N>;
+  steppedRule(
+    id: string,
+    options: Omit<SteppedRuleDefinition<N>, "id" | "priority"> & { readonly priority?: number },
+  ): SteppedRuleDefinition<N>;
   defineGame(options: GameContentInput<N>): import("./definition.js").GameDefinition<N>;
 }
 
@@ -76,6 +108,22 @@ export function createGameKit<N>(options: { readonly numbers: NumericAdapter<N> 
     recipe: (id: string, value: RecipeOptions<N>) => createRecipe(id, value, owner, numbers),
     allocation: (id: string, value: AllocationOptions<N>) =>
       createAllocation(id, value, owner, numbers),
+    prestige: (id: string, value: PrestigeOptions<N>) => createPrestige(id, value, owner),
+    upgrade: (id, value) => createUpgrade(id, value, owner, numbers),
+    milestone: (id, value) => createTrigger(id, { ...value, kind: "milestone" }, owner),
+    achievement: (id, value) => createTrigger(id, { ...value, kind: "achievement" }, owner),
+    challenge: (id, value) => createChallenge(id, value, owner),
+    automation: (id, value) => createAutomation(id, value, owner),
+    scopeActivation: (id, value) => {
+      validId(id, "scope activation");
+      assertOwner(value.scope, owner, `Scope for ${id}`);
+      return owned({ ...value, id }, owner);
+    },
+    steppedRule: (id, value) => {
+      validId(id, "stepped rule");
+      assertOwner(value.scope, owner, `Scope for ${id}`);
+      return owned({ ...value, id, priority: safePriority(value.priority, id) }, owner);
+    },
     defineGame: (input) => defineOwnedGame({ ...input, numbers }, owner),
   };
   return Object.freeze(kit);
@@ -126,9 +174,7 @@ function createFlow<N>(
 ): FlowDefinition<N> {
   validId(id, "flow");
   assertOwner(options.scope, owner, `Scope for ${id}`);
-  const priority = options.priority ?? 0;
-  if (!Number.isSafeInteger(priority))
-    throw new TypeError(`Priority for ${id} must be a safe integer`);
+  const priority = safePriority(options.priority, id);
   const consumes = freezeEntries(options.consumes ?? [], owner, numbers, id);
   const produces = freezeEntries(options.produces, owner, numbers, id);
   if (produces.length === 0) throw new TypeError(`Flow ${id} must produce at least one resource`);
@@ -234,31 +280,5 @@ function createAllocation<N>(
   return owned(
     { id, scope: options.scope, budget: options.budget, targets, initial: Object.freeze(initial) },
     owner,
-  );
-}
-
-function validId(id: string, kind: string): void {
-  if (!ID_PATTERN.test(id)) throw new TypeError(`Invalid ${kind} id: ${id}`);
-}
-
-function assertOwner(value: object, owner: object, label: string): void {
-  if (ownerOf(value) !== owner) throw new TypeError(`${label} belongs to another game kit`);
-}
-
-function freezeEntries<N>(
-  entries: readonly (readonly [Resource<N>, N])[],
-  owner: object,
-  numbers: NumericAdapter<N>,
-  id: string,
-): readonly (readonly [Resource<N>, N])[] {
-  const zero = numbers.fromNumber(0);
-  return Object.freeze(
-    entries.map(([resource, coefficient]) => {
-      assertOwner(resource, owner, `Flow ${id} resource`);
-      if (!numbers.isFinite(coefficient) || numbers.cmp(coefficient, zero) <= 0) {
-        throw new TypeError(`Flow ${id} coefficients must be positive and finite`);
-      }
-      return Object.freeze([resource, coefficient] as const);
-    }),
   );
 }

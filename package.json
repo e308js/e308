@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:packages": "bash tests/packages/consumer.sh",
+    "test:reference": "vitest run tests/reference",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

@@ -26,6 +26,8 @@ function executeRecipe<N>(
   recipe: RecipeDefinition<N>,
   request: RecipeRequest,
 ): void {
+  if (!transaction.isScopeActive(recipe.scope))
+    transaction.reject({ code: "disabled", actionId: recipe.id, reasonKey: "scope-inactive" });
   const numbers = transaction.numbers;
   if (!Number.isSafeInteger(request.count) || request.count < 1) {
     transaction.reject({ code: "invalid-count", requested: request.count });

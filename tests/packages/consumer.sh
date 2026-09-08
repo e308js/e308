@@ -25,9 +25,18 @@ npm install --save-exact --ignore-scripts --no-audit --offline --cache "$consume
   "$consumer_dir/semver-7.8.5.tgz" >/dev/null
 
 node --input-type=module -e '
-  import { defineGame } from "@e308/core";
-  const game = defineGame({ id: "consumer", simulationVersion: 1, stepMs: 50 });
-  if (game.id !== "consumer" || !Object.isFrozen(game)) process.exit(1);
+  import { createGame, createGameKit, nativeNumbers, upgradeCommand } from "@e308/core";
+  const kit = createGameKit({ numbers: nativeNumbers });
+  const run = kit.scope("run");
+  const points = kit.resource("points", { scope: run, initial: 1 });
+  const upgrade = kit.upgrade("first", {
+    scope: run, costs: [[points, 1]], prerequisiteIds: [], unlocked: () => true
+  });
+  const definition = kit.defineGame({
+    id: "consumer", simulationVersion: 1, stepMs: 50, resources: [points], upgrades: [upgrade]
+  });
+  const game = createGame(definition);
+  if (!game.dispatch(upgradeCommand(upgrade)).ok || !game.getSnapshot().progression.upgrades.first) process.exit(1);
 '
 node --input-type=module -e '
   import { readFile } from "node:fs/promises";

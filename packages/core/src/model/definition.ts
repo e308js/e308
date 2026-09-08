@@ -1,8 +1,15 @@
+import type { AutomationDefinition } from "../automation/scheduler.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import type { RecipeDefinition } from "../economy/recipes.js";
 import type { FlowDefinition } from "../economy/types.js";
 import type { NumericAdapter } from "../numbers/types.js";
+import type { ScopeActivationDefinition } from "../progression/activation.js";
+import type { ChallengeDefinition } from "../progression/challenges.js";
+import type { ProgressionContext } from "../progression/context.js";
+import type { TriggerDefinition, UpgradeDefinition } from "../progression/features.js";
+import type { PrestigeDefinition } from "../progression/resets.js";
+import type { SteppedRuleDefinition } from "../simulation/rules.js";
 
 declare const gameIdBrand: unique symbol;
 
@@ -21,6 +28,14 @@ export interface GameDefinition<N = never> {
   readonly buyables?: readonly BuyableDefinition<N>[];
   readonly recipes?: readonly RecipeDefinition<N>[];
   readonly allocations?: readonly AllocationDefinition<N>[];
+  readonly prestiges?: readonly PrestigeDefinition<N>[];
+  readonly upgrades?: readonly UpgradeDefinition<N>[];
+  readonly triggers?: readonly TriggerDefinition<N>[];
+  readonly challenges?: readonly ChallengeDefinition<N>[];
+  readonly automation?: readonly AutomationDefinition<N>[];
+  readonly scopeActivations?: readonly ScopeActivationDefinition<N>[];
+  readonly win?: (state: ProgressionContext<N>) => boolean;
+  readonly steppedRules?: readonly SteppedRuleDefinition<N>[];
 }
 
 export interface GameDefinitionInput {
@@ -35,6 +50,14 @@ export interface GameContentInput<N> extends GameDefinitionInput {
   readonly buyables?: readonly BuyableDefinition<N>[];
   readonly recipes?: readonly RecipeDefinition<N>[];
   readonly allocations?: readonly AllocationDefinition<N>[];
+  readonly prestiges?: readonly PrestigeDefinition<N>[];
+  readonly upgrades?: readonly UpgradeDefinition<N>[];
+  readonly triggers?: readonly TriggerDefinition<N>[];
+  readonly challenges?: readonly ChallengeDefinition<N>[];
+  readonly automation?: readonly AutomationDefinition<N>[];
+  readonly scopeActivations?: readonly ScopeActivationDefinition<N>[];
+  readonly win?: (state: ProgressionContext<N>) => boolean;
+  readonly steppedRules?: readonly SteppedRuleDefinition<N>[];
 }
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/;
@@ -83,15 +106,32 @@ export function defineOwnedGame<N>(
   }
   validateOwnedIds(input.recipes ?? [], owner, "Recipe");
   validateOwnedIds(input.allocations ?? [], owner, "Allocation");
+  validateOwnedIds(input.prestiges ?? [], owner, "Prestige");
+  validateOwnedIds(input.upgrades ?? [], owner, "Upgrade");
+  validateOwnedIds(input.triggers ?? [], owner, "Trigger");
+  validateOwnedIds(input.challenges ?? [], owner, "Challenge");
+  validateOwnedIds(input.automation ?? [], owner, "Automation");
+  validateOwnedIds(input.scopeActivations ?? [], owner, "Scope activation");
+  validateOwnedIds(input.steppedRules ?? [], owner, "Stepped rule");
   return owned(
     {
-      ...base,
+      id: base.id,
+      simulationVersion: base.simulationVersion,
+      stepMs: base.stepMs,
       numbers: input.numbers,
       resources: Object.freeze([...input.resources]),
       flows: Object.freeze([...(input.flows ?? [])]),
       buyables: Object.freeze([...(input.buyables ?? [])]),
       recipes: Object.freeze([...(input.recipes ?? [])]),
       allocations: Object.freeze([...(input.allocations ?? [])]),
+      prestiges: Object.freeze([...(input.prestiges ?? [])]),
+      upgrades: Object.freeze([...(input.upgrades ?? [])]),
+      triggers: Object.freeze([...(input.triggers ?? [])]),
+      challenges: Object.freeze([...(input.challenges ?? [])]),
+      automation: Object.freeze([...(input.automation ?? [])]),
+      scopeActivations: Object.freeze([...(input.scopeActivations ?? [])]),
+      ...(input.win === undefined ? {} : { win: input.win }),
+      steppedRules: Object.freeze([...(input.steppedRules ?? [])]),
     },
     owner,
   );

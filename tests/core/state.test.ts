@@ -103,6 +103,12 @@ describe("transactional game state", () => {
     expect(
       game.dispatch({ id: "bad-allocation", execute: (tx) => tx.setAllocation("missing", "x", 1) }),
     ).toEqual({ ok: false, error: { code: "invalid-target", id: "missing:x" } });
+    expect(
+      game.dispatch({
+        id: "nonfinite-allocation",
+        execute: (tx) => tx.setAllocation("missing", "x", Number.NaN),
+      }),
+    ).toMatchObject({ ok: false, error: { code: "numeric-fault" } });
   });
 
   it("advances in fixed steps in one committed publication", () => {

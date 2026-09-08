@@ -1,0 +1,57 @@
+{
+  "name": "Antimatter Dimensions bounded parity laboratory",
+  "repository": "https://github.com/IvarK/AntimatterDimensionsSourceCode",
+  "commit": "5409e320cecef96a917cca1dfb68f1f183e499ca",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2017 IvarK",
+  "cases": {
+    "AD01": "Eight tiers, descending update order, tickspeed, and a purchase during a trace",
+    "AD02": "Single/until-ten/max purchases, grouped prices, multiplier, and unlock boundaries",
+    "AD03": "Dimension Boost and Antimatter Galaxy requirements and reset projections",
+    "AD04": "First Infinity, timeMult/18Mult prerequisite, retention, and effects",
+    "AD05": "NC2/NC3/NC10 rules and dimension/reset autobuyer schedules",
+    "AD06": "Controlled explicit tick schedule and non-native numeric quantities; persistence follows in S04"
+  },
+  "files": [
+    {
+      "path": "src/core/dimensions/antimatter-dimension.js",
+      "sha256": "2a8ebeb010002088c36c636cc6f47dd03420abd418e22801596d9f49ddd7b6e0"
+    },
+    {
+      "path": "src/core/dimensions/dimension.js",
+      "sha256": "0440ae264dccd157bc43a9ea59e66d09c465f305ce6dbccf2154eddaf72106a4"
+    },
+    {
+      "path": "src/core/dimboost.js",
+      "sha256": "c9b8730dc693fce8a6544787756c5f5646736193d6c1f60f7c46ac997b065c6f"
+    },
+    {
+      "path": "src/core/galaxy.js",
+      "sha256": "90f892afe8ae1a1293eb3c2c915a089e92e2c466d895baaefad1745c4c729192"
+    },
+    {
+      "path": "src/core/normal-challenges.js",
+      "sha256": "34479c1431541ce00987959d0545279e53fbc22b201c86d424b74683e548e916"
+    },
+    {
+      "path": "src/core/secret-formula/challenges/normal-challenges.js",
+      "sha256": "4c793a690477464f0cd900be6fa60b7d3e35f94a0398eedcfa4431624059394d"
+    },
+    {
+      "path": "src/core/autobuyers/antimatter-dimension-autobuyer.js",
+      "sha256": "fef5144afd42066ceab0a495d7b06decbfbdfdb9dfd001d58d142c33df4c5511"
+    },
+    {
+      "path": "src/core/autobuyers/dimboost-autobuyer.js",
+      "sha256": "8c083b09a06fd54f01c3cb918e6212ddceac1d0783bac123a56a1728d580bbfd"
+    },
+    {
+      "path": "src/core/secret-formula/infinity/infinity-upgrades.js",
+      "sha256": "7557c7596d886ed54745ca4451f24d800e0e340b47c5d335803477815cda744f"
+    },
+    {
+      "path": "src/core/player.js",
+      "sha256": "c78b39c3ff65b677abd6518562638e4632aad8c4aa05bfd4956aa0dcedfaf113"
+    }
+  ]
+}

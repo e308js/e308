@@ -34,6 +34,7 @@ function executeBuy<N>(
   buyable: BuyableDefinition<N>,
   request: BuyRequest<N>,
 ): void {
+  assertActive(transaction, buyable);
   const numbers = transaction.numbers;
   const zero = numbers.fromNumber(0);
   const current = transaction.getPurchase(buyable.id);
@@ -74,6 +75,7 @@ function executeSell<N>(
   buyable: BuyableDefinition<N>,
   requested: N | undefined,
 ): void {
+  assertActive(transaction, buyable);
   const numbers = transaction.numbers;
   const owned = transaction.getPurchase(buyable.id);
   const count = requested ?? owned;
@@ -85,6 +87,11 @@ function executeSell<N>(
   const refund = numbers.mul(paid, buyable.refundRate);
   transaction.setPurchase(buyable.id, remaining);
   transaction.add(buyable.currency, refund);
+}
+
+function assertActive<N>(transaction: Transaction<N>, buyable: BuyableDefinition<N>): void {
+  if (!transaction.isScopeActive(buyable.scope))
+    transaction.reject({ code: "disabled", actionId: buyable.id, reasonKey: "scope-inactive" });
 }
 
 function isPositiveWhole<N>(value: N, numbers: Transaction<N>["numbers"]): boolean {

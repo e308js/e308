@@ -48,6 +48,8 @@ function assign<N>(
   targetId: string,
   amount: N,
 ): void {
+  if (!transaction.isScopeActive(allocation.scope))
+    transaction.reject({ code: "disabled", actionId: allocation.id, reasonKey: "scope-inactive" });
   const numbers = transaction.numbers;
   const zero = numbers.fromNumber(0);
   if (!allocation.targets.includes(targetId)) {

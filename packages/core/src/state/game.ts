@@ -1,3 +1,4 @@
+import { type AutomationDefinition, runAutomation } from "../automation/scheduler.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import { validateAllocations } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
@@ -6,8 +7,12 @@ import type { FlowDefinition } from "../economy/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import { definitionOwner } from "../model/definition.js";
 import type { Resource } from "../model/handles.js";
+import type { ScopeActivationDefinition } from "../progression/activation.js";
+import { resolveTriggers, resolveWin, type TriggerDefinition } from "../progression/features.js";
 import { planAdvance } from "../simulation/clock.js";
-import { failureFrom, makeTransaction } from "./transaction.js";
+import { runSteppedRules, type SteppedRuleDefinition } from "../simulation/rules.js";
+import { cloneProgression, freezeProgression, initialProgression } from "./progression-state.js";
+import { failureFrom, makeTransaction, setTransactionTime } from "./transaction.js";
 import type {
   Command,
   CommandFailure,
@@ -31,6 +36,10 @@ type CompleteDefinition<N> = GameDefinition<N> & {
   readonly flows: readonly FlowDefinition<N>[];
   readonly buyables: readonly BuyableDefinition<N>[];
   readonly allocations: readonly AllocationDefinition<N>[];
+  readonly triggers: readonly TriggerDefinition<N>[];
+  readonly automation: readonly AutomationDefinition<N>[];
+  readonly scopeActivations: readonly ScopeActivationDefinition<N>[];
+  readonly steppedRules: readonly SteppedRuleDefinition<N>[];
 };
 
 export function createGame<N>(definition: GameDefinition<N>): Game<N> {
@@ -67,6 +76,8 @@ class GameRuntime<N> implements Game<N> {
           this.#definition.numbers.fromNumber(0),
         ]),
       ),
+      {},
+      initialProgression(),
     );
   }
 
@@ -87,6 +98,12 @@ class GameRuntime<N> implements Game<N> {
           current: this.#snapshot.revision,
         },
       };
+    }
+    for (const [scopeId, expected] of Object.entries(command.expectedScopeGenerations ?? {})) {
+      const current = this.#snapshot.scopeGenerations[scopeId] ?? 0n;
+      if (expected !== current) {
+        return { ok: false, error: { code: "stale-revision", expected, current } };
+      }
     }
     const result = this.transact(command.execute);
     return result.ok
@@ -113,8 +130,15 @@ class GameRuntime<N> implements Game<N> {
       (transaction) => {
         for (let index = 0; index < plan.steps; index += 1) {
           const seconds = this.#definition.stepMs / 1000;
+          const boundaryMs = this.#snapshot.gameTimeMs + (index + 1) * this.#definition.stepMs;
+          setTransactionTime(transaction, boundaryMs);
           runFlows(transaction, this.#definition.flows, this.#definition.numbers, seconds);
+          runSteppedRules(transaction, this.#definition.steppedRules, seconds);
           step?.(transaction, seconds);
+          resolveTriggers(transaction, this.#definition.triggers);
+          runAutomation(transaction, this.#definition.automation, boundaryMs);
+          resolveTriggers(transaction, this.#definition.triggers);
+          resolveWin(transaction, this.#definition.win);
         }
       },
       plan.gameTimeMs,
@@ -151,6 +175,8 @@ class GameRuntime<N> implements Game<N> {
       ]),
     );
     const productionTotals = { ...this.#snapshot.productionTotals };
+    const scopeGenerations = { ...this.#snapshot.scopeGenerations };
+    const progression = cloneProgression(this.#snapshot.progression);
     try {
       const transaction = makeTransaction(
         this.#owner,
@@ -158,14 +184,29 @@ class GameRuntime<N> implements Game<N> {
         purchaseCounts,
         allocations,
         productionTotals,
+        scopeGenerations,
+        this.#definition,
+        progression,
+        this.#snapshot.gameTimeMs,
         this.#definition.numbers,
       );
       execute(transaction);
       validateAllocations(transaction, this.#definition.allocations);
+      resolveTriggers(transaction, this.#definition.triggers);
+      resolveWin(transaction, this.#definition.win);
     } catch (error) {
       return { ok: false, error: failureFrom(error) };
     }
-    this.commit(working, gameTimeMs, remainderMs, purchaseCounts, allocations, productionTotals);
+    this.commit(
+      working,
+      gameTimeMs,
+      remainderMs,
+      purchaseCounts,
+      allocations,
+      productionTotals,
+      scopeGenerations,
+      progression,
+    );
     return { ok: true, value: this.#snapshot };
   }
 
@@ -176,6 +217,8 @@ class GameRuntime<N> implements Game<N> {
     purchaseCounts: Readonly<Record<string, N>> = this.#snapshot.purchaseCounts,
     allocations: Readonly<Record<string, Readonly<Record<string, N>>>> = this.#snapshot.allocations,
     productionTotals: Readonly<Record<string, N>> = this.#snapshot.productionTotals,
+    scopeGenerations: Readonly<Record<string, bigint>> = this.#snapshot.scopeGenerations,
+    progression = cloneProgression(this.#snapshot.progression),
   ): void {
     this.#snapshot = makeSnapshot(
       this.#snapshot.revision + 1n,
@@ -185,6 +228,8 @@ class GameRuntime<N> implements Game<N> {
       purchaseCounts,
       allocations,
       productionTotals,
+      scopeGenerations,
+      progression,
     );
     publish(this.#subscribers, this.#snapshot);
   }
@@ -198,6 +243,8 @@ function makeSnapshot<N>(
   purchaseCounts: Readonly<Record<string, N>>,
   allocations: Readonly<Record<string, Readonly<Record<string, N>>>>,
   productionTotals: Readonly<Record<string, N>>,
+  scopeGenerations: Readonly<Record<string, bigint>>,
+  progression: ReturnType<typeof initialProgression<N>>,
 ): Snapshot<N> {
   const frozenAllocations = Object.fromEntries(
     Object.entries(allocations).map(([id, assignments]) => [id, Object.freeze(assignments)]),
@@ -210,6 +257,8 @@ function makeSnapshot<N>(
     purchaseCounts: Object.freeze(purchaseCounts),
     allocations: Object.freeze(frozenAllocations),
     productionTotals: Object.freeze(productionTotals),
+    scopeGenerations: Object.freeze(scopeGenerations),
+    progression: freezeProgression(progression),
   });
 }
 

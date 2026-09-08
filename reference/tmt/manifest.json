@@ -1,0 +1,18 @@
+{
+  "name": "The Modding Tree bounded prestige parity fixture",
+  "repository": "https://github.com/Acamaeda/The-Modding-Tree",
+  "commit": "4d8a86cfb3c59ef3ef4c222f21ef4fbee980c621",
+  "license": "MIT",
+  "copyright": "Modding Tree Copyright (c) 2020 Acamaeda",
+  "files": [
+    {
+      "path": "js/game.js",
+      "sha256": "4c7ff89cea911953a580a49c0d5e23ff17a7e44b80559b70ac2742556055c891"
+    },
+    {
+      "path": "docs/layer-features.md",
+      "sha256": "ea49c626e5ce00184c22ee6ccf8e1b086fad8bb5a2206e9a31c7810a9a86287d"
+    }
+  ],
+  "cases": ["T04.normal-prestige", "T05.static-prestige"]
+}

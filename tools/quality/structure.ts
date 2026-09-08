@@ -2,7 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { extname, join, relative } from "node:path";
 import ts from "typescript";
 
-const ROOTS = ["packages", "tools", "examples"];
+const ROOTS = ["packages", "tools", "examples", "reference"];
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".css"]);
 const SKIPPED_DIRECTORIES = new Set(["dist", "node_modules", "coverage"]);
 

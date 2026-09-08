@@ -3,6 +3,7 @@ import {
   eternityNumbers,
   type NumericAdapter,
   nativeNumbers,
+  normalPrestige,
   type Resource,
 } from "@e308/core";
 import type { ActionView } from "@e308/ux";
@@ -12,7 +13,37 @@ const run = kit.scope("run");
 const value = kit.resource("value", { scope: run, initial: kit.q("1") });
 const numberResource: Resource<number> = value;
 const adapter: NumericAdapter<number> = kit.numbers;
-kit.defineGame({ id: "types", simulationVersion: 1, stepMs: 50, resources: [numberResource] });
+const rank = kit.resource("rank", { scope: run, initial: 0 });
+const formula = normalPrestige(nativeNumbers, {
+  baseResource: value,
+  requirement: 10,
+  exponent: 0.5,
+});
+const prestige = kit.prestige("rank-up", {
+  scope: run,
+  reward: rank,
+  manifest: { clear: [run], retain: { resources: [rank] } },
+  ...formula,
+});
+const unlock = kit.upgrade("unlock", {
+  scope: run,
+  costs: [[value, 1]],
+  prerequisiteIds: [],
+  unlocked: () => true,
+});
+const active = kit.scopeActivation("run-active", {
+  scope: run,
+  active: (state) => state.hasUpgrade(unlock.id),
+});
+kit.defineGame({
+  id: "types",
+  simulationVersion: 1,
+  stepMs: 50,
+  resources: [numberResource, rank],
+  prestiges: [prestige],
+  upgrades: [unlock],
+  scopeActivations: [active],
+});
 
 const hugeKit = createGameKit({ numbers: eternityNumbers });
 const huge = hugeKit.resource("huge", {

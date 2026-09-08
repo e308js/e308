@@ -1,6 +1,6 @@
 # Capability slices and acceptance evidence
 
-Status: **implementation active**. S00 and S01 are accepted and S02 is in progress; exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These are AI-sized capability integrations, not small human-review-sized commits.
+Status: **implementation active**. S00 through S02 are accepted and S03 is in progress; exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These are AI-sized capability integrations, not small human-review-sized commits.
 
 The file paths below are proposed module areas, not prescribed individual files. Modules must obey size/dependency rules and keep semantic ownership clear. Each slice includes appropriate public type declarations, implementation, tests and authoring documentation. Follow-up corrective commits are allowed; the final pushed SHA is the acceptance subject.
 
@@ -140,7 +140,7 @@ The file paths below are proposed module areas, not prescribed individual files.
 
 ## S11 — Release candidate and parity closure
 
-**Deliver:** Reconcile every TMT source leaf, required reference case and D1–D8/D1R requirement to actual evidence; resolve missing features rather than mark them N/A. Finish public API/reference docs, migration guides, examples and package archives. Independently review test-source mapping and game distinctness/usability.
+**Deliver:** Reconcile every TMT source leaf, required reference case and D1–D8/D1R requirement to actual evidence; resolve missing features rather than mark them N/A. Replace the planning-era root README with ordinary developer documentation covering installation, a runnable first game, core concepts, package/API maps, renderer integration, testing and compatibility. Finish public API/reference docs, migration guides, examples and package archives. Independently review test-source mapping and game distinctness/usability.
 
 **Tests:** Clean checkout and immutable installation; entire type/lint/structure/coverage/package/browser/reference/property/scenario suite; complete workload matrix on release SHA; no unknown/missing/skipped required evidence. Validate emitted public types and exports from the actual archive, not workspace aliases.
 
