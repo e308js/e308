@@ -1,6 +1,6 @@
 # Capability slices and acceptance evidence
 
-Status: **implementation active**. S00 through S03 are accepted and S04 is in progress; exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These are AI-sized capability integrations, not small human-review-sized commits.
+Status: **implementation active**. S00 through S04 are accepted and S05 is next; exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These are AI-sized capability integrations, not small human-review-sized commits.
 
 The file paths below are proposed module areas, not prescribed individual files. Modules must obey size/dependency rules and keep semantic ownership clear. Each slice includes appropriate public type declarations, implementation, tests and authoring documentation. Follow-up corrective commits are allowed; the final pushed SHA is the acceptance subject.
 

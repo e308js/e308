@@ -1,7 +1,8 @@
 # S04 evidence: durable saves and recoverable offline progress
 
 S04 adds a concrete, versioned save envelope and a recoverable catch-up protocol to the headless
-core. Exact accepted SHAs and GitHub Actions runs are recorded in [status.md](status.md).
+core. Implementation commit `4c2a9e7b39660236fba1c5768b5151b73bec6434` passed
+[GitHub Actions run 34291320021](https://github.com/e308js/e308/actions/runs/34291320021).
 
 ## Delivered contracts
 
@@ -33,6 +34,5 @@ commit boundary, deterministic RNG rollback, public subpath types, package archi
 AD06 save/offline schedules with automation enabled and disabled. Browser storage ownership, hidden
 tabs, and worker cancellation remain assigned to S07.
 
-Coverage remains above the repository's aggregate and per-file 80% gates for statements, branches,
-functions, and lines. The exact implementation and evidence-head totals are recorded with their CI
-runs after acceptance.
+The implementation-head suite passed 158 tests with 95.87% statements, 88.8% branches, 100%
+functions, and 97.35% lines. Every production file passed the 80% thresholds for all four metrics.
