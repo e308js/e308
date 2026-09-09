@@ -8,34 +8,141 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  static:
+    name: Static, packages, and release
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.21.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24.14.1
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm quality
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm check:structure
+      - run: pnpm build
+      - run: pnpm build:release
+      - run: pnpm build:site
+      - run: pnpm test:packages
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: quality-${{ github.sha }}
+          name: release-${{ github.sha }}
           path: |
-            coverage/
-            artifacts/pacing/
-            artifacts/performance/
-            artifacts/finished-games/
             artifacts/packages/
             packages/*/dist/
             games/*/dist/
             examples/finished-games/dist/
             site-dist/
+
+  coverage:
+    name: Unit, reference, and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm test:coverage
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-${{ github.sha }}
+          path: coverage/
+
+  browser:
+    name: Browser behavior
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm build:site
+      - run: pnpm test:browser
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: browser-${{ github.sha }}
+          path: |
             playwright-report/
             test-results/
+
+  pacing:
+    name: Pacing and finished-game reports
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: pnpm report:pacing
+      - run: pnpm report:finished-games
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pacing-${{ github.sha }}
+          path: |
+            artifacts/pacing/
+            artifacts/finished-games/
+
+  performance:
+    name: Performance workloads
+    needs: pacing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: pacing-${{ github.sha }}
+          path: artifacts/
+      - run: pnpm build
+      - run: pnpm report:performance
+      - run: pnpm verify:performance
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: performance-${{ github.sha }}
+          path: artifacts/performance/
+
+  quality:
+    name: quality
+    if: always()
+    needs: [static, coverage, browser, pacing, performance]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-${{ github.sha }}
+          path: .
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-${{ github.sha }}
+          path: coverage/
+      - uses: actions/download-artifact@v8
+        with:
+          name: browser-${{ github.sha }}
+          path: .
+      - uses: actions/download-artifact@v8
+        with:
+          name: pacing-${{ github.sha }}
+          path: artifacts/
+      - uses: actions/download-artifact@v8
+        with:
+          name: performance-${{ github.sha }}
+          path: artifacts/performance/
+      - run: node tools/release/verify.mjs
+      - name: Require every quality lane
+        env:
+          STATIC_RESULT: ${{ needs.static.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          PACING_RESULT: ${{ needs.pacing.result }}
+          PERFORMANCE_RESULT: ${{ needs.performance.result }}
+        run: |
+          test "$STATIC_RESULT" = success
+          test "$COVERAGE_RESULT" = success
+          test "$BROWSER_RESULT" = success
+          test "$PACING_RESULT" = success
+          test "$PERFORMANCE_RESULT" = success
