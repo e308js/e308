@@ -32,6 +32,7 @@ jobs:
             artifacts/pacing/
             artifacts/performance/
             artifacts/finished-games/
+            artifacts/packages/
             packages/*/dist/
             games/*/dist/
             examples/finished-games/dist/
