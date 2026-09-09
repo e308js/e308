@@ -1,12 +1,9 @@
-import { createSaveCodec } from "@e308/core";
 import { randomLegalPolicy, rankedPolicy, runHarness } from "@e308/core/testing";
 import {
   createWireworks,
   importWireworks,
-  wireworksDefinition,
   wireworksProjects,
   wireworksResources,
-  wireworksSaveCodec,
   wireworksScenario,
   wireworksTerminalView,
   wireworksView,
@@ -138,30 +135,6 @@ describe("finished Wireworks", () => {
     expect(terminal.title).toBe("Wireworks terminal");
     expect(JSON.stringify(panel)).toContain("Market");
     expect(JSON.stringify(terminal)).toContain("terminal-stocks");
-  });
-
-  it("migrates version-one saves into the production network", () => {
-    const legacy = createSaveCodec(
-      { ...wireworksDefinition, simulationVersion: 1 },
-      {
-        stateSchemaVersion: 1,
-        contentVersion: "1.0.0",
-        contentDigest: "wireworks-1.0.0-2026-09-09",
-      },
-    );
-    const raw = legacy.encode(createWireworks().getSnapshot(), {
-      wallAnchorMs: 1_000,
-      entitlement: {
-        policyVersion: "wireworks-offline-1",
-        enabled: true,
-        capMs: 8 * 60 * 60_000,
-        excess: "bank",
-      },
-      catchup: null,
-    });
-    const loaded = wireworksSaveCodec.decode(raw);
-    expect(loaded.migrationLedger).toEqual(["wireworks-content-1-to-2"]);
-    expect(loaded.snapshot.resources.matter).toBe(240);
   });
 
   it("rejects oversubscribed power without changing allocation", () => {

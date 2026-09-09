@@ -11,8 +11,6 @@ import {
   quoteMarket,
   recipeCommand,
   type Snapshot,
-  simulationTransition,
-  updateEnvelopeVersion,
   upgradeCommand,
 } from "@e308/core";
 import { GameViewSource } from "@e308/ux";
@@ -51,17 +49,7 @@ const saveConfiguration = {
   contentDigest: "wireworks-1.1.0-production-network-2026-09-09",
 } as const;
 
-export const wireworksSaveCodec = createSaveCodec(wireworksDefinition, saveConfiguration, {
-  migrations: [
-    {
-      id: "wireworks-content-1-to-2",
-      fromVersion: 1,
-      toVersion: 2,
-      migrate: (source) => updateEnvelopeVersion(source, saveConfiguration),
-    },
-  ],
-  pendingTransitions: [simulationTransition("wireworks-simulation-1-to-2", 1, 2)],
-});
+export const wireworksSaveCodec = createSaveCodec(wireworksDefinition, saveConfiguration);
 
 export function createWireworks(snapshot?: Snapshot<number>): WireworksGame {
   return new WireworksGame(createGame(wireworksDefinition, snapshot ? { snapshot } : {}));

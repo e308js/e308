@@ -1,11 +1,8 @@
-import { createSaveCodec } from "@e308/core";
 import { rankedPolicy, runHarness } from "@e308/core/testing";
 import {
   createHearth,
-  hearthDefinition,
   hearthResearch,
   hearthResources,
-  hearthSaveCodec,
   hearthScenario,
   hearthTasks,
   importHearth,
@@ -89,30 +86,6 @@ describe("finished Hearth", () => {
     const restored = importHearth(wrapper.exportSave(3_000_000));
     expect(restored.getSnapshot()).toEqual(played);
     expect(restored.getSnapshot().calendars.seasons?.cycle).toBeGreaterThanOrEqual(1n);
-  });
-
-  it("migrates version-one settlement saves into the revised economy", () => {
-    const legacy = createSaveCodec(
-      { ...hearthDefinition, simulationVersion: 1 },
-      {
-        stateSchemaVersion: 1,
-        contentVersion: "1.0.0",
-        contentDigest: "hearth-1.0.0-2026-09-09",
-      },
-    );
-    const raw = legacy.encode(createHearth().getSnapshot(), {
-      wallAnchorMs: 1_000,
-      entitlement: {
-        policyVersion: "hearth-offline-1",
-        enabled: true,
-        capMs: 8 * 60 * 60_000,
-        excess: "discard",
-      },
-      catchup: null,
-    });
-    const loaded = hearthSaveCodec.decode(raw);
-    expect(loaded.migrationLedger).toEqual(["hearth-content-1-to-2"]);
-    expect(loaded.snapshot.resources.workers).toBe(4);
   });
 
   it("keeps failed research and task commands atomic", () => {

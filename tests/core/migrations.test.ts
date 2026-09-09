@@ -7,6 +7,8 @@ import {
   nativeNumbers,
   processCatchupChunk,
   type SaveEnvelope,
+  simulationTransition,
+  updateEnvelopeVersion,
 } from "../../packages/core/src/index.js";
 import { envelopeChecksum } from "../../packages/core/src/persistence/checksum.js";
 
@@ -31,6 +33,35 @@ const entitlement = {
 };
 
 describe("save and pending-session migrations", () => {
+  it("composes the standard envelope and simulation version transitions", () => {
+    const old = versioned(1);
+    const oldCodec = createSaveCodec(old.definition, {
+      stateSchemaVersion: 1,
+      contentVersion: "1",
+      contentDigest: "old",
+    });
+    const base = oldCodec.decode(
+      oldCodec.encode(old.game.getSnapshot(), { wallAnchorMs: 0, entitlement, catchup: null }),
+    );
+    const pending = beginCatchup(old.definition, base, 1_000, "standard-transition");
+    const raw = oldCodec.encode(pending.snapshot, pending);
+    const next = versioned(2);
+    const target = { stateSchemaVersion: 2, contentVersion: "2", contentDigest: "new" };
+    const codec = createSaveCodec(next.definition, target, {
+      migrations: [
+        {
+          id: "content-1-to-2",
+          fromVersion: 1,
+          toVersion: 2,
+          migrate: (source) => updateEnvelopeVersion(source, target),
+        },
+      ],
+      pendingTransitions: [simulationTransition("simulation-1-to-2", 1, 2)],
+    });
+
+    expect(codec.decode(raw).migrationLedger).toEqual(["content-1-to-2", "simulation-1-to-2"]);
+  });
+
   it("requires an explicit pending-session rules transition", () => {
     const old = versioned(1);
     const oldCodec = createSaveCodec(old.definition, {

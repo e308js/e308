@@ -174,24 +174,27 @@ async function hostFor<N>(
   codec: SaveCodec<N>,
 ): Promise<BrowserHost<N>> {
   const initial = createGame(definition).getSnapshot();
+  const store = new IndexedDbSaveStore({ databaseName: `e308-finished-${id}-${instanceId}` });
+  const initialSave = {
+    snapshot: initial,
+    metadata: {
+      wallAnchorMs: Date.now(),
+      entitlement: {
+        policyVersion: `${id}-browser-1`,
+        enabled: true,
+        capMs: id === "wireworks" ? 8 * 60 * 60_000 : null,
+        excess: "bank" as const,
+      },
+      catchup: null,
+    },
+  };
+  await replaceInvalidExampleSave(store, codec, initialSave);
   const host = await openBrowserHost({
     definition,
     codec,
-    store: new IndexedDbSaveStore({ databaseName: `e308-finished-${id}-${instanceId}` }),
+    store,
     slot: "main",
-    initial: {
-      snapshot: initial,
-      metadata: {
-        wallAnchorMs: Date.now(),
-        entitlement: {
-          policyVersion: `${id}-browser-1`,
-          enabled: true,
-          capMs: id === "wireworks" ? 8 * 60 * 60_000 : null,
-          excess: "bank",
-        },
-        catchup: null,
-      },
-    },
+    initial: initialSave,
     clock: browserClock,
     scheduler: browserScheduler,
     ownership: new WebLockOwnership({ lockName: `e308-finished-${id}-${instanceId}-owner` }),
@@ -201,6 +204,32 @@ async function hostFor<N>(
   });
   bindBrowserLifecycle(host);
   return host;
+}
+
+async function replaceInvalidExampleSave<N>(
+  store: IndexedDbSaveStore,
+  codec: SaveCodec<N>,
+  initial: {
+    readonly snapshot: Snapshot<N>;
+    readonly metadata: Parameters<SaveCodec<N>["encode"]>[1];
+  },
+): Promise<void> {
+  for (;;) {
+    const stored = await store.read("main");
+    if (!stored) return;
+    try {
+      codec.decode(stored.value);
+      return;
+    } catch {
+      const fresh = codec.encode(initial.snapshot, {
+        ...initial.metadata,
+        wallAnchorMs: Date.now(),
+        catchup: null,
+      });
+      const written = await store.compareAndSwap("main", stored.revision, fresh);
+      if (written.ok) return;
+    }
+  }
 }
 
 function show(value: Session): void {

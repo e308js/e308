@@ -8,8 +8,6 @@ import {
   queueTaskCommand,
   recipeCommand,
   type Snapshot,
-  simulationTransition,
-  updateEnvelopeVersion,
   upgradeCommand,
 } from "@e308/core";
 import { GameViewSource } from "@e308/ux";
@@ -36,17 +34,7 @@ const hearthSaveConfiguration = {
   contentDigest: "hearth-1.1.0-settlement-loop-2026-09-09",
 } as const;
 
-export const hearthSaveCodec = createSaveCodec(hearthDefinition, hearthSaveConfiguration, {
-  migrations: [
-    {
-      id: "hearth-content-1-to-2",
-      fromVersion: 1,
-      toVersion: 2,
-      migrate: (source) => updateEnvelopeVersion(source, hearthSaveConfiguration),
-    },
-  ],
-  pendingTransitions: [simulationTransition("hearth-simulation-1-to-2", 1, 2)],
-});
+export const hearthSaveCodec = createSaveCodec(hearthDefinition, hearthSaveConfiguration);
 
 export function createHearth(snapshot?: Snapshot<number>): HearthGame {
   return new HearthGame(createGame(hearthDefinition, snapshot ? { snapshot } : {}));
