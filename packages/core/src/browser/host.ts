@@ -1,8 +1,9 @@
 import type { LoadedCheckpoint, SaveMetadata } from "../persistence/types.js";
 import { createGame } from "../state/game.js";
-import type { Command, CommandFailure, CommandReceipt, Game, Result } from "../state/types.js";
+import type { CommandFailure, CommandReceipt, Game, Result } from "../state/types.js";
 import { reconcileCheckpoint } from "./reconcile.js";
 import type {
+  BrowserCommand,
   BrowserHost,
   BrowserHostEvent,
   BrowserHostOptions,
@@ -71,13 +72,16 @@ class BrowserHostRuntime<N> implements BrowserHost<N> {
     this.startTimers();
   }
 
-  dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure<N>> {
-    if (this.ownership !== "primary")
+  dispatch(source: BrowserCommand<N>): Result<CommandReceipt, CommandFailure<N>> {
+    if (this.ownership !== "primary") {
+      const command = resolveCommand(source, this.#game);
       return {
         ok: false,
         error: { code: "disabled", actionId: command.id, reasonKey: "secondary" },
       };
+    }
     this.advanceActiveTime();
+    const command = resolveCommand(source, this.#game);
     return this.#game.dispatch(command);
   }
 
@@ -295,6 +299,10 @@ class BrowserHostRuntime<N> implements BrowserHost<N> {
   private emit(event: BrowserHostEvent): void {
     for (const listener of this.#listeners) listener(event);
   }
+}
+
+function resolveCommand<N>(source: BrowserCommand<N>, game: Game<N>) {
+  return typeof source === "function" ? source(game.getSnapshot()) : source;
 }
 
 function validateOptions<N>(options: BrowserHostOptions<N>): void {

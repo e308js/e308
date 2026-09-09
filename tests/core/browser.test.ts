@@ -128,6 +128,25 @@ describe("browser host", () => {
     await host.dispose();
   });
 
+  it("creates revision-bound commands after advancing active time", async () => {
+    const context = setup();
+    const host = await openBrowserHost(context.options);
+    context.clock.monotonic = 250;
+    let commandGameTime = -1;
+    const result = host.dispatch((snapshot) => {
+      commandGameTime = snapshot.gameTimeMs;
+      return {
+        id: "fresh-command",
+        expectedRevision: snapshot.revision,
+        execute: (transaction) => transaction.add(context.fixture.points, 1),
+      };
+    });
+    expect(result.ok).toBe(true);
+    expect(commandGameTime).toBe(200);
+    expect(host.game.getSnapshot().remainderMs).toBe(50);
+    await host.dispose();
+  });
+
   it("round-trips Wireworks, Cascade, and Hearth through the browser host", async () => {
     const kernels = [createWireworksKernel(), createCascadeKernel(), createHearthKernel()];
     for (const { definition, game } of kernels) {

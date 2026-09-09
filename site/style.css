@@ -239,6 +239,9 @@ pre {
   background: #0e1d22;
   border: 1px solid #46d1bd55;
 }
+.wireworks button[data-action] {
+  margin: 0.25rem 0.35rem 0.25rem 0;
+}
 .cascade {
   background: #151128;
   border: 1px solid #9d7cff66;

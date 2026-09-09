@@ -6,6 +6,7 @@ export { WebLockOwnership } from "./ownership.js";
 export { reconcileCheckpoint } from "./reconcile.js";
 export type {
   BrowserClock,
+  BrowserCommand,
   BrowserHost,
   BrowserHostEvent,
   BrowserHostOptions,

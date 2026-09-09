@@ -23,6 +23,7 @@ export const starterTheme = `
 .e308-mark[data-tone="danger"] { background: #8b2635; }
 .e308-progress { border: 1px solid currentColor; height: 1.5rem; overflow: hidden; position: relative; }
 .e308-progress-fill { background: var(--e308-accent); display: block; height: 100%; transform-origin: left; transform: scaleX(var(--e308-progress)); }
+.e308-progress-label { align-items: center; display: flex; inset: 0; justify-content: center; padding-inline: .5rem; position: absolute; text-shadow: 0 1px 2px var(--e308-bg); }
 .e308-progress[data-direction="left"] .e308-progress-fill { transform-origin: right; }
 .e308-progress[data-direction="up"], .e308-progress[data-direction="down"] { height: 8rem; width: 1.5rem; }
 .e308-progress[data-direction="up"] .e308-progress-fill { transform: scaleY(var(--e308-progress)); transform-origin: bottom; }

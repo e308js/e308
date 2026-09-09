@@ -1,5 +1,12 @@
 import { type EternityQuantity, eternityNumbers, type Snapshot } from "@e308/core";
-import type { ActionView, GridCellView, TreeNodeView, ViewDocument, ViewNode } from "@e308/ux";
+import {
+  type ActionView,
+  formatEncoded,
+  type GridCellView,
+  type TreeNodeView,
+  type ViewDocument,
+  type ViewNode,
+} from "@e308/ux";
 import {
   cascadeBuyables,
   cascadeKit,
@@ -11,6 +18,7 @@ import { cascadeChallenges } from "./progression.js";
 import type { CascadeIntent } from "./runtime.js";
 
 const q = cascadeKit.q;
+const display = (value: EternityQuantity) => formatEncoded(encoded(value));
 
 export function cascadeView(
   snapshot: Snapshot<EternityQuantity>,
@@ -124,7 +132,7 @@ function dimensionRow(
         content: [
           {
             kind: "text",
-            value: `${encoded(count)} bought · ×${encoded(multiplier)} production · next ×${encoded(nextMultiplier)} at ${nextThreshold}`,
+            value: `${display(count)} bought · ×${display(multiplier)} production · next ×${display(nextMultiplier)} at ${nextThreshold}`,
           },
         ],
       },
@@ -150,13 +158,18 @@ function purchaseNode(
   const enabled = eternityNumbers.cmp(currency, cost) >= 0;
   const tier = index + 1;
   const label =
-    count === 1 ? `Buy Tier ${tier} generator` : `Buy ${count} for ×${encoded(multiplier)}`;
+    count === 1 ? `Buy Tier ${tier} generator` : `Buy ${count} for ×${display(multiplier)}`;
+  const tooltip =
+    count === 1
+      ? `Buy one Tier ${tier} generator.`
+      : `Buy ${count} Tier ${tier} generators to reach the next group of ten and raise this tier's production multiplier to ×${display(multiplier)}.`;
   return {
     kind: "action",
     id: count === 1 ? `buy-${tier}` : `buy-group-${tier}`,
     action: {
       id: count === 1 ? `buy-${tier}` : `buy-group-${tier}`,
       label,
+      tooltip,
       enabled,
       intent: { type: "buy", tier, count },
       blockers: enabled
@@ -231,7 +244,7 @@ function challengeGrid(
         id: challenge.id,
         row: Math.floor(index / 3) + 1,
         column: (index % 3) + 1,
-        label: `${challenge.id.replaceAll("-", " ")} (${completions ? encoded(completions) : "0"})`,
+        label: `${challenge.id.replaceAll("-", " ")} (${completions ? display(completions) : "0"})`,
         action: simpleAction(
           active ? "Complete" : "Enter",
           active
@@ -251,12 +264,24 @@ function researchPanel(
 ): ViewNode<CascadeIntent, EternityQuantity>[] {
   const points = snapshot.resources["research-points"] as EternityQuantity;
   const maximum = Math.min(10, Number(encoded(points)) || 0);
+  const speed = Number(encoded(snapshot.allocations.research?.speed ?? q(0)));
   return [
+    {
+      kind: "description",
+      id: "research-explanation",
+      content: [
+        {
+          kind: "text",
+          value: `Challenge completions award research points. Each point assigned to Speed adds 100% of base production. Current production rate: ×${speed + 1}.`,
+        },
+      ],
+    },
     {
       kind: "range-input",
       id: "research-speed",
       label: "Speed research",
-      value: Number(encoded(snapshot.allocations.research?.speed ?? q(0))),
+      tooltip: "Assign challenge research points to increase production across every tier.",
+      value: speed,
       min: 0,
       max: maximum,
       step: 1,
@@ -274,11 +299,14 @@ function waitNode(snapshot: Snapshot<EternityQuantity>): ViewNode<CascadeIntent,
   return {
     kind: "action",
     id: "wait",
-    action: simpleAction(
-      "Advance one minute",
-      { type: "advance", milliseconds: 60_000 },
-      !snapshot.progression.won,
-    ),
+    action: {
+      ...simpleAction(
+        "Advance one minute",
+        { type: "advance", milliseconds: 60_000 },
+        !snapshot.progression.won,
+      ),
+      id: "wait",
+    },
   };
 }
 

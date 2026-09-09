@@ -12,6 +12,7 @@ export function renderInput<Intent, N>(
 ): HTMLElement {
   const label = keyed(document, "label", view.id);
   label.className = "e308-input";
+  if (view.tooltip) label.title = resolver.text(view.tooltip);
   const caption = document.createElement("span");
   caption.className = "e308-input-label";
   caption.textContent = resolver.text(view.label);

@@ -25,6 +25,21 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.getByRole("button", { name: "Make one clip by hand" })).toBeEnabled();
   await page.getByRole("button", { name: "Make one clip by hand" }).click();
   await expect(page.getByText("Clip inventory: 1", { exact: true })).toBeVisible();
+  for (let made = 1; made < 5; made += 1) {
+    await page.getByRole("button", { name: "Make one clip by hand" }).click();
+  }
+  const premiumSale = page.getByRole("button", { name: "Sell 5 clips — premium" });
+  await expect(premiumSale).toBeEnabled();
+  await premiumSale.click();
+  await expect(page.locator("#host-status")).toHaveText("Action applied");
+  await expect(page.getByText("Cash: 80", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Buy 200 feedstock" }).click();
+  await expect(page.getByText("Cash: 70", { exact: true })).toBeVisible();
+  expect(
+    await page
+      .getByRole("button", { name: "Buy 200 feedstock" })
+      .evaluate((button) => getComputedStyle(button).marginRight),
+  ).not.toBe("0px");
   await expect(page.getByRole("button", { name: "Run production for 10 seconds" })).toBeHidden();
   await page.getByText("Developer tools", { exact: true }).click();
   await expect(page.getByRole("button", { name: "Run production for 10 seconds" })).toBeVisible();
@@ -72,9 +87,12 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
   await expect(page.getByRole("button", { name: "Buy Tier 1 generator" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Advance one minute" })).toBeHidden();
   await page.getByRole("button", { name: "Buy Tier 1 generator" }).click();
   await expect(page.getByText("Tier 1 generators: 1", { exact: true })).toBeVisible();
   const advance = page.getByRole("button", { name: "Advance one minute" });
+  await page.getByText("Developer tools", { exact: true }).click();
+  await expect(advance).toBeVisible();
   await advance.click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(1_250);

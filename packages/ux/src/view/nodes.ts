@@ -13,6 +13,7 @@ export interface ViewStyle {
   readonly background?: string;
   readonly borderColor?: string;
   readonly width?: string;
+  readonly maxWidth?: string;
   readonly height?: string;
   readonly className?: string;
 }
@@ -106,6 +107,7 @@ export type InputView<Intent, N> =
       readonly kind: "text-input";
       readonly id: string;
       readonly label: TextValue<N>;
+      readonly tooltip?: TextValue<N>;
       readonly value: string;
       readonly intent: (value: string) => Intent;
     }
@@ -113,6 +115,7 @@ export type InputView<Intent, N> =
       readonly kind: "range-input";
       readonly id: string;
       readonly label: TextValue<N>;
+      readonly tooltip?: TextValue<N>;
       readonly value: number;
       readonly min: number;
       readonly max: number;
@@ -125,6 +128,7 @@ export type InputView<Intent, N> =
       readonly kind: "select-input";
       readonly id: string;
       readonly label: TextValue<N>;
+      readonly tooltip?: TextValue<N>;
       readonly value: string;
       readonly options: readonly { readonly value: string; readonly label: TextValue<N> }[];
       readonly intent: (value: string) => Intent;
@@ -133,6 +137,7 @@ export type InputView<Intent, N> =
       readonly kind: "toggle-input";
       readonly id: string;
       readonly label: TextValue<N>;
+      readonly tooltip?: TextValue<N>;
       readonly value: boolean;
       readonly intent: (value: boolean) => Intent;
     };

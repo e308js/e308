@@ -98,6 +98,7 @@ function gallery(state: State): ViewDocument<Intent, number> {
       action: {
         ...action("gain"),
         description: [{ kind: "text", value: "Gain points" }],
+        tooltip: "Adds one point immediately",
         confirm: "Continue?",
       },
       mark: { label: "new", tone: "positive" },
@@ -200,6 +201,7 @@ function gallery(state: State): ViewDocument<Intent, number> {
       kind: "range-input",
       id: "range",
       label: "Range",
+      tooltip: "Choose a quantity",
       value: 2,
       min: 0,
       max: 10,
@@ -351,7 +353,13 @@ describe("DOM renderer", () => {
     expect(root.querySelectorAll("[role=progressbar]")).toHaveLength(4);
     expect(root.querySelector("[data-e308-key=right]")?.getAttribute("aria-valuenow")).toBe("100");
     expect(root.querySelector("[data-e308-key=left]")?.getAttribute("aria-valuenow")).toBe("0");
+    expect(root.querySelector("[data-e308-key=right] .e308-progress-label")?.textContent).toBe(
+      "Right",
+    );
     expect(root.querySelector(".e308-resource")?.getAttribute("title")).toBe("capacity 100");
+    expect(root.querySelector("[data-e308-key=range]")?.getAttribute("title")).toBe(
+      "Choose a quantity",
+    );
     expect(root.querySelectorAll(".e308-tree-branches line")).toHaveLength(2);
     expect(root.querySelector(".e308-tree-node img")?.getAttribute("alt")).toBe("Start");
     expect(root.querySelector("[data-action=locked] .e308-action-blockers")?.textContent).toBe(
@@ -365,7 +373,9 @@ describe("DOM renderer", () => {
     (root.querySelector("[data-action=locked]") as HTMLButtonElement).click();
     expect(source.intents.map((item) => item.type)).toEqual(["gain"]);
     expect(results).toEqual(["gain"]);
-    expect(root.querySelector("[data-action=gain]")?.getAttribute("title")).toBe("Gain points");
+    expect(root.querySelector("[data-action=gain]")?.getAttribute("title")).toBe(
+      "Adds one point immediately",
+    );
     confirm.mockReturnValue(false);
     (root.querySelector("[data-action=gain]") as HTMLButtonElement).click();
     expect(source.intents).toHaveLength(1);

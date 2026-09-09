@@ -18,6 +18,7 @@ export function applyStyle(element: HTMLElement, style: ViewStyle | undefined): 
   if (style.background) element.style.background = style.background;
   if (style.borderColor) element.style.borderColor = style.borderColor;
   if (style.width) element.style.width = style.width;
+  if (style.maxWidth) element.style.maxWidth = style.maxWidth;
   if (style.height) element.style.height = style.height;
 }
 
@@ -83,11 +84,12 @@ export function renderAction<Intent, N>(
   button.textContent = resolver.text(action.label);
   button.dataset.action = action.id;
   button.setAttribute("aria-disabled", String(!action.enabled));
+  if (action.tooltip) button.title = resolver.text(action.tooltip);
   if (action.description) {
     const description = document.createElement("span");
     description.className = "e308-action-description";
     appendDescription(description, action.description, resolver);
-    button.title = description.textContent ?? "";
+    if (!action.tooltip) button.title = description.textContent ?? "";
     button.append(description);
   }
   if (action.blockers.length > 0)

@@ -53,7 +53,7 @@ export interface BrowserHost<N> {
   readonly ownership: OwnershipStatus;
   readonly game: Game<N>;
   readonly storageRevision: string | null;
-  dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure<N>>;
+  dispatch(command: BrowserCommand<N>): Result<CommandReceipt, CommandFailure<N>>;
   saveNow(reason?: string): Promise<boolean>;
   exportSave(): Promise<string>;
   importSave(raw: string): Promise<boolean>;
@@ -64,6 +64,8 @@ export interface BrowserHost<N> {
   subscribe(listener: (event: BrowserHostEvent) => void): () => void;
   dispose(): Promise<void>;
 }
+
+export type BrowserCommand<N> = Command<N> | ((snapshot: Snapshot<N>) => Command<N>);
 
 export interface BrowserHostOptions<N> {
   readonly definition: GameDefinition<N>;

@@ -1,7 +1,13 @@
 // @vitest-environment happy-dom
 
 import { nativeNumbers } from "@e308/core";
-import { cascadeScenario, cascadeView, createCascade } from "@e308/game-cascade";
+import {
+  cascadeBuyables,
+  cascadeKit,
+  cascadeScenario,
+  cascadeView,
+  createCascade,
+} from "@e308/game-cascade";
 import { createHearth, hearthScenario, hearthView } from "@e308/game-hearth";
 import {
   createWireworks,
@@ -64,7 +70,19 @@ describe("finished-game view states", () => {
 
   it("renders Cascade before progress, during challenges, and after its theorem", () => {
     const initial = createCascade();
-    expect(JSON.stringify(cascadeView(initial.getSnapshot()))).toContain("ending-boundary");
+    const initialView = JSON.stringify(cascadeView(initial.getSnapshot()));
+    expect(initialView).toContain("ending-boundary");
+    expect(initialView).toContain("Each point assigned to Speed adds 100% of base production");
+    const sixtyOwned = {
+      ...initial.getSnapshot(),
+      purchaseCounts: {
+        ...initial.getSnapshot().purchaseCounts,
+        [cascadeBuyables[0]?.id ?? ""]: cascadeKit.q(60),
+      },
+    };
+    const renderedSixty = JSON.stringify(cascadeView(sixtyOwned));
+    expect(renderedSixty).toContain("×64 production");
+    expect(renderedSixty).not.toContain("64.000000001");
     expect(initial.dispatch({ type: "automation", id: "dimension", enabled: true }).ok).toBe(false);
     expect(initial.dispatch({ type: "research", target: "speed", amount: 1 }).ok).toBe(false);
     expect(initial.dispatch({ type: "respec" }).ok).toBe(true);

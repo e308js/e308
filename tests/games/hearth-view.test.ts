@@ -50,6 +50,9 @@ describe("Hearth settlement view", () => {
     });
     expect(hearth.dispatch({ type: "task", task: "expedition" }).ok).toBe(true);
     expect(root.textContent).toContain("60 seconds remaining");
+    const journey = root.querySelector<HTMLElement>("[data-e308-key=task-expedition-progress]");
+    expect(journey?.style.width).toBe("100%");
+    expect(journey?.style.maxWidth).toBe("28rem");
     hearth.dispatch({ type: "advance", milliseconds: 1_000 });
     expect(root.textContent).toContain("59 seconds remaining");
     const wait = Array.from(root.querySelectorAll("button")).find((button) =>

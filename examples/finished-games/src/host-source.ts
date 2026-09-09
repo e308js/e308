@@ -32,11 +32,8 @@ export class HostSource<N, Intent extends { readonly type: string }>
         ? this.host.game.advance(
             (intent as Intent & { readonly milliseconds: number }).milliseconds,
           )
-        : this.host.dispatch(
-            this.command(
-              this.getSnapshot(),
-              intent as Exclude<Intent, { readonly type: "advance" }>,
-            ),
+        : this.host.dispatch((snapshot) =>
+            this.command(snapshot, intent as Exclude<Intent, { readonly type: "advance" }>),
           );
     this.publish();
     return result;

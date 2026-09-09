@@ -22,6 +22,7 @@ export interface ActionView<Intent = unknown, N = unknown> {
   readonly id: string;
   readonly label: TextValue<N>;
   readonly description?: readonly DescriptionNode<N>[];
+  readonly tooltip?: TextValue<N>;
   readonly enabled: boolean;
   readonly intent: Intent;
   readonly blockers: readonly ActionBlocker<N>[];

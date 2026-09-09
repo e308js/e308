@@ -55,11 +55,14 @@ export function hearthView(snapshot: Snapshot<number>): ViewDocument<HearthInten
       {
         kind: "action",
         id: "wait",
-        action: simpleAction(
-          "Advance one minute",
-          { type: "advance", milliseconds: 60_000 },
-          !snapshot.progression.won,
-        ),
+        action: {
+          ...simpleAction(
+            "Advance one minute",
+            { type: "advance", milliseconds: 60_000 },
+            !snapshot.progression.won,
+          ),
+          id: "wait",
+        },
       },
       snapshot.progression.won
         ? {
@@ -280,6 +283,7 @@ function taskProgress(
     value: 1 - remaining / total,
     direction: "right",
     animated: true,
+    style: { width: "100%", maxWidth: "28rem" },
   };
 }
 

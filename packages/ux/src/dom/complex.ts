@@ -19,7 +19,10 @@ export function renderProgress<Intent, N>(
   fill.className = "e308-progress-fill";
   fill.style.setProperty("--e308-progress", String(value));
   fill.dataset.animated = String(node.animated === true && !context.reducedMotion);
-  outer.append(fill);
+  const label = context.document.createElement("span");
+  label.className = "e308-progress-label";
+  label.textContent = context.resolver.text(node.label);
+  outer.append(fill, label);
   applyStyle(outer, node.style);
   return outer;
 }
