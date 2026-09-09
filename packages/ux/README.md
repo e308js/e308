@@ -1,7 +1,8 @@
 # @e308/ux
 
 Optional, framework-independent views and DOM controls for e308 games. The package renders resolved
-state and dispatches game-authored intents. It does not own simulation time, saves, or economy math.
+state and dispatches game-authored intents. Simulation time, saves, and economy math remain in the
+game's state source.
 
 ```ts
 import { nativeNumbers } from "@e308/core";

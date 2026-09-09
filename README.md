@@ -2,8 +2,8 @@
 
 e308 is a TypeScript toolkit for deterministic incremental and idle games. It keeps simulation,
 persistence, offline progress, and balance tooling in a headless core. The optional `@e308/ux`
-package turns game-owned view models into accessible DOM controls without choosing a framework or
-layout for you.
+package turns game-owned view models into accessible DOM controls while the game owns its framework
+and layout.
 
 The repository includes three complete original games with different economies and interfaces:
 
@@ -14,9 +14,10 @@ The repository includes three complete original games with different economies a
 - **Hearth** is a seasonal settlement economy built around workers, storage, crafting, paid tasks,
   shortages, and recovery.
 
-The packages are release candidates and have not been published to npm yet. The workspace quality
-pipeline creates installable archives and tests them in clean temporary consumers. Once published,
-installation will be:
+The packages are release candidates. The workspace quality pipeline creates installable archives
+and tests them in clean temporary consumers. npm publication will make installation available as:
+
+**[Play Wireworks, Cascade, and Hearth](https://e308js.github.io/e308/)**
 
 ```sh
 pnpm add @e308/core
@@ -71,7 +72,7 @@ the snapshot unchanged and return a structured reason.
 - paid task queues, deterministic calendars, and revision-bound markets.
 
 Definitions can be grouped into dependency-checked content modules. Custom stepped rules and checked
-bulk capabilities cover game-specific mechanics without adding game IDs or UI concerns to core.
+bulk capabilities cover game-specific mechanics while keeping core generic and presentation-free.
 
 Use `eternityNumbers` when progression must exceed native numeric range:
 
@@ -125,8 +126,8 @@ if (catchup.catchup) {
 }
 ```
 
-The computation budget limits work per chunk. It never reduces credited time: unfinished work stays
-in the serializable session. `@e308/core/browser` adds IndexedDB, autosave, suspension reconciliation,
+The computation budget limits work per chunk while preserving all credited time in the serializable
+session. `@e308/core/browser` adds IndexedDB, autosave, suspension reconciliation,
 and cross-tab single-writer ownership. `@e308/core/worker` provides a versioned worker protocol with
 revision fencing and chunk-boundary cancellation.
 
@@ -169,7 +170,7 @@ tabs, positioned trees, grids, progress bars, infoboxes, typed inputs, notificat
 particles, safe rich descriptions, and custom render slots. Controls are unstyled by default;
 `starterTheme` is an optional baseline.
 
-## Test pacing without a browser
+## Test pacing headlessly
 
 `@e308/core/testing` gives bot policies only a serializable observation and legal, revision-bound
 action quotes. It records reproducible actions, waits, constraints, milestones, offline fidelity, and
@@ -211,9 +212,9 @@ const report = runHarness({
 | [`examples/gallery`](examples/gallery) | Renderer capability gallery with two layouts over one state source |
 | [`examples/pacing`](examples/pacing) | Reproducible pacing, sweep, baseline, checkpoint, and performance reports |
 
-Reference-game fixtures are test evidence and are kept separate from the public game page. They make
-bounded mechanics comparisons against pinned Antimatter Dimensions, Kittens Game, and Universal
-Paperclips sources; they are not distributed as e308 games.
+Reference-game fixtures provide private test evidence for bounded mechanics comparisons against
+pinned Antimatter Dimensions, Kittens Game, and Universal Paperclips sources. The public game page
+features the three original e308 games.
 
 ## Develop e308
 
@@ -235,7 +236,8 @@ The [public API reference](docs/api-reference.md) lists package subpaths and con
 [migration guide](docs/migration-guide.md) covers persistent IDs, save schemas, offline rule changes,
 and numeric backend transitions.
 
-e308 is ESM-only. Core imports do not access the DOM, timers, storage, or ambient randomness.
+e308 is ESM-only. Core imports remain headless and free of DOM, timer, storage, and ambient-randomness
+dependencies.
 
 ## License
 

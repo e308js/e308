@@ -12,27 +12,13 @@
   </head>
   <body>
     <header class="site-head">
-      <div><strong>e308</strong><span>incremental game toolkit</span></div>
+      <h1><strong>e308</strong><span>incremental game toolkit</span></h1>
       <nav aria-label="Choose game">
         <button type="button" data-game="wireworks">Wireworks</button>
         <button type="button" data-game="cascade">Cascade</button>
         <button type="button" data-game="hearth">Hearth</button>
       </nav>
     </header>
-    <section class="library-intro" aria-labelledby="library-title">
-      <p class="eyebrow">Headless simulation · Optional renderer · Offline progress</p>
-      <h1 id="library-title">Build incremental games without inheriting their interface.</h1>
-      <p>
-        e308 provides deterministic simulation, composable economies and progression, durable
-        saves, offline advancement, bot players, and pacing reports. These three complete games use
-        the same public engine through deliberately different mechanics and layouts.
-      </p>
-      <div class="package-list" aria-label="Public packages">
-        <code>@e308/core</code>
-        <code>@e308/ux</code>
-        <span>MIT licensed</span>
-      </div>
-    </section>
     <aside class="save-tools" aria-label="Save controls">
       <output id="host-status">Opening local save…</output>
       <button type="button" id="save">Save</button>
@@ -42,6 +28,17 @@
       <textarea id="save-data" aria-label="Exported save" rows="3"></textarea>
     </aside>
     <main id="game" class="game-shell" aria-live="polite"></main>
+    <footer class="library-about">
+      <p>
+        e308 provides deterministic simulation, composable economies and progression, durable
+        saves, offline advancement, bot players, pacing reports, and game-owned interfaces.
+      </p>
+      <div class="package-list" aria-label="Public packages">
+        <code>@e308/core</code>
+        <code>@e308/ux</code>
+        <span>MIT licensed</span>
+      </div>
+    </footer>
     <script type="module" src="./dist/app.js?v=s10"></script>
   </body>
 </html>

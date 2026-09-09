@@ -42,8 +42,10 @@ button:disabled {
   border-bottom: 1px solid #ffffff24;
   backdrop-filter: blur(12px);
 }
-.site-head div {
+.site-head h1 {
   display: grid;
+  margin: 0;
+  font-size: 1rem;
   letter-spacing: 0.04em;
 }
 .site-head span {
@@ -55,32 +57,19 @@ button:disabled {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-.library-intro {
+.library-about {
   width: min(1180px, calc(100% - 2rem));
-  margin: 2rem auto 1rem;
-  padding: clamp(1rem, 3vw, 2rem);
+  margin: 0 auto 2rem;
+  padding: 1rem;
   border: 1px solid #ffffff24;
   border-radius: 1rem;
-  background: linear-gradient(135deg, #142431, #111521 55%, #1d1629);
+  background: #101923;
 }
-.library-intro h1 {
-  max-width: 20ch;
-  margin: 0.25rem 0 0.75rem;
-  font-size: clamp(1.8rem, 5vw, 3.5rem);
-  line-height: 1.05;
-}
-.library-intro > p:not(.eyebrow) {
+.library-about > p {
   max-width: 70ch;
+  margin-top: 0;
   color: #c7d3da;
   line-height: 1.6;
-}
-.eyebrow {
-  margin: 0;
-  color: #69e6d3;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
 }
 .package-list {
   display: flex;

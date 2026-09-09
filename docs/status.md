@@ -87,8 +87,10 @@ SHA-keyed release manifest with archive hashes and D1–D8/D1R evidence paths. A
 kept separate from the source, game/usability, and physical-device reviews listed in
 [release-review.md](release-review.md).
 
-A manual-only GitHub Pages workflow is prepared. It builds the tested site artifact containing all
-three original games and omits the private reference laboratories. Pages remains disabled and no
-site has been published.
+A manual-only GitHub Pages workflow builds the tested site artifact containing all three original
+games and omitting the private reference laboratories. The public site was deployed from commit
+`1f8358a55374dec42e97357df0a371a73a7bdc1e` in
+[run 34332386635](https://github.com/e308js/e308/actions/runs/34332386635) and is available at
+[e308js.github.io/e308](https://e308js.github.io/e308/).
 
 No npm package or public GitHub release has been published.

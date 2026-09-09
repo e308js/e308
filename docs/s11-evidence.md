@@ -1,7 +1,7 @@
 # S11 evidence — release candidate and parity closure
 
 Status: **IN REVIEW**. Candidate commit
-`8655ad2f74669e16686c20d1fd8d1bec5136bb5c` passed the complete GitHub Actions quality workflow.
+`1f8358a55374dec42e97357df0a371a73a7bdc1e` passed the complete GitHub Actions quality workflow.
 All automated D1–D8 and D1R entries pass. Independent source, game/usability, physical-device, and
 final review sign-offs remain open.
 
@@ -22,7 +22,7 @@ final review sign-offs remain open.
 
 ## Exact-head quality results
 
-[GitHub Actions run 34320192794](https://github.com/e308js/e308/actions/runs/34320192794)
+[GitHub Actions run 34331718472](https://github.com/e308js/e308/actions/runs/34331718472)
 completed successfully on Node 24.14.1. It ran:
 
 - Biome with warnings rejected, strict TypeScript, file/function budgets, duplicate-block checks, and
@@ -40,15 +40,15 @@ completed successfully on Node 24.14.1. It ran:
 
 ## Candidate archives
 
-The SHA-keyed CI artifact `quality-8655ad2f74669e16686c20d1fd8d1bec5136bb5c` contains:
+The release builder currently produces:
 
 | Package | Version | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
-| `@e308/core` | `1.0.0-rc.1` | 157,758 | `3ab2fcc57d528607e8948a32c76f48ecc5bafb44af83b590087d9ec4cbfb167e` |
-| `@e308/ux` | `1.0.0-rc.1` | 31,241 | `71553ce12962b34abab66efc759756802a0af8a345dbd6874f3bbb347f955639` |
-| `@e308/game-wireworks` | `1.0.0` private evidence | 12,769 | `5cfd2fba60af73bb179774935846fa84615ceabc9f3dd3e410b12983d6568ec8` |
-| `@e308/game-cascade` | `1.0.0` private evidence | 16,172 | `114b9b105e0391014dc081592718dd9ff9fa026ac79f817f048d71c2a72e3547` |
-| `@e308/game-hearth` | `1.0.0` private evidence | 14,759 | `1f5a8a2ae31ed88326d35416f0a6b68783b6de85610ee93985f669bb51fb6539` |
+| `@e308/core` | `1.0.0-rc.1` | 158,593 | `e410d7223802920a90018014d972fc1b4f89f157888e12f012aba956affff0a4` |
+| `@e308/ux` | `1.0.0-rc.1` | 32,333 | `73dbc5fcfc73e4229d7afae886d30da5b1f959f2e96527dbdf03846b599c11c5` |
+| `@e308/game-wireworks` | `1.0.0` private evidence | 13,492 | `abc2ef8e742a5362027a133fa52c94d77e636de1bd2a4d1cd32a7fa8f08c1c3c` |
+| `@e308/game-cascade` | `1.0.0` private evidence | 16,911 | `e25c2344d1bd1dbaecc65adf17a433078ddeb20fd5d1c76186e05482b766ae3c` |
+| `@e308/game-hearth` | `1.0.0` private evidence | 15,494 | `8c24b764b83cef8dc077a3abd515d87d851c764a0793869a26adc6ddb3ce55b4` |
 
 The generated release manifest records the same hashes, exact commit, artifact paths, automated gate
 statuses, and open-review fields.
@@ -59,4 +59,5 @@ The [release review procedure](release-review.md) still requires a reviewer to a
 reference-source coverage, review every consequential game choice and ending,
 exercise desktop and physical-touch usability, and record a named physical-device sleep/wake run.
 The reviewer may be the implementer. Those requirements also keep S10 in review. The project and
-public packages use the MIT license. npm publication and Pages deployment have not occurred.
+public packages use the MIT license. npm publication has not occurred. The original-games-only
+Pages site is deployed at [e308js.github.io/e308](https://e308js.github.io/e308/).

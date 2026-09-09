@@ -44,8 +44,8 @@ const ascend = kit.prestige("ascend", {
 });
 ```
 
-For adapter-independent game code, use `numbers.cmp` in callbacks rather than backend-specific
-methods. `normalPrestige` implements threshold, gain multiplier/exponent, direct multiplier, and
+Adapter-independent callbacks use `numbers.cmp` for comparisons. `normalPrestige` implements
+threshold, gain multiplier/exponent, direct multiplier, and
 softcap stages. `staticPrestige` implements TMT-compatible increasing requirements and one/max gain.
 Custom prestige behavior uses ordinary `canReset` and `rewardFor` callbacks.
 
@@ -55,8 +55,8 @@ the start of each fixed step. Shared inputs are reserved by ascending priority a
 become available to other flows on the next step. `Snapshot.productionTotals` records gross output by
 resource, including output later consumed or discarded by a capacity policy.
 
-`scopeActivation` attaches a progression predicate to a scope. Inactive scopes do not run flows,
-stepped rules, or automation, and built-in scoped actions return a structured `scope-inactive`
+`scopeActivation` attaches a progression predicate to a scope. Inactive scopes pause flows, stepped
+rules, and automation, and built-in scoped actions return a structured `scope-inactive`
 failure. Automation runs at fixed game-time boundaries in priority/ID order and dispatches the same
 validated commands used by a player. Reset manifests clear every definition owned by a named scope,
 with explicit typed retention for resources, buyables, allocations, upgrades, triggers, challenges,
@@ -128,8 +128,8 @@ if (returned.catchup) {
 }
 ```
 
-The work budget above limits computation per checkpoint; it does not reduce credited time. The cap
-is resolved and saved before an absence. It is applied once even if catch-up needs many chunks or
+The work budget above limits computation per checkpoint while preserving credited time. The cap is
+resolved and saved before an absence. It is applied once even if catch-up needs many chunks or
 restarts. `MemorySaveStore` and `commitCatchupChunk` in `@e308/core/storage` demonstrate atomic
 compare-and-swap recovery.
 
@@ -137,7 +137,7 @@ compare-and-swap recovery.
 
 `@e308/core/browser` connects a game to explicit lifecycle events, IndexedDB, autosave, and
 single-writer ownership across tabs. It uses monotonic time while the page is active and the saved
-wall-clock anchor after suspension or reload, so the same interval is never credited twice.
+wall-clock anchor after suspension or reload, so each interval is credited exactly once.
 
 ```ts
 import {
@@ -172,8 +172,8 @@ the result `custom-reward`; cap and recovery accounting remain unchanged. Canoni
 the ordinary fixed-step rules and enabled automation.
 
 Schema migrations and pending simulation-rule transitions are explicit and carry stable IDs in the
-migration ledger. A pending session cannot cross a simulation version without its declared
-transition. The published JSON Schema is `schema/save-v1.schema.json`; a complete interrupted save is
+migration ledger. Crossing a simulation version requires the pending session's declared transition.
+The published JSON Schema is `schema/save-v1.schema.json`; a complete interrupted save is
 kept in the repository as a compatibility fixture.
 
 ## Bot runs and pacing reports
@@ -207,14 +207,14 @@ const report = runHarness({
 
 `@e308/core/balance` aggregates reached and unreached populations, runs paired parameter sweeps,
 and compares versioned baselines. A failed policy run remains distinct from an authored barrier
-certificate. The workspace's `pnpm report:pacing` command exercises three deliberately different
-economy kernels and emits machine-readable JSON plus reviewer-friendly Markdown.
+certificate. The workspace's `pnpm report:pacing` command exercises three distinct economy kernels
+and emits machine-readable JSON plus readable Markdown.
 
 ## Checked bulk advancement
 
-`@e308/core/optimize` can reduce long native-number recurrences without changing their canonical
+`@e308/core/optimize` can reduce long native-number recurrences while preserving their canonical
 economic result. Exact mode recognizes safe-integer constant, allocated, proportional, and linear
-product rates without inputs or capacities. It exponentiates their affine recurrence and stops
+product rates with input-free, capacity-free definitions. It exponentiates their affine recurrence and stops
 before automation boundaries so the boundary command runs through an ordinary canonical step.
 
 ```ts
@@ -231,7 +231,7 @@ if (result.status === "pending") {
 ```
 
 When any precondition fails, the driver uses canonical fixed steps and records why. Its work budget
-returns unprocessed time instead of discarding it; `AdvanceBacklog` owns that pending duration and
+preserves unprocessed time; `AdvanceBacklog` owns that pending duration and
 refuses additions beyond a declared bound. Registered build-time capabilities declare dependencies,
 versions, and checked plans. Approximate capabilities also declare error bounds and run only when the
 caller explicitly selects `mode: "approximate"`.
