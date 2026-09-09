@@ -1,0 +1,68 @@
+import type { BotContext, BotPolicy, HarnessValue, LegalActionQuote } from "./types.js";
+
+export function scriptedPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
+  readonly id: string;
+  readonly version: string;
+  readonly actions: readonly string[];
+  readonly repeat?: boolean;
+}): BotPolicy<O, I> {
+  let index = 0;
+  return {
+    id: options.id,
+    version: options.version,
+    decide: () => {
+      if (options.actions.length === 0) return { kind: "wait", reason: "script-empty" };
+      if (index >= options.actions.length && !options.repeat)
+        return { kind: "wait", reason: "script-complete" };
+      const actionId = options.actions[index % options.actions.length] as string;
+      index += 1;
+      return { kind: "action", actionId };
+    },
+  };
+}
+
+export function rankedPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
+  readonly id?: string;
+  readonly version: string;
+}): BotPolicy<O, I> {
+  return {
+    id: options.id ?? "ranked",
+    version: options.version,
+    decide: (context) => chooseRanked(context.quotes, context.random),
+  };
+}
+
+export function goalPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
+  readonly id: string;
+  readonly version: string;
+  readonly score: (context: BotContext<O, I>, quote: LegalActionQuote<I>) => number;
+}): BotPolicy<O, I> {
+  return {
+    id: options.id,
+    version: options.version,
+    decide: (context) => {
+      const scored = context.quotes
+        .filter((quote) => quote.legal && quote.useful)
+        .map((quote) => ({ quote, score: options.score(context, quote) }))
+        .filter((entry) => Number.isFinite(entry.score))
+        .sort(
+          (left, right) => right.score - left.score || left.quote.id.localeCompare(right.quote.id),
+        );
+      return scored[0]
+        ? { kind: "action", actionId: scored[0].quote.id }
+        : { kind: "wait", reason: "no-goal-action" };
+    },
+  };
+}
+
+function chooseRanked<I extends HarnessValue>(
+  quotes: readonly LegalActionQuote<I>[],
+  random: () => number,
+) {
+  const legal = quotes.filter((quote) => quote.legal && quote.useful);
+  if (legal.length === 0) return { kind: "wait" as const, reason: "no-ranked-action" };
+  const highest = Math.max(...legal.map((quote) => quote.rank ?? 0));
+  const tied = legal.filter((quote) => (quote.rank ?? 0) === highest);
+  const index = Math.min(tied.length - 1, Math.floor(random() * tied.length));
+  return { kind: "action" as const, actionId: (tied[index] as LegalActionQuote<I>).id };
+}

@@ -4,7 +4,7 @@ import {
   createGameKit,
   nativeNumbers,
   recipeCommand,
-} from "../../packages/core/src/index.js";
+} from "@e308/core";
 
 export function createWireworksKernel() {
   const kit = createGameKit({ numbers: nativeNumbers });
@@ -58,7 +58,7 @@ export function createCascadeKernel() {
   return { definition, game: createGame(definition) };
 }
 
-export function createHearthKernel() {
+export function createHearthKernel(foodCost = 2) {
   const kit = createGameKit({ numbers: nativeNumbers });
   const run = kit.scope("settlement");
   const workers = kit.resource("workers", { scope: run, initial: 3 });
@@ -74,7 +74,7 @@ export function createHearthKernel() {
   const cook = kit.recipe("cook", {
     scope: run,
     consumes: [
-      [food, 2],
+      [food, foodCost],
       [wood, 1],
     ],
     produces: [[meals, 1]],
@@ -90,9 +90,11 @@ export function createHearthKernel() {
   });
   const game = createGame(definition);
   game.dispatch(allocationCommand(jobs, "farm", 2));
+  const cookCommand = (count: number) => recipeCommand(cook, { count });
   return {
     definition,
     game,
-    cook: (count: number) => game.dispatch(recipeCommand(cook, { count })),
+    cookCommand,
+    cook: (count: number) => game.dispatch(cookCommand(count)),
   };
 }

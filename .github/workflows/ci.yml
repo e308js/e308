@@ -29,6 +29,7 @@ jobs:
           name: quality-${{ github.sha }}
           path: |
             coverage/
+            artifacts/pacing/
             packages/*/dist/
             playwright-report/
             test-results/

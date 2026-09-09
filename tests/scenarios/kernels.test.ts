@@ -3,7 +3,7 @@ import {
   createCascadeKernel,
   createHearthKernel,
   createWireworksKernel,
-} from "../helpers/kernels.js";
+} from "../../examples/pacing/src/kernels.js";
 
 describe("S02 headless game kernels", () => {
   it("runs Wireworks as an input- and power-constrained factory", () => {

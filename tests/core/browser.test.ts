@@ -1,6 +1,11 @@
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 import {
+  createCascadeKernel,
+  createHearthKernel,
+  createWireworksKernel,
+} from "../../examples/pacing/src/kernels.js";
+import {
   type BrowserClock,
   type BrowserScheduler,
   IndexedDbSaveStore,
@@ -12,11 +17,6 @@ import {
 import { createSaveCodec } from "../../packages/core/src/persistence/index.js";
 import type { Transaction } from "../../packages/core/src/state/types.js";
 import { MemorySaveStore, StorageFault } from "../../packages/core/src/storage/index.js";
-import {
-  createCascadeKernel,
-  createHearthKernel,
-  createWireworksKernel,
-} from "../helpers/kernels.js";
 import { persistenceFixture } from "../helpers/persistence-fixture.js";
 
 class TestClock implements BrowserClock {

@@ -8,6 +8,7 @@
     "lib": ["ES2024", "DOM"],
     "paths": {
       "@e308/core": ["packages/core/src/index.ts"],
+      "@e308/core/balance": ["packages/core/src/balance/index.ts"],
       "@e308/core/browser": ["packages/core/src/browser/index.ts"],
       "@e308/core/calendar": ["packages/core/src/calendar/index.ts"],
       "@e308/core/markets": ["packages/core/src/markets/index.ts"],
@@ -15,6 +16,7 @@
       "@e308/core/persistence": ["packages/core/src/persistence/index.ts"],
       "@e308/core/storage": ["packages/core/src/storage/index.ts"],
       "@e308/core/tasks": ["packages/core/src/tasks/index.ts"],
+      "@e308/core/testing": ["packages/core/src/testing/index.ts"],
       "@e308/core/worker": ["packages/core/src/worker/index.ts"],
       "@e308/ux": ["packages/ux/src/index.ts"],
       "@e308/ux/dom": ["packages/ux/src/dom/index.ts"],

@@ -6,6 +6,7 @@ import {
   normalPrestige,
   type Resource,
 } from "@e308/core";
+import { compareBaseline, type SweepParameterCase } from "@e308/core/balance";
 import type { BrowserHost, OwnershipPort } from "@e308/core/browser";
 import { type CalendarDefinition, currentPhase } from "@e308/core/calendar";
 import { type MarketQuote, marketCommand } from "@e308/core/markets";
@@ -13,6 +14,7 @@ import { type CatchupExecution, processCatchupChunk } from "@e308/core/offline";
 import { createSaveCodec, type SaveEnvelope } from "@e308/core/persistence";
 import { MemorySaveStore, type TransactionalSaveStore } from "@e308/core/storage";
 import { queueTaskCommand, type TaskDefinition } from "@e308/core/tasks";
+import { type HarnessReport, rankedPolicy } from "@e308/core/testing";
 import type { WorkerRequest, WorkerTransferCodec } from "@e308/core/worker";
 import type { ActionView, ViewDocument, ViewSource } from "@e308/ux";
 import { mountView } from "@e308/ux/dom";
@@ -90,6 +92,10 @@ void (undefined as BrowserHost<number> | undefined);
 void (undefined as OwnershipPort | undefined);
 void (undefined as WorkerRequest | undefined);
 void (undefined as WorkerTransferCodec<number, { kind: "run" }, string> | undefined);
+void (undefined as HarnessReport | undefined);
+void (undefined as SweepParameterCase<Record<string, string>> | undefined);
+void compareBaseline;
+void rankedPolicy;
 void queueTaskCommand;
 void currentPhase;
 void marketCommand;

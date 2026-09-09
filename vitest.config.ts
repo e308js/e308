@@ -1,6 +1,21 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: coreAliases([
+      "balance",
+      "browser",
+      "calendar",
+      "markets",
+      "offline",
+      "persistence",
+      "storage",
+      "tasks",
+      "testing",
+      "worker",
+    ]),
+  },
   test: {
     coverage: {
       exclude: ["**/*.d.ts", "**/*.types.ts", "**/dist/**", "**/index.ts"],
@@ -21,3 +36,18 @@ export default defineConfig({
     restoreMocks: true,
   },
 });
+
+function coreAliases(subpaths: readonly string[]) {
+  return [
+    ...subpaths.map((subpath) => ({
+      find: `@e308/core/${subpath}`,
+      replacement: fileURLToPath(
+        new URL(`./packages/core/src/${subpath}/index.ts`, import.meta.url),
+      ),
+    })),
+    {
+      find: /^@e308\/core$/,
+      replacement: fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
+    },
+  ];
+}

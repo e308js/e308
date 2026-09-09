@@ -54,6 +54,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ux
 
+  examples/pacing:
+    dependencies:
+      '@e308/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   packages/core:
     dependencies:
       '@noble/hashes':

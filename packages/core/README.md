@@ -175,3 +175,37 @@ Schema migrations and pending simulation-rule transitions are explicit and carry
 migration ledger. A pending session cannot cross a simulation version without its declared
 transition. The published JSON Schema is `schema/save-v1.schema.json`; a complete interrupted save is
 kept in the repository as a compatibility fixture.
+
+## Bot runs and pacing reports
+
+`@e308/core/testing` runs a game headlessly with scripted, ranked, or game-authored goal policies.
+Policies receive only a serializable observation and revision-bound legal-action quotes. The harness
+dispatches the quoted intent through the same command path as a player, stops player decisions during
+idle and absent sessions, and records bounded traces, samples, constraints, milestones, offline
+fidelity, and replay inputs.
+
+```ts
+import { rankedPolicy, runHarness } from "@e308/core/testing";
+
+const report = runHarness({
+  scenario,
+  policy: rankedPolicy({ version: "1" }),
+  gameSeed: "00",
+  botSeed: "01",
+  goalId: "first-prestige",
+  decisionCadenceMs: 1_000,
+  schedule: [{ kind: "active", durationMs: 60_000 }],
+  limits: {
+    maximumDecisions: 100,
+    maximumTraceEntries: 200,
+    maximumSamples: 100,
+    sampleCadenceMs: 1_000,
+  },
+  replayCommand: "pnpm pacing -- first-prestige 00 01",
+});
+```
+
+`@e308/core/balance` aggregates reached and unreached populations, runs paired parameter sweeps,
+and compares versioned baselines. A failed policy run remains distinct from an authored barrier
+certificate. The workspace's `pnpm report:pacing` command exercises three deliberately different
+economy kernels and emits machine-readable JSON plus reviewer-friendly Markdown.
