@@ -1,6 +1,9 @@
 # Reference-game parity gates
 
-Status: required release specification; all comparison results are **NOT RUN**. D1R in [definition-of-done.md](definition-of-done.md) requires both reference games below. They cannot be replaced by invented demonstration economies or by the TMT feature gallery.
+Status: automated bounded-parity suite **PASS**; independent source-review sign-off pending. The
+[reference evidence manifest](evidence/reference-games.json) maps all 15 required cases—AD01–AD06,
+KG01–KG06, and PC01–PC03—to pinned source manifests, executable comparisons, declared numerical
+policies, and interactive evidence. All 15 cases pass with zero failed or not-run cases.
 
 The reference games are the user's original research subjects: Universal Paperclips, Antimatter Dimensions, and Kittens Game. Antimatter Dimensions and Kittens Game have mandatory bounded mechanics-parity suites. Paperclips has a mandatory source-to-showcase mapping and independent correctness scenarios. This is not a claim that e308 must clone their entire campaigns, content, branding, or pixels.
 
@@ -76,6 +79,9 @@ These are structural/mechanical coverage requirements, not exact Paperclips form
 6. Demonstrate each slice interactively using a public renderer or a supplied custom view, including save/load and blockers. No requirement to reproduce the original appearance.
 7. Preserve fixtures, traces, versions, failures and results in the same evidence bundle as TMT and the showcase games.
 
-All six AD slices, six KG slices and three PC mappings are required. Each table cell expands into atomic cases, including relevant boundaries and interaction cases, before it can pass. The source-fixture freeze is a tracked prerequisite and remains **NOT RUN** in this documentation pass. Neither a source link nor the table itself is evidence of executed parity.
+All six AD slices, six KG slices and three PC mappings are required. Their source fixtures are frozen
+in `reference/*/manifest.json`; source integrity and the 15-case evidence mapping are executable
+tests. The automated comparisons pass. Independent review must still verify that the pinned
+selections faithfully cover the stated source behavior before D1R is accepted.
 
 The release claim must name the scope: **TMT capability parity, Antimatter Dimensions/Kittens Game parity for the specified slices, and three complete original e308 games.** Full-game AD/Kittens parity is not implied by passing bounded slices.

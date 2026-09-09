@@ -1,0 +1,132 @@
+{
+  "schema": "e308-reference-game-evidence",
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-09",
+  "summary": { "required": 15, "passed": 15, "failed": 0, "notRun": 0 },
+  "review": {
+    "implementation": "codex implementation audit",
+    "independentSourceReview": "pending"
+  },
+  "cases": [
+    {
+      "id": "AD01",
+      "sourceManifest": "reference/ad/manifest.json",
+      "test": "tests/reference/ad-economy.test.ts",
+      "comparison": "exact discrete state; floating quantities use predeclared Vitest decimal precision",
+      "interactive": "examples/finished-games/reference-labs.html#ad-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "AD02",
+      "sourceManifest": "reference/ad/manifest.json",
+      "test": "tests/reference/ad-economy.test.ts",
+      "comparison": "exact purchases and unlocks; floating quantities use predeclared Vitest decimal precision",
+      "interactive": "examples/finished-games/reference-labs.html#ad-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "AD03",
+      "sourceManifest": "reference/ad/manifest.json",
+      "test": "tests/reference/ad-economy.test.ts",
+      "comparison": "exact requirements, reset counts, and retained or cleared fields",
+      "interactive": "examples/finished-games/reference-labs.html#ad-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "AD04",
+      "sourceManifest": "reference/ad/manifest.json",
+      "test": "tests/reference/ad-progression.test.ts",
+      "comparison": "exact Infinity eligibility, reward, upgrade prerequisites, and reset retention",
+      "interactive": "examples/finished-games/reference-labs.html#ad-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "AD05",
+      "sourceManifest": "reference/ad/manifest.json",
+      "test": "tests/reference/ad-progression.test.ts",
+      "comparison": "exact challenge state and completion plus autobuyer cadence and priority",
+      "interactive": "examples/finished-games/reference-labs.html#ad-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "AD06",
+      "sourceManifest": "reference/ad/manifest.json",
+      "test": "tests/reference/ad-progression.test.ts",
+      "comparison": "exact large-number serialization and discrete automation under a matched delta schedule",
+      "interactive": "examples/finished-games/reference-labs.html#ad-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "KG01",
+      "sourceManifest": "reference/kittens/manifest.json",
+      "test": "tests/reference/kittens.test.ts",
+      "comparison": "exact capacities and discrete state; resource quantities within 1e-9",
+      "interactive": "examples/finished-games/reference-labs.html#kittens-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "KG02",
+      "sourceManifest": "reference/kittens/manifest.json",
+      "test": "tests/reference/kittens.test.ts",
+      "comparison": "exact worker assignments and rejection; resource quantities within 1e-9",
+      "interactive": "examples/finished-games/reference-labs.html#kittens-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "KG03",
+      "sourceManifest": "reference/kittens/manifest.json",
+      "test": "tests/reference/kittens.test.ts",
+      "comparison": "exact calendar boundaries and selected deterministic seasonal modifiers",
+      "interactive": "examples/finished-games/reference-labs.html#kittens-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "KG04",
+      "sourceManifest": "reference/kittens/manifest.json",
+      "test": "tests/reference/kittens.test.ts",
+      "comparison": "exact construction and craft prerequisites and counts; resource quantities within 1e-9",
+      "interactive": "examples/finished-games/reference-labs.html#kittens-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "KG05",
+      "sourceManifest": "reference/kittens/manifest.json",
+      "test": "tests/reference/kittens.test.ts",
+      "comparison": "exact redshift rounding, caps, subsystem order, and shortage branch",
+      "interactive": "examples/finished-games/reference-labs.html#kittens-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "KG06",
+      "sourceManifest": "reference/kittens/manifest.json",
+      "test": "tests/reference/kittens.test.ts",
+      "comparison": "exact save continuity and retained or cleared reset fields",
+      "interactive": "examples/finished-games/reference-labs.html#kittens-lab",
+      "status": "PASS"
+    },
+    {
+      "id": "PC01",
+      "sourceManifest": "reference/paperclips/manifest.json",
+      "test": "tests/reference/paperclips-mapping.test.ts",
+      "comparison": "independent structural oracle keeps stock and revenue in separate ledgers",
+      "interactive": "examples/finished-games/index.html",
+      "status": "PASS"
+    },
+    {
+      "id": "PC02",
+      "sourceManifest": "reference/paperclips/manifest.json",
+      "test": "tests/reference/paperclips-mapping.test.ts",
+      "comparison": "independent exact conservation oracle for matter, wire, and allocated power",
+      "interactive": "examples/finished-games/index.html",
+      "status": "PASS"
+    },
+    {
+      "id": "PC03",
+      "sourceManifest": "reference/paperclips/manifest.json",
+      "test": "tests/reference/paperclips-mapping.test.ts",
+      "comparison": "exact once-only transition event and active or retired control scopes",
+      "interactive": "examples/finished-games/index.html",
+      "status": "PASS"
+    }
+  ]
+}

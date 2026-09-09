@@ -10,7 +10,7 @@
     "AD03": "Dimension Boost and Antimatter Galaxy requirements and reset projections",
     "AD04": "First Infinity, timeMult/18Mult prerequisite, retention, and effects",
     "AD05": "NC2/NC3/NC10 rules and dimension/reset autobuyer schedules",
-    "AD06": "Controlled explicit tick schedule and non-native numeric quantities; persistence follows in S04"
+    "AD06": "Controlled explicit tick schedule, non-native numeric quantities, save round-trip, and offline automation"
   },
   "files": [
     {
