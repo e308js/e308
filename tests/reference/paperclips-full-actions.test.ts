@@ -9,6 +9,10 @@ import {
 describe("Universal Paperclips campaign action boundaries", () => {
   it("enforces phase and project prerequisites", () => {
     const game = createPaperclipsReference();
+    expect(game.dispatch({ type: "project", id: "improved-auto-clippers" })).toMatchObject({
+      ok: false,
+      error: { code: "insufficient", resourceId: "operations" },
+    });
     expect(game.dispatch({ type: "project", id: "missing" })).toMatchObject({
       ok: false,
       error: { code: "invalid-target" },
@@ -55,10 +59,20 @@ describe("Universal Paperclips campaign action boundaries", () => {
     });
     expect(game.dispatch({ type: "buy", id: "marketing" })).toMatchObject({ ok: true });
     expect(game.getSnapshot().resources[paperclipsResources.marketingLevel.id]).toBe(2);
+    expect(game.dispatch({ type: "project", id: "lexical-processing" })).toMatchObject({
+      ok: true,
+    });
     expect(game.dispatch({ type: "project", id: "new-slogan" })).toMatchObject({ ok: true });
-    expect(game.getSnapshot().resources.demand).toBeGreaterThan(1);
+    expect(game.getSnapshot().resources[paperclipsResources.marketingEffectiveness.id]).toBe(1.5);
+    seed(game, (transaction) => {
+      transaction.set(paperclipsResources.funds, 0);
+      transaction.set(paperclipsResources.bankroll, 0);
+      transaction.set(paperclipsResources.wire, 0);
+      transaction.set(paperclipsResources.unsold, 0);
+    });
     expect(game.dispatch({ type: "project", id: "beg-for-more-wire" })).toMatchObject({ ok: true });
     expect(game.getSnapshot().resources.wire).toBe(1_000);
+    seed(game, (transaction) => transaction.set(paperclipsResources.funds, 100_000));
     expect(game.dispatch({ type: "project", id: "improved-wire-extrusion" })).toMatchObject({
       ok: true,
     });
@@ -89,14 +103,17 @@ describe("Universal Paperclips campaign action boundaries", () => {
     expect(game.getSnapshot().resources.bankroll).toBe(0);
   });
 
-  it("checks free trust and industrial machine unlocks", () => {
+  it("spends source Trust even when all compute capacity is assigned", () => {
     const game = createPaperclipsReference();
     seed(game, (transaction) => {
       transaction.set(paperclipsResources.trust, 2);
       transaction.setAllocation("compute", "processors", 1);
       transaction.setAllocation("compute", "memory", 1);
+      transaction.set(paperclipsResources.wire, 0);
     });
-    expect(game.dispatch({ type: "project", id: "beg-for-more-wire" })).toMatchObject({
+    expect(game.dispatch({ type: "project", id: "beg-for-more-wire" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot().resources.trust).toBe(1);
+    expect(game.dispatch({ type: "compute", target: "processor" })).toMatchObject({
       ok: false,
       error: { code: "insufficient" },
     });
@@ -133,6 +150,25 @@ describe("Universal Paperclips campaign action boundaries", () => {
       game.advance(60_000);
       expect(game.getSnapshot().resources.probes).toBe(before);
     }
+  });
+
+  it("applies both source factory throughput upgrades", () => {
+    const game = createPaperclipsReference();
+    seed(game, (transaction) => {
+      transaction.setProgress("milestone", "industry-phase");
+      transaction.setProgress("upgrade", "upgraded-factories");
+      transaction.setPurchase(paperclipsBuyables.factory.id, 1);
+      transaction.setPurchase(paperclipsBuyables.battery.id, 1);
+      transaction.set(paperclipsResources.processedMatter, 1e30);
+      transaction.set(paperclipsResources.storedPower, 1e20);
+    });
+    const initial = game.getSnapshot().resources.clips as number;
+    game.advance(1_000);
+    expect((game.getSnapshot().resources.clips as number) - initial).toBeCloseTo(1e22);
+    seed(game, (transaction) => transaction.setProgress("upgrade", "hyperspeed-factories"));
+    const beforeHyperspeed = game.getSnapshot().resources.clips as number;
+    game.advance(1_000);
+    expect((game.getSnapshot().resources.clips as number) - beforeHyperspeed).toBeCloseTo(1e23);
   });
 });
 

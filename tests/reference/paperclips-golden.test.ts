@@ -31,6 +31,12 @@ interface GoldenTrace {
     };
     readonly autoClipperProjects: readonly Readonly<Record<string, number>>[];
     readonly wireProjects: readonly Readonly<Record<string, number>>[];
+    readonly trustProjects: readonly Readonly<Record<string, number | string>>[];
+    readonly trustThresholds: readonly Readonly<Record<string, number>>[];
+    readonly hypnoTransition: {
+      readonly marketing: readonly Readonly<Record<string, number | string>>[];
+      readonly released: Readonly<Record<string, number>>;
+    };
   };
 }
 
@@ -135,14 +141,15 @@ describe("Universal Paperclips pinned-source golden trace", () => {
     seed(boostGame, (transaction) => {
       transaction.set(paperclipsResources.wire, 100);
       transaction.setPurchase(paperclipsBuyables.autoClipper.id, 1);
-      for (const id of [
-        "improved-auto-clippers",
-        "even-better-auto-clippers",
-        "optimized-auto-clippers",
-      ]) {
-        transaction.setProgress("upgrade", id);
-      }
+      transaction.set(paperclipsResources.operations, 20_000);
     });
+    for (const id of [
+      "improved-auto-clippers",
+      "even-better-auto-clippers",
+      "optimized-auto-clippers",
+    ]) {
+      expect(boostGame.dispatch({ type: "project", id })).toMatchObject({ ok: true });
+    }
     boostGame.advance(1_000);
     expect(boostGame.getSnapshot().resources.clips).toBeCloseTo(
       golden.scenarios.autoClipperProjects[2]?.clipperBoost as number,
@@ -223,7 +230,115 @@ describe("Universal Paperclips pinned-source golden trace", () => {
       "wire-price-timer": 0,
     });
   });
+
+  it("matches the source Trust grants and social-project costs", () => {
+    const game = createPaperclipsReference();
+    seed(game, (transaction) => {
+      transaction.set(paperclipsResources.operations, 250_000);
+      transaction.set(paperclipsResources.creativity, 5_000);
+      transaction.set(paperclipsResources.yomi, 50_000);
+      transaction.set(paperclipsResources.trust, 8);
+      transaction.setProgress("upgrade", "creativity");
+    });
+    const ids = [
+      "limerick",
+      "lexical-processing",
+      "combinatory-harmonics",
+      "hadwiger-problem",
+      "toth-sausage",
+      "donkey-space",
+      "coherent-extrapolated-volition",
+      "cure-for-cancer",
+      "world-peace",
+      "global-warming",
+      "male-pattern-baldness",
+    ];
+    for (const [index, id] of ids.entries()) {
+      expect(game.dispatch({ type: "project", id })).toMatchObject({ ok: true });
+      const expected = golden.scenarios.trustProjects[index];
+      expect(game.getSnapshot().resources).toMatchObject({
+        trust: expected?.trust,
+        operations: expected?.standardOps,
+        creativity: expected?.creativity,
+        yomi: expected?.yomi,
+        "stock-gain-threshold": expected?.stockGainThreshold,
+      });
+    }
+  });
+
+  it("matches source marketing multipliers and the HypnoDrone transition", () => {
+    const game = createPaperclipsReference();
+    seed(game, (transaction) => {
+      transaction.set(paperclipsResources.operations, 100_000);
+      transaction.set(paperclipsResources.creativity, 500);
+      transaction.set(paperclipsResources.trust, 100);
+      transaction.set(paperclipsResources.wire, 4_321);
+      transaction.setPurchase(paperclipsBuyables.autoClipper.id, 75);
+      transaction.setPurchase(paperclipsBuyables.megaClipper.id, 4);
+    });
+    const ids = [
+      "lexical-processing",
+      "new-slogan",
+      "combinatory-harmonics",
+      "catchy-jingle",
+      "hypno-harmonics",
+    ];
+    for (const [index, id] of ids.entries()) {
+      expect(game.dispatch({ type: "project", id })).toMatchObject({ ok: true });
+      const expected = golden.scenarios.hypnoTransition.marketing[index];
+      expect(game.getSnapshot().resources).toMatchObject({
+        trust: expected?.trust,
+        operations: expected?.standardOps,
+        creativity: expected?.creativity,
+        "marketing-effectiveness": expected?.marketingEffectiveness,
+      });
+    }
+    expect(game.dispatch({ type: "project", id: "hypnodrones" })).toMatchObject({ ok: true });
+    expect(game.dispatch({ type: "project", id: "release-hypnodrones" })).toMatchObject({
+      ok: true,
+    });
+    const snapshot = game.getSnapshot();
+    expect(snapshot.resources).toMatchObject({
+      trust: golden.scenarios.hypnoTransition.released.trust,
+      wire: golden.scenarios.hypnoTransition.released.wire,
+      "nano-wire": golden.scenarios.hypnoTransition.released.nanoWire,
+    });
+    expect(snapshot.purchaseCounts).toMatchObject({ "auto-clipper": 0, "mega-clipper": 0 });
+    expect(snapshot.resources.clips).toBe(0);
+    expect(snapshot.progression.milestones).toHaveProperty("industry-phase");
+  });
+
+  it("preserves project Trust while advancing source Fibonacci thresholds", () => {
+    const game = createPaperclipsReference();
+    const checkpoints = golden.scenarios.trustThresholds;
+    for (const [index, clips] of [3_000, 5_000, 8_000, 13_000].entries()) {
+      seed(game, (transaction) => transaction.set(paperclipsResources.clips, clips));
+      game.advance(1_000);
+      expectTrustCheckpoint(game, checkpoints[index]);
+    }
+    seed(game, (transaction) => transaction.set(paperclipsResources.creativity, 50));
+    expect(game.dispatch({ type: "project", id: "lexical-processing" })).toMatchObject({
+      ok: true,
+    });
+    expectTrustCheckpoint(game, checkpoints[4]);
+    seed(game, (transaction) => transaction.set(paperclipsResources.clips, 21_000));
+    game.advance(1_000);
+    expectTrustCheckpoint(game, checkpoints[5]);
+  });
 });
+
+function expectTrustCheckpoint(
+  game: ReturnType<typeof createPaperclipsReference>,
+  expected: Readonly<Record<string, number>> | undefined,
+): void {
+  expect(game.getSnapshot().resources).toMatchObject({
+    clips: expected?.clips,
+    trust: expected?.trust,
+    "next-trust": expected?.nextTrust,
+    "trust-fibonacci-previous": expected?.fib1,
+    "trust-fibonacci-current": expected?.fib2,
+  });
+}
 
 function seed(
   reference: ReturnType<typeof createPaperclipsReference>,

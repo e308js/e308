@@ -22,10 +22,9 @@ for (const file of sourceFiles) {
   sources.set(file, source);
 }
 
-const runtime = createRuntime();
-for (const file of sourceFiles) runtime.evaluate(requiredSource(file), file);
+const initialRuntime = loadedRuntime();
 const scenarios = {
-  initial: runtime.read([
+  initial: initialRuntime.read([
     "clips",
     "unusedClips",
     "unsoldClips",
@@ -45,11 +44,14 @@ const scenarios = {
     "operations",
     "trust",
   ]),
-  retail: retailTrace(runtime),
-  machineCosts: machineCostTrace(runtime),
-  autoClipperProjects: autoClipperProjectTrace(runtime),
-  wireProjects: wireProjectTrace(runtime),
-  timedRetail: timedRetailTrace(runtime),
+  retail: retailTrace(loadedRuntime()),
+  machineCosts: machineCostTrace(loadedRuntime()),
+  autoClipperProjects: autoClipperProjectTrace(loadedRuntime()),
+  wireProjects: wireProjectTrace(loadedRuntime()),
+  timedRetail: timedRetailTrace(loadedRuntime()),
+  trustProjects: trustProjectTrace(loadedRuntime()),
+  trustThresholds: trustThresholdTrace(loadedRuntime()),
+  hypnoTransition: hypnoTransitionTrace(loadedRuntime()),
 };
 
 await writeFile(
@@ -172,6 +174,81 @@ function wireProjectTrace(runtime) {
   );
   checkpoints.push(runtime.read(["wireSupply", "standardOps"]));
   return checkpoints;
+}
+
+function trustProjectTrace(runtime) {
+  runtime.run(
+    "standardOps=250000; operations=250000; creativity=5000; yomi=50000; trust=8; stockGainThreshold=.5",
+  );
+  const checkpoints = [];
+  for (const name of [
+    "project6",
+    "project13",
+    "project14",
+    "project15",
+    "project17",
+    "project19",
+    "project27",
+    "project28",
+    "project29",
+    "project30",
+    "project31",
+  ]) {
+    runtime.run(`${name}.element=document.getElementById('${name}'); ${name}.effect()`);
+    checkpoints.push({
+      project: name,
+      ...runtime.read(["trust", "standardOps", "creativity", "yomi", "stockGainThreshold"]),
+    });
+  }
+  return checkpoints;
+}
+
+function trustThresholdTrace(runtime) {
+  const checkpoints = [];
+  for (const clips of [3_000, 5_000, 8_000, 13_000]) {
+    runtime.run(`clips=${clips}; calculateTrust()`);
+    checkpoints.push(runtime.read(["clips", "trust", "nextTrust", "fib1", "fib2"]));
+  }
+  runtime.run(
+    "creativity=50; project13.element=document.getElementById('project13'); project13.effect()",
+  );
+  checkpoints.push(runtime.read(["clips", "trust", "nextTrust", "fib1", "fib2"]));
+  runtime.run("clips=21000; calculateTrust()");
+  checkpoints.push(runtime.read(["clips", "trust", "nextTrust", "fib1", "fib2"]));
+  return checkpoints;
+}
+
+function hypnoTransitionTrace(runtime) {
+  runtime.run(
+    "standardOps=100000; operations=100000; creativity=500; trust=100; wire=4321; clipmakerLevel=75; megaClipperLevel=4; marketingEffectiveness=1",
+  );
+  const marketing = [];
+  for (const name of ["project13", "project11", "project14", "project12", "project34"]) {
+    runtime.run(`${name}.element=document.getElementById('${name}'); ${name}.effect()`);
+    marketing.push({
+      project: name,
+      ...runtime.read(["trust", "standardOps", "creativity", "marketingEffectiveness"]),
+    });
+  }
+  runtime.run("project70.element=document.getElementById('project70'); project70.effect()");
+  runtime.run("project35.element=document.getElementById('project35'); project35.effect()");
+  return {
+    marketing,
+    released: runtime.read([
+      "trust",
+      "clipmakerLevel",
+      "megaClipperLevel",
+      "wire",
+      "nanoWire",
+      "humanFlag",
+    ]),
+  };
+}
+
+function loadedRuntime() {
+  const runtime = createRuntime();
+  for (const file of sourceFiles) runtime.evaluate(requiredSource(file), file);
+  return runtime;
 }
 
 function createRuntime() {

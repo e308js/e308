@@ -22,7 +22,7 @@ export function updateBusiness(
   }
   runCompute(transaction, seconds, resources, compute);
   runInvestments(transaction, seconds, resources);
-  awardTrust(transaction, resources);
+  awardTrust(transaction, seconds, resources);
 }
 
 function runRetailSchedule(
@@ -77,8 +77,8 @@ function automaticConfig(
   const auto = transaction.getPurchase(requiredBuyable(buyables, "autoClipper").id);
   const mega = transaction.getPurchase(requiredBuyable(buyables, "megaClipper").id);
   return {
-    autoPerTick: clipperBoost(transaction) * (auto / 100),
-    megaPerTick: mega * 5,
+    autoPerTick: transaction.get(required(resources, "autoClipperBoost")) * (auto / 100),
+    megaPerTick: mega * 5 * transaction.get(required(resources, "megaClipperBoost")),
     wireBuyer: transaction.hasProgress("upgrade", "wire-buyer"),
     wireCost: transaction.get(required(resources, "wireCost")),
     wireSupply: transaction.get(required(resources, "wireSupply")),
@@ -160,33 +160,39 @@ function runInvestments(
   );
 }
 
-function awardTrust(transaction: Transaction<number>, resources: BusinessResources): void {
+function awardTrust(
+  transaction: Transaction<number>,
+  seconds: number,
+  resources: BusinessResources,
+): void {
   const clips = transaction.get(required(resources, "clips"));
-  const earned = 2 + trustThresholdsReached(clips);
-  if (earned > transaction.get(required(resources, "trust"))) {
-    transaction.set(required(resources, "trust"), earned);
+  const nextTrust = required(resources, "nextTrust");
+  const previous = required(resources, "trustFibonacciPrevious");
+  const current = required(resources, "trustFibonacciCurrent");
+  let threshold = transaction.get(nextTrust);
+  let fibPrevious = transaction.get(previous);
+  let fibCurrent = transaction.get(current);
+  const tickLimit = Math.round(seconds / 0.01);
+  let awarded = 0;
+  while (clips >= threshold && awarded < tickLimit) {
+    awarded += 1;
+    const next = fibPrevious + fibCurrent;
+    threshold = next * 1_000;
+    fibPrevious = fibCurrent;
+    fibCurrent = next;
   }
-}
-
-function trustThresholdsReached(clips: number): number {
-  let previous = 2_000;
-  let threshold = 3_000;
-  let reached = 0;
-  while (clips >= threshold && reached < 100) {
-    reached += 1;
-    const next = previous + threshold;
-    previous = threshold;
-    threshold = next;
-  }
-  return reached;
-}
-
-function clipperBoost(transaction: Transaction<number>): number {
-  let boost = 1;
-  if (transaction.hasProgress("upgrade", "improved-auto-clippers")) boost += 0.25;
-  if (transaction.hasProgress("upgrade", "even-better-auto-clippers")) boost += 0.5;
-  if (transaction.hasProgress("upgrade", "optimized-auto-clippers")) boost += 0.75;
-  return boost;
+  if (awarded === 0) return;
+  transaction.add(required(resources, "trust"), awarded);
+  transaction.set(
+    required(resources, "computeCapacity"),
+    Math.max(
+      transaction.get(required(resources, "computeCapacity")),
+      transaction.get(required(resources, "trust")),
+    ),
+  );
+  transaction.set(nextTrust, threshold);
+  transaction.set(previous, fibPrevious);
+  transaction.set(current, fibCurrent);
 }
 
 function required(resources: BusinessResources, id: string): Resource<number> {

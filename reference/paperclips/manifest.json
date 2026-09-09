@@ -18,14 +18,17 @@
   "goldenTrace": {
     "path": "reference/paperclips/golden-trace.json",
     "generator": "reference/paperclips/generate-golden.mjs",
-    "sha256": "3414f9c96ab7a8dcb1d31a49d6ea262612bccfd71cad2d7bf9769f11f2fc31c6",
+    "sha256": "0fcd108af6a4b541ffb11fbba66349bad57a8cb0a7dce1e6cad1afc5f894ba97",
     "scenarios": [
       "initial",
       "retail",
       "machineCosts",
       "autoClipperProjects",
       "wireProjects",
-      "timedRetail"
+      "timedRetail",
+      "trustProjects",
+      "trustThresholds",
+      "hypnoTransition"
     ]
   },
   "mapping": {

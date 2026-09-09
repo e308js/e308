@@ -178,6 +178,187 @@
           "wirePriceTimer": 0
         }
       ]
+    },
+    "trustProjects": [
+      {
+        "project": "project6",
+        "trust": 9,
+        "standardOps": 250000,
+        "creativity": 4990,
+        "yomi": 50000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project13",
+        "trust": 10,
+        "standardOps": 250000,
+        "creativity": 4940,
+        "yomi": 50000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project14",
+        "trust": 11,
+        "standardOps": 250000,
+        "creativity": 4840,
+        "yomi": 50000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project15",
+        "trust": 12,
+        "standardOps": 250000,
+        "creativity": 4690,
+        "yomi": 50000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project17",
+        "trust": 13,
+        "standardOps": 250000,
+        "creativity": 4490,
+        "yomi": 50000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project19",
+        "trust": 14,
+        "standardOps": 250000,
+        "creativity": 4240,
+        "yomi": 50000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project27",
+        "trust": 15,
+        "standardOps": 230000,
+        "creativity": 3740,
+        "yomi": 47000,
+        "stockGainThreshold": 0.5
+      },
+      {
+        "project": "project28",
+        "trust": 25,
+        "standardOps": 205000,
+        "creativity": 3740,
+        "yomi": 47000,
+        "stockGainThreshold": 0.51
+      },
+      {
+        "project": "project29",
+        "trust": 37,
+        "standardOps": 175000,
+        "creativity": 3740,
+        "yomi": 32000,
+        "stockGainThreshold": 0.52
+      },
+      {
+        "project": "project30",
+        "trust": 52,
+        "standardOps": 125000,
+        "creativity": 3740,
+        "yomi": 27500,
+        "stockGainThreshold": 0.53
+      },
+      {
+        "project": "project31",
+        "trust": 72,
+        "standardOps": 105000,
+        "creativity": 3740,
+        "yomi": 27500,
+        "stockGainThreshold": 0.54
+      }
+    ],
+    "trustThresholds": [
+      {
+        "clips": 3000,
+        "trust": 3,
+        "nextTrust": 5000,
+        "fib1": 3,
+        "fib2": 5
+      },
+      {
+        "clips": 5000,
+        "trust": 4,
+        "nextTrust": 8000,
+        "fib1": 5,
+        "fib2": 8
+      },
+      {
+        "clips": 8000,
+        "trust": 5,
+        "nextTrust": 13000,
+        "fib1": 8,
+        "fib2": 13
+      },
+      {
+        "clips": 13000,
+        "trust": 6,
+        "nextTrust": 21000,
+        "fib1": 13,
+        "fib2": 21
+      },
+      {
+        "clips": 13000,
+        "trust": 7,
+        "nextTrust": 21000,
+        "fib1": 13,
+        "fib2": 21
+      },
+      {
+        "clips": 21000,
+        "trust": 8,
+        "nextTrust": 34000,
+        "fib1": 21,
+        "fib2": 34
+      }
+    ],
+    "hypnoTransition": {
+      "marketing": [
+        {
+          "project": "project13",
+          "trust": 101,
+          "standardOps": 100000,
+          "creativity": 450,
+          "marketingEffectiveness": 1
+        },
+        {
+          "project": "project11",
+          "trust": 101,
+          "standardOps": 97500,
+          "creativity": 425,
+          "marketingEffectiveness": 1.5
+        },
+        {
+          "project": "project14",
+          "trust": 102,
+          "standardOps": 97500,
+          "creativity": 325,
+          "marketingEffectiveness": 1.5
+        },
+        {
+          "project": "project12",
+          "trust": 102,
+          "standardOps": 93000,
+          "creativity": 280,
+          "marketingEffectiveness": 3
+        },
+        {
+          "project": "project34",
+          "trust": 101,
+          "standardOps": 85500,
+          "creativity": 280,
+          "marketingEffectiveness": 15
+        }
+      ],
+      "released": {
+        "trust": 0,
+        "clipmakerLevel": 0,
+        "megaClipperLevel": 0,
+        "wire": 4321,
+        "nanoWire": 4321,
+        "humanFlag": 0
+      }
     }
   }
 }

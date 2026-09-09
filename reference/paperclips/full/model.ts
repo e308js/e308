@@ -30,12 +30,37 @@ export const paperclipsResources = {
   universePrestige: paperclipsKit.resource("universe-prestige", { scope: permanent, initial: 0 }),
   marketingLevel: paperclipsKit.resource("marketing-level", { scope: business, initial: 1 }),
   trust: paperclipsKit.resource("trust", { scope: permanent, initial: 2 }),
+  computeCapacity: paperclipsKit.resource("compute-capacity", { scope: permanent, initial: 2 }),
+  nextTrust: paperclipsKit.resource("next-trust", { scope: permanent, initial: 3_000 }),
+  trustFibonacciPrevious: paperclipsKit.resource("trust-fibonacci-previous", {
+    scope: permanent,
+    initial: 2,
+  }),
+  trustFibonacciCurrent: paperclipsKit.resource("trust-fibonacci-current", {
+    scope: permanent,
+    initial: 3,
+  }),
   operations: paperclipsKit.resource("operations", { scope: permanent, initial: 0 }),
   creativity: paperclipsKit.resource("creativity", { scope: permanent, initial: 0 }),
   yomi: paperclipsKit.resource("yomi", { scope: permanent, initial: 0 }),
   bankroll: paperclipsKit.resource("bankroll", { scope: permanent, initial: 0 }),
   investmentLevel: paperclipsKit.resource("investment-level", { scope: permanent, initial: 0 }),
   tournaments: paperclipsKit.resource("tournaments", { scope: permanent, initial: 0 }),
+  megaClipperBoost: paperclipsKit.resource("mega-clipper-boost", {
+    scope: permanent,
+    initial: 1,
+  }),
+  autoClipperBoost: paperclipsKit.resource("auto-clipper-boost", {
+    scope: permanent,
+    initial: 1,
+  }),
+  wirePurchases: paperclipsKit.resource("wire-purchases", { scope: permanent, initial: 0 }),
+  nanoWire: paperclipsKit.resource("nano-wire", { scope: permanent, initial: 0 }),
+  bribe: paperclipsKit.resource("bribe", { scope: permanent, initial: 1_000_000 }),
+  stockGainThreshold: paperclipsKit.resource("stock-gain-threshold", {
+    scope: permanent,
+    initial: 0.5,
+  }),
   manualClips: paperclipsKit.resource("manual-clips", { scope: permanent, initial: 0 }),
   availableMatter: paperclipsKit.resource("available-matter", { scope: industry, initial: 6e27 }),
   acquiredMatter: paperclipsKit.resource("acquired-matter", { scope: industry, initial: 0 }),
@@ -56,7 +81,7 @@ export const paperclipsResources = {
 
 export const computeAllocation = paperclipsKit.allocation("compute", {
   scope: permanent,
-  budget: paperclipsResources.trust,
+  budget: paperclipsResources.computeCapacity,
   targets: ["processors", "memory"],
   initial: { processors: 1, memory: 1 },
 });

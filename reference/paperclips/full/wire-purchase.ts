@@ -7,6 +7,7 @@ export interface WirePurchaseResources {
   readonly wireCost: Resource<number>;
   readonly wirePriceTimer: Resource<number>;
   readonly wireSupply: Resource<number>;
+  readonly wirePurchases: Resource<number>;
 }
 
 export function purchaseWire(
@@ -19,5 +20,6 @@ export function purchaseWire(
   transaction.add(resources.wire, transaction.get(resources.wireSupply));
   transaction.set(resources.wirePriceTimer, 0);
   transaction.add(resources.wireBasePrice, 0.05);
+  transaction.add(resources.wirePurchases, 1);
   return true;
 }

@@ -5,6 +5,7 @@ import type {
 } from "../../../packages/core/src/testing/index.js";
 import { paperclipsBuyable } from "./buyable-map.js";
 import { paperclipsResources } from "./model.js";
+import { appendProjectTriggerConstraints } from "./project-quote-constraints.js";
 import {
   businessProjects,
   industryProjects,
@@ -24,6 +25,7 @@ export function paperclipsBusinessQuotes(
   if (paperclipsPhase(snapshot) !== "business") return [];
   return [
     ...businessProjects.map((project) => projectQuote(snapshot, project)),
+    investmentQuote(snapshot),
     tournamentQuote(snapshot),
     wireQuote(snapshot),
     ...computeQuotes(snapshot),
@@ -105,6 +107,22 @@ function tournamentQuote(snapshot: Snapshot<number>): LegalActionQuote<Paperclip
   );
 }
 
+function investmentQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
+  const constraints: ConstraintEvidence[] = [];
+  if (!snapshot.progression.upgrades["algorithmic-trading"])
+    constraints.push({
+      kind: "prerequisite",
+      id: "algorithmic-trading",
+      detail: "investment engine",
+    });
+  const bankroll = snapshot.resources.bankroll ?? 0;
+  const amount = Math.min(10_000 - bankroll, snapshot.resources.funds ?? 0);
+  if (bankroll >= 10_000)
+    constraints.push({ kind: "policy", id: "bankroll", detail: "takeover trigger reached" });
+  if (amount <= 0) requireAmount(snapshot, "funds", 1, constraints);
+  return quote(snapshot, "invest", { type: "invest", amount }, constraints, 995);
+}
+
 function wireQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
   const cost = snapshot.resources[paperclipsResources.wireCost.id] ?? 0;
   const constraints: ConstraintEvidence[] = [];
@@ -160,7 +178,7 @@ function machineQuote(
     constraints.push({ kind: "policy", id, detail: `campaign target ${target}` });
   requireAmount(
     snapshot,
-    isBusinessMachine(id) ? "funds" : "clips",
+    id === "auto-clipper" || id === "mega-clipper" || id === "marketing" ? "funds" : "clips",
     buyable.curve.unitCost(count),
     constraints,
   );
@@ -222,26 +240,17 @@ function projectConstraints(
   if (project.operations) requireAmount(snapshot, "operations", project.operations, constraints);
   if (project.creativity) requireAmount(snapshot, "creativity", project.creativity, constraints);
   if (project.yomi) requireAmount(snapshot, "yomi", project.yomi, constraints);
+  if (project.funds) requireAmount(snapshot, "funds", project.funds, constraints);
   if (project.clips) requireAmount(snapshot, "clips", project.clips, constraints);
-  if (project.trust) requireFreeTrust(snapshot, project.trust, constraints);
+  if (project.trustCost && project.id !== "beg-for-more-wire") {
+    requireAmount(snapshot, "trust", project.trustCost, constraints);
+  }
+  appendProjectTriggerConstraints(snapshot, project, constraints);
   if (project.id === "spectral-froth-annealment")
     requireAmount(snapshot, paperclipsResources.wireSupply.id, 5_000, constraints);
   if (project.id === "quantum-foam-annealment")
     requireAmount(snapshot, paperclipsResources.wireCost.id, 125, constraints);
   return constraints;
-}
-
-function requireFreeTrust(
-  snapshot: Snapshot<number>,
-  amount: number,
-  constraints: ConstraintEvidence[],
-): void {
-  const used = Object.values(snapshot.allocations.compute ?? {}).reduce(
-    (sum, value) => sum + value,
-    0,
-  );
-  if ((snapshot.resources.trust ?? 0) - used < amount)
-    constraints.push({ kind: "insufficient-input", id: "trust", detail: `${amount} free trust` });
 }
 
 function requireAmount(
@@ -283,12 +292,8 @@ function machinePrerequisite(id: PaperclipsBuyableId): string | undefined {
   return prerequisites[id];
 }
 
-function isBusinessMachine(id: PaperclipsBuyableId): boolean {
-  return id === "auto-clipper" || id === "mega-clipper" || id === "marketing";
-}
-
 function machineTarget(id: PaperclipsBuyableId): number {
-  if (id === "auto-clipper") return 50;
+  if (id === "auto-clipper") return 75;
   if (id === "mega-clipper") return 25;
   if (id === "marketing") return 10;
   if (id === "factory" || id === "battery" || id === "solar-farm") return 5;
