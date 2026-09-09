@@ -1,4 +1,3 @@
-import { writeFile } from "node:fs/promises";
 import { compareBaseline, runSweep } from "@e308/core/balance";
 import { goalPolicy, rankedPolicy, runHarness, scriptedPolicy } from "@e308/core/testing";
 import {
@@ -57,15 +56,15 @@ if (!baselineReport || !currentReport)
   throw new TypeError("Pacing sweep did not produce two reports");
 const baseline = compareBaseline(baselineReport, currentReport, { milestoneRelative: 0.1 });
 
-await Promise.all([
-  writeReportSet({
-    output,
-    reports,
-    fileName: (report) => `${report.scenarioId}-${report.policy.id}.md`,
-  }),
-  writeFile(new URL("sweep.json", output), `${JSON.stringify(sweep, null, 2)}\n`),
-  writeFile(new URL("baseline.json", output), `${JSON.stringify(baseline, null, 2)}\n`),
-]);
+await writeReportSet({
+  output,
+  reports,
+  fileName: (report) => `${report.scenarioId}-${report.policy.id}.md`,
+  extras: [
+    { name: "sweep.json", contents: `${JSON.stringify(sweep, null, 2)}\n` },
+    { name: "baseline.json", contents: `${JSON.stringify(baseline, null, 2)}\n` },
+  ],
+});
 
 function policies(scenarioId: string) {
   const actions = scenarioId === "hearth" ? ["cook"] : [];
