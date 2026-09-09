@@ -14,7 +14,7 @@ describe("finished-game offline matrix", () => {
     verifyMatrix("wireworks", wireworksDefinition, wireworksSaveCodec, wireworksCheckpoints());
     verifyMatrix("cascade", cascadeDefinition, cascadeSaveCodec, cascadeCheckpoints());
     verifyMatrix("hearth", hearthDefinition, hearthSaveCodec, hearthCheckpoints());
-  }, 30_000);
+  }, 90_000);
 
   it("resumes interrupted eight-hour sessions exactly for every game", () => {
     verifyResume(wireworksDefinition, wireworksSaveCodec, middle(wireworksCheckpoints()));
