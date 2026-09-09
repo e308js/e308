@@ -28,7 +28,8 @@ All nine cold and warm p95 values are below the frozen two-second budget. The co
 timings and preserve 2,392,000,000 ms as pending work after the declared 200,000-step bound. No
 approximate advancement mode is used.
 
-`pnpm verify:performance` rejects missing matrix rows, fewer than ten eight-hour measurements,
-approximate modes, incomplete eight-hour work, a p95 above two seconds, or inconsistent 30-day
-backlogs. GitHub Actions uploads the generated JSON and Markdown reports inside its SHA-keyed
-quality artifact.
+`pnpm verify:performance` always rejects missing matrix rows, fewer than ten eight-hour
+measurements, approximate modes, incomplete eight-hour work, or inconsistent 30-day backlogs. It
+enforces the two-second p95 only when the recorded CPU is the named reference machine; arbitrary CI
+hardware remains diagnostic. GitHub Actions uploads the generated JSON and Markdown reports inside
+its SHA-keyed quality artifact.
