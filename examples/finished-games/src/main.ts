@@ -62,9 +62,14 @@ style.textContent = starterTheme;
 document.head.append(style);
 
 const sessions = new Map<string, Session>();
-let active = await session("wireworks");
+let active = await session(document.body.dataset.game ?? "wireworks");
 let mounted = active.mount();
 show(active);
+
+const developerTools = document.querySelector<HTMLDetailsElement>("#developer-tools");
+developerTools?.addEventListener("toggle", () => {
+  document.body.classList.toggle("debug-open", developerTools.open);
+});
 
 for (const button of document.querySelectorAll<HTMLButtonElement>("[data-game]")) {
   button.addEventListener("click", async () => {
@@ -195,6 +200,7 @@ function wireworksActionOverride(
   if (node.kind !== "action") return undefined;
   const button = context.document.createElement("button");
   button.className = node.action.id === "wait" ? "custom-wait" : "wireworks-command";
+  button.dataset.action = node.action.id;
   button.textContent =
     node.action.id === "wait"
       ? "Run the line +10 seconds"

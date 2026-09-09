@@ -8,6 +8,7 @@
       "!!**/node_modules",
       "!!artifacts",
       "!!playwright-report",
+      "!!site-dist",
       "!!test-results",
       "!!pnpm-lock.yaml"
     ]

@@ -15,7 +15,9 @@ const types = new Map([
 createServer(async (request, response) => {
   const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
   const requested = url.pathname === "/" ? "/examples/gallery/index.html" : url.pathname;
-  const path = join(root, normalize(requested).replace(/^[/\\]+/, ""));
+  let path = join(root, normalize(requested).replace(/^[/\\]+/, ""));
+  const info = await stat(path).catch(() => undefined);
+  if (info?.isDirectory()) path = join(path, "index.html");
   if (!path.startsWith(root) || !(await stat(path).catch(() => undefined))?.isFile()) {
     response.writeHead(404).end("not found");
     return;
