@@ -66,19 +66,22 @@ async function runWorker(): Promise<void> {
   const client = new WorkerClient<FixtureIntent, string>(
     messageEndpoint<WorkerResponse<string>, WorkerRequest<FixtureIntent, string>>(worker),
   );
-  const initial = fixture.transfer.encodeSnapshot(host.game.getSnapshot());
+  const source = host.game.getSnapshot();
+  const initial = fixture.transfer.encodeSnapshot(source);
   await client.request({ protocol: 1, kind: "initialize", requestId: "init", snapshot: initial });
   const result = await client.request({
     protocol: 1,
     kind: "advance",
     requestId: "advance",
-    sourceRevision: host.game.getSnapshot().revision.toString(),
+    sourceRevision: source.revision.toString(),
     elapsedMs: 1_000,
   });
   element("worker-result").textContent =
     result.kind === "result"
       ? String(fixture.transfer.decodeSnapshot(result.snapshot).resources.points)
-      : result.kind;
+      : result.kind === "error"
+        ? `${result.kind}:${result.code}`
+        : result.kind;
   client.dispose();
   worker.terminate();
 }
