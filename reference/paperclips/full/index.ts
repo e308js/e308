@@ -3,6 +3,7 @@ import { paperclipsCommand } from "./commands.js";
 import { paperclipsDefinition } from "./model.js";
 import type { PaperclipsIntent } from "./types.js";
 
+export * from "./automatic-production.js";
 export * from "./commands.js";
 export * from "./model.js";
 export * from "./project-source-map.js";

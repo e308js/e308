@@ -4,8 +4,8 @@ import type {
   Resource,
   Transaction,
 } from "../../../packages/core/src/index.js";
+import { advanceAutomaticTick } from "./automatic-production.js";
 import { advanceRetailTick } from "./retail.js";
-import { purchaseWire } from "./wire-purchase.js";
 
 type BusinessResources = Readonly<Record<string, Resource<number>>>;
 type BusinessBuyables = Readonly<Record<string, BuyableDefinition<number>>>;
@@ -45,43 +45,44 @@ function runMainTicks(
   buyables: BusinessBuyables,
 ): void {
   const ticks = Math.round(seconds / 0.01);
+  const clips = required(resources, "clips");
+  const initialClips = transaction.get(clips);
+  let state = {
+    clips: initialClips,
+    funds: transaction.get(required(resources, "funds")),
+    unsoldClips: transaction.get(required(resources, "unsold")),
+    wire: transaction.get(required(resources, "wire")),
+    wireBasePrice: transaction.get(required(resources, "wireBasePrice")),
+    wirePriceTimer: transaction.get(required(resources, "wirePriceTimer")),
+  };
+  const config = automaticConfig(transaction, resources, buyables);
   for (let index = 0; index < ticks; index += 1) {
-    maintainWire(transaction, resources);
-    produceClips(transaction, resources, buyables);
-    updateDemand(transaction, resources);
+    state = advanceAutomaticTick(state, config);
   }
+  transaction.set(clips, state.clips);
+  transaction.set(required(resources, "funds"), state.funds);
+  transaction.set(required(resources, "unsold"), state.unsoldClips);
+  transaction.set(required(resources, "wire"), state.wire);
+  transaction.set(required(resources, "wireBasePrice"), state.wireBasePrice);
+  transaction.set(required(resources, "wirePriceTimer"), state.wirePriceTimer);
+  transaction.addProduction(clips.id, state.clips - initialClips);
+  updateDemand(transaction, resources);
 }
 
-function maintainWire(transaction: Transaction<number>, resources: BusinessResources): void {
-  if (!transaction.hasProgress("upgrade", "wire-buyer")) return;
-  if (transaction.get(required(resources, "wire")) > 1) return;
-  purchaseWire(transaction, wireResources(resources));
-}
-
-function produceClips(
+function automaticConfig(
   transaction: Transaction<number>,
   resources: BusinessResources,
   buyables: BusinessBuyables,
-): void {
+) {
   const auto = transaction.getPurchase(requiredBuyable(buyables, "autoClipper").id);
   const mega = transaction.getPurchase(requiredBuyable(buyables, "megaClipper").id);
-  produceAmount(transaction, resources, clipperBoost(transaction) * (auto / 100));
-  produceAmount(transaction, resources, mega * 5);
-}
-
-function produceAmount(
-  transaction: Transaction<number>,
-  resources: BusinessResources,
-  possible: number,
-): void {
-  const wire = required(resources, "wire");
-  if (transaction.get(wire) < 1) return;
-  const produced = Math.min(transaction.get(wire), possible);
-  if (produced <= 0) return;
-  transaction.add(wire, -produced);
-  transaction.add(required(resources, "clips"), produced);
-  transaction.add(required(resources, "unsold"), produced);
-  transaction.addProduction(required(resources, "clips").id, produced);
+  return {
+    autoPerTick: clipperBoost(transaction) * (auto / 100),
+    megaPerTick: mega * 5,
+    wireBuyer: transaction.hasProgress("upgrade", "wire-buyer"),
+    wireCost: transaction.get(required(resources, "wireCost")),
+    wireSupply: transaction.get(required(resources, "wireSupply")),
+  };
 }
 
 function updateDemand(transaction: Transaction<number>, resources: BusinessResources): void {
@@ -198,15 +199,4 @@ function requiredBuyable(buyables: BusinessBuyables, id: string): BuyableDefinit
   const buyable = buyables[id];
   if (!buyable) throw new TypeError(`Missing Paperclips buyable: ${id}`);
   return buyable;
-}
-
-function wireResources(resources: BusinessResources) {
-  return {
-    funds: required(resources, "funds"),
-    wire: required(resources, "wire"),
-    wireBasePrice: required(resources, "wireBasePrice"),
-    wireCost: required(resources, "wireCost"),
-    wirePriceTimer: required(resources, "wirePriceTimer"),
-    wireSupply: required(resources, "wireSupply"),
-  };
 }

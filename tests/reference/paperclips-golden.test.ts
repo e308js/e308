@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import type { Transaction } from "@e308/core";
 import { describe, expect, it } from "vitest";
 import {
+  advanceAutomaticTick,
   advanceRetailTick,
   autoClipperCurve,
   createPaperclipsReference,
@@ -168,20 +169,35 @@ describe("Universal Paperclips pinned-source golden trace", () => {
 
   it("matches the source's 100 ms sale and wire-price schedule", () => {
     let state = {
+      clips: 20,
       demand: 3.2,
       funds: 0,
       margin: 0.25,
       unsoldClips: 20,
+      wire: 100,
       wireBasePrice: 20,
       wireCost: 20,
       wirePriceCounter: 0,
       wirePriceTimer: 248,
     };
     for (const [index, [wire, sale]] of golden.scenarios.timedRetail.draws.entries()) {
-      state = { ...state, unsoldClips: state.unsoldClips + 1 };
-      state = advanceRetailTick(state, { wire, sale });
+      for (let tick = 0; tick < 10; tick += 1) {
+        state = {
+          ...state,
+          ...advanceAutomaticTick(state, {
+            autoPerTick: 0.1,
+            megaPerTick: 0,
+            wireBuyer: false,
+            wireCost: state.wireCost,
+            wireSupply: 1_000,
+          }),
+        };
+      }
+      state = { ...state, ...advanceRetailTick(state, { wire, sale }) };
       const expected = golden.scenarios.timedRetail.checkpoints[index];
+      expect(state.clips).toBe(expected?.clips);
       expect(state.unsoldClips).toBeCloseTo(expected?.unsoldClips as number);
+      expect(state.wire).toBe(expected?.wire);
       expect(state.funds).toBe(expected?.funds);
       expect(state.wireBasePrice).toBe(expected?.wireBasePrice);
       expect(state.wireCost).toBe(expected?.wireCost);

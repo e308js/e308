@@ -38,6 +38,10 @@ describe("Universal Paperclips campaign action boundaries", () => {
 
   it("applies pricing, marketing, wire extrusion, and project effects", () => {
     const game = createPaperclipsReference();
+    expect(game.dispatch({ type: "buy-wire" })).toMatchObject({
+      ok: false,
+      error: { code: "insufficient" },
+    });
     seed(game, (transaction) => {
       transaction.set(paperclipsResources.funds, 100_000);
       transaction.set(paperclipsResources.operations, 100_000);
