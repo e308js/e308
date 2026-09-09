@@ -123,6 +123,7 @@ async function wireworksSession(): Promise<Session> {
         project: wireworksView,
         resolver,
         overrides: { action: wireworksActionOverride },
+        onDispatchResult: showDispatchResult,
       }),
   };
 }
@@ -141,7 +142,13 @@ async function cascadeSession(): Promise<Session> {
   return {
     id: "cascade",
     host: host as BrowserHost<unknown>,
-    mount: () => mountView(root, { source, project: cascadeView, resolver }),
+    mount: () =>
+      mountView(root, {
+        source,
+        project: cascadeView,
+        resolver,
+        onDispatchResult: showDispatchResult,
+      }),
   };
 }
 
@@ -154,7 +161,13 @@ async function hearthSession(): Promise<Session> {
   return {
     id: "hearth",
     host: host as BrowserHost<unknown>,
-    mount: () => mountView(root, { source, project: hearthView, resolver }),
+    mount: () =>
+      mountView(root, {
+        source,
+        project: hearthView,
+        resolver,
+        onDispatchResult: showDispatchResult,
+      }),
   };
 }
 
@@ -213,6 +226,23 @@ function wireworksActionOverride(
 function show(value: Session): void {
   root.className = `game-shell ${value.id}`;
   status.value = `${value.id}: ${value.host.ownership}; offline progress enabled`;
+}
+
+function showDispatchResult(result: unknown): void {
+  if (!isRecord(result) || typeof result.ok !== "boolean") return;
+  if (result.ok) {
+    status.value = "Action applied";
+    return;
+  }
+  const error = isRecord(result.error) ? result.error : {};
+  status.value =
+    error.code === "allocation-exceeded"
+      ? "All workers are assigned. Lower another job before raising this one."
+      : `Action blocked: ${typeof error.code === "string" ? error.code : "requirements"}`;
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null;
 }
 
 function required<T extends HTMLElement>(id: string): T {

@@ -180,6 +180,7 @@ describe("browser host", () => {
     context.clock.monotonic = 200;
     context.clock.wall = 200;
     await host.handleLifecycle("hidden");
+    expect(events).toContain("advanced");
     expect(context.scheduler.runs.size).toBe(0);
     context.clock.wall = 1_200;
     await host.handleLifecycle("visible");

@@ -23,6 +23,19 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await page.getByText("Developer tools", { exact: true }).click();
   await expect(page.getByRole("button", { name: "Run the line +10 seconds" })).toBeVisible();
   await expect(page.locator("#ad-lab, #kittens-lab, .labs")).toHaveCount(0);
+  const wireworksText = await page.locator("#game").innerText();
+  await expect.poll(() => page.locator("#game").innerText()).not.toBe(wireworksText);
+
+  await page.goto("/site-dist/examples/hearth/");
+  await page.getByRole("button", { name: "New save" }).click();
+  await expect(page.locator("#host-status")).toHaveText("Started a new save");
+  await page.getByLabel("miner").evaluate((input: HTMLInputElement) => {
+    input.value = "1";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.locator("#host-status")).toHaveText(
+    "All workers are assigned. Lower another job before raising this one.",
+  );
 
   for (const path of [
     "reference-labs.html",

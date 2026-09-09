@@ -39,6 +39,7 @@ export type BrowserLifecycleEvent = "visible" | "hidden" | "pagehide" | "pagesho
 
 export type BrowserHostEvent =
   | { readonly kind: "ownership"; readonly status: OwnershipStatus }
+  | { readonly kind: "advanced"; readonly elapsedGameMs: number }
   | { readonly kind: "saved"; readonly revision: string; readonly reason: string }
   | { readonly kind: "conflict"; readonly currentRevision: string | null }
   | { readonly kind: "storage-error"; readonly operation: string; readonly error: unknown }

@@ -222,7 +222,10 @@ class BrowserHostRuntime<N> implements BrowserHost<N> {
       const total = this.#monotonicCarryMs + Math.max(0, now - this.#lastMonotonicMs);
       const elapsed = Math.floor(total);
       this.#monotonicCarryMs = total - elapsed;
-      if (elapsed > 0) this.#game.advance(elapsed);
+      if (elapsed > 0) {
+        this.#game.advance(elapsed);
+        this.emit({ kind: "advanced", elapsedGameMs: elapsed });
+      }
     }
     this.#lastMonotonicMs = now;
   }
