@@ -1,6 +1,7 @@
 import type { ActionView } from "../view/models.js";
 import type { HotkeyView, ViewDocument } from "../view/nodes.js";
 import type { InternalRenderContext } from "./internal.js";
+import { reconcileChildren } from "./reconcile.js";
 import { renderNode } from "./render-node.js";
 import type { MountViewOptions, ViewMount, VisualClock } from "./types.js";
 
@@ -10,12 +11,20 @@ interface FocusState {
   readonly end?: number | null;
 }
 
+let mountSequence = 0;
+
+interface RangeGestureController {
+  active(): HTMLInputElement | undefined;
+  dispose(): void;
+}
+
 export function mountView<State, Intent, N>(
   root: HTMLElement,
   options: MountViewOptions<State, Intent, N>,
 ): ViewMount {
   let disposed = false;
   let rendering = false;
+  let ranges!: RangeGestureController;
   let view = options.project(options.source.getSnapshot());
   const renderDisposers: (() => void)[] = [];
   const dispatch = (intent: Intent): unknown => {
@@ -24,20 +33,27 @@ export function mountView<State, Intent, N>(
     return result;
   };
   const hold = createHoldController(root.ownerDocument, dispatch);
-  const context = createContext(root, options, dispatch, hold.start, renderDisposers, () =>
-    render(),
+  const context = createContext(
+    root,
+    options,
+    dispatch,
+    hold.start,
+    renderDisposers,
+    `e308-mount-${mountSequence++}`,
+    () => render(),
   );
   const render = (): void => {
     if (disposed || rendering) return;
     rendering = true;
     const focus = captureFocus(root);
     for (const dispose of renderDisposers.splice(0)) dispose();
-    root.replaceChildren(...context.renderMany(view.content));
+    reconcileChildren(root, context.renderMany(view.content), ranges.active());
     if (view.title) root.setAttribute("aria-label", options.resolver.text(view.title));
     else root.removeAttribute("aria-label");
     restoreFocus(root, focus);
     rendering = false;
   };
+  ranges = createRangeGestureController(root, render);
   const unsubscribe = options.source.subscribe((snapshot) => {
     view = options.project(snapshot);
     render();
@@ -54,11 +70,49 @@ export function mountView<State, Intent, N>(
       disposed = true;
       unsubscribe();
       root.ownerDocument.removeEventListener("keydown", keydown);
+      ranges.dispose();
       root.ownerDocument.removeEventListener("pointerup", hold.stop);
       root.ownerDocument.removeEventListener("pointercancel", hold.stop);
       hold.stop();
       for (const dispose of renderDisposers.splice(0)) dispose();
       root.replaceChildren();
+    },
+  };
+}
+
+function createRangeGestureController(
+  root: HTMLElement,
+  render: () => void,
+): RangeGestureController {
+  const document = root.ownerDocument;
+  let active: HTMLInputElement | undefined;
+  let release: number | undefined;
+  const pointerdown = (event: PointerEvent): void => {
+    if (event.target instanceof HTMLInputElement && event.target.type === "range")
+      active = event.target;
+  };
+  const pointerup = (): void => {
+    if (!active || !document.defaultView) return;
+    release = document.defaultView.setTimeout(() => {
+      active = undefined;
+      release = undefined;
+      render();
+    }, 0);
+  };
+  const pointercancel = (): void => {
+    active = undefined;
+    render();
+  };
+  root.addEventListener("pointerdown", pointerdown);
+  document.addEventListener("pointerup", pointerup);
+  document.addEventListener("pointercancel", pointercancel);
+  return {
+    active: () => active,
+    dispose() {
+      root.removeEventListener("pointerdown", pointerdown);
+      document.removeEventListener("pointerup", pointerup);
+      document.removeEventListener("pointercancel", pointercancel);
+      if (release !== undefined) document.defaultView?.clearTimeout(release);
     },
   };
 }
@@ -69,11 +123,13 @@ function createContext<State, Intent, N>(
   dispatch: (intent: Intent) => unknown,
   startHold: (hold: NonNullable<ActionView<Intent>["hold"]>) => void,
   renderDisposers: (() => void)[],
+  idPrefix: string,
   requestRender: () => void,
 ): InternalRenderContext<Intent, N> {
   const context: InternalRenderContext<Intent, N> = {
     document: root.ownerDocument,
     resolver: options.resolver,
+    idPrefix,
     dispatch,
     reducedMotion: options.reducedMotion ?? reducedMotion(root.ownerDocument),
     clock: options.visualClock ?? browserVisualClock(root.ownerDocument),
@@ -143,10 +199,11 @@ function restoreFocus(root: HTMLElement, focus: FocusState | undefined): void {
   const candidate = Array.from(root.querySelectorAll<HTMLElement>("[data-e308-key]")).find(
     (element) => element.dataset.e308Key === focus.key,
   );
-  candidate?.focus({ preventScroll: true });
+  if (candidate !== root.ownerDocument.activeElement) candidate?.focus({ preventScroll: true });
   if (
     (candidate instanceof HTMLInputElement || candidate instanceof HTMLTextAreaElement) &&
-    focus.start !== undefined
+    focus.start !== undefined &&
+    focus.start !== null
   ) {
     candidate.setSelectionRange(focus.start, focus.end ?? focus.start);
   }

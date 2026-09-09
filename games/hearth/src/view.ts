@@ -114,8 +114,10 @@ function workforce(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[]
     label: job,
     value: snapshot.allocations.jobs?.[job] ?? 0,
     min: 0,
-    max: maximum - assigned + (snapshot.allocations.jobs?.[job] ?? 0),
+    max: maximum,
+    allowedMax: maximum - assigned + (snapshot.allocations.jobs?.[job] ?? 0),
     step: 1,
+    showTicks: true,
     intent: (amount) => ({ type: "allocate", job, amount }),
   }));
 }

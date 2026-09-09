@@ -66,7 +66,7 @@ export function renderNode<Intent, N>(
     case "range-input":
     case "select-input":
     case "toggle-input":
-      return renderInput(context.document, node, context.resolver, context.dispatch);
+      return renderInputNode(node, context);
     case "notification":
       return renderNotification(node, context);
     case "particles":
@@ -94,6 +94,13 @@ export function renderNode<Intent, N>(
     default:
       return undefined;
   }
+}
+
+function renderInputNode<Intent, N>(
+  node: Extract<ViewNode<Intent, N>, { kind: `${string}-input` }>,
+  context: InternalRenderContext<Intent, N>,
+): HTMLElement {
+  return renderInput(context.document, node, context.resolver, context.dispatch, context.idPrefix);
 }
 
 function renderReset<Intent, N>(

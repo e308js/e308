@@ -10,6 +10,7 @@ export interface InternalRenderContext<Intent, N> extends RenderContext<Intent, 
   readonly clock: VisualClock;
   readonly overrides: Partial<Record<ViewNode<Intent, N>["kind"], ControlOverride<Intent, N>>>;
   readonly resolver: TextResolver<N>;
+  readonly idPrefix: string;
   readonly renderDisposers: (() => void)[];
   readonly startHold: (hold: NonNullable<ActionView<Intent>["hold"]>, event: PointerEvent) => void;
   renderMany(nodes: readonly ViewNode<Intent, N>[]): Node[];

@@ -32,6 +32,9 @@ describe("Hearth settlement view", () => {
     expect(root.querySelector('table[aria-label="Seasonal production ledger"]')).not.toBeNull();
     expect(root.textContent).toContain("Goal: guide the settlement through its first winter");
     expect(root.textContent).toContain("Winter will test the current stores");
+    const miner = root.querySelector<HTMLInputElement>("[data-e308-key='job-miner:control']");
+    expect(miner?.max).toBe("4");
+    expect(miner?.dataset.allowedMax).toBe("1");
     (root.querySelector("[data-tab=projects]") as HTMLButtonElement).click();
     const hall = Array.from(root.querySelectorAll("button")).find((button) =>
       button.textContent?.includes("raise great hall"),

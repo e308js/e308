@@ -414,12 +414,14 @@ describe("DOM renderer", () => {
     expect(source.listeners.size).toBe(0);
   });
 
-  it("preserves keyed focus, local disclosure state, and handles scoped hotkeys", () => {
+  it("preserves keyed identity, local state, and handles scoped hotkeys", () => {
     const root = document.createElement("main");
     document.body.append(root);
     const source = new Source();
     const mount = mountView(root, { source, project: gallery, resolver, reducedMotion: true });
     const input = required(root.querySelector<HTMLInputElement>("[data-e308-key='name:control']"));
+    const heading = required(root.querySelector<HTMLElement>("[data-e308-key=heading]"));
+    const resource = required(root.querySelector<HTMLElement>("[data-e308-key=points]"));
     input.focus();
     input.setSelectionRange(1, 2);
     const details = required(root.querySelector<HTMLDetailsElement>("details"));
@@ -427,7 +429,10 @@ describe("DOM renderer", () => {
     details.dispatchEvent(new Event("toggle"));
     const focus = vi.spyOn(HTMLElement.prototype, "focus");
     source.emit({ ...source.state, points: 13 });
-    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(root.querySelector("[data-e308-key=heading]")).toBe(heading);
+    expect(root.querySelector("[data-e308-key=points]")).toBe(resource);
+    expect(root.textContent).toContain("Points: 13");
+    expect(focus).not.toHaveBeenCalled();
     expect(document.activeElement?.getAttribute("data-e308-key")).toBe("name:control");
     expect((document.activeElement as HTMLInputElement).selectionStart).toBe(1);
     expect(root.querySelector<HTMLDetailsElement>("details")?.open).toBe(false);

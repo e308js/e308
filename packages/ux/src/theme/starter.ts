@@ -39,7 +39,10 @@ export const starterTheme = `
 .e308-tree-node[data-highlight="prestige"] { filter: drop-shadow(0 0 .5rem #ef7cff); }
 .e308-particles { min-height: 8rem; overflow: hidden; position: relative; }
 .e308-particle { background: transparent; border: 0; position: absolute; }
-.e308-input { display: grid; gap: .25rem; }
+.e308-input { display: grid; gap: .35rem; grid-template-columns: 1fr auto; align-items: center; }
+.e308-input input, .e308-input select { grid-column: 1 / -1; }
+.e308-input input[type="range"] { accent-color: var(--e308-accent); min-height: 2rem; width: 100%; }
+.e308-input-value { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   .e308-progress-fill { transition: none; }
 }

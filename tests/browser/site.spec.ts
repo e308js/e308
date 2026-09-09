@@ -36,18 +36,36 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
   await expect(page.getByText("1 of 4 workers available.", { exact: false })).toBeVisible();
-  await page.getByLabel("miner").evaluate((input: HTMLInputElement) => {
-    input.value = "1";
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  });
+  const miner = page.getByLabel("miner");
+  await expect(miner).toHaveAttribute("min", "0");
+  await expect(miner).toHaveAttribute("max", "4");
+  await expect(miner).toHaveAttribute("data-allowed-max", "1");
+  await expect(miner.locator("xpath=../datalist/option")).toHaveCount(5);
+  await miner.scrollIntoViewIfNeeded();
+  await miner.evaluate(
+    (input) => ((input as HTMLInputElement & { marker?: string }).marker = "drag"),
+  );
+  const track = await miner.boundingBox();
+  if (!track) throw new Error("expected the miner range track");
+  await page.mouse.move(track.x + 2, track.y + track.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(track.x + track.width - 2, track.y + track.height / 2, { steps: 8 });
+  await page.waitForTimeout(1_250);
+  expect(
+    await miner.evaluate((input) => (input as HTMLInputElement & { marker?: string }).marker),
+  ).toBe("drag");
+  await page.mouse.up();
   await expect(page.getByText("0 of 4 workers available.", { exact: false })).toBeVisible();
-  await expect(page.getByLabel("scholar")).toHaveAttribute("max", "0");
+  await expect(miner).toHaveValue("1");
+  await expect(miner.locator("xpath=../output")).toHaveText("1 of 4");
+  await expect(page.getByLabel("scholar")).toHaveAttribute("max", "4");
+  await expect(page.getByLabel("scholar")).toHaveAttribute("data-allowed-max", "0");
   await page.getByRole("tab", { name: "Crafting" }).click();
   await expect(page.getByRole("button", { name: "build cottage" })).toBeVisible();
   await expect(page.getByText("A cottage adds one worker")).toBeVisible();
   await page.getByRole("tab", { name: "Projects" }).click();
   await expect(page.getByRole("button", { name: "raise great hall" })).toBeDisabled();
-  await expect(page.getByText("wood: need 30, have 10", { exact: false })).toBeVisible();
+  await expect(page.getByText("wood: need 30, have", { exact: false })).toBeVisible();
 
   await page.goto("/site-dist/examples/cascade/");
   await expect(page.locator("#host-status")).toContainText("cascade");

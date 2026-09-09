@@ -1,3 +1,4 @@
+import { bindEvent } from "../dom/events.js";
 import type { VisualClock } from "../dom/types.js";
 import type { TextValue } from "../localization/types.js";
 import type { ParticleView } from "../view/nodes.js";
@@ -64,7 +65,7 @@ function bindParticle<Intent, N>(
   options: ParticleRenderOptions<Intent, N>,
 ): void {
   if (view.intent !== undefined) {
-    element.addEventListener("click", () => {
+    bindEvent<MouseEvent>(element, "click", () => {
       if (view.claimId && options.claimed.has(view.claimId)) return;
       if (view.claimId) options.claimed.add(view.claimId);
       options.dispatch(view.intent as Intent);
@@ -72,10 +73,14 @@ function bindParticle<Intent, N>(
     });
   }
   if (view.hoverIntent !== undefined) {
-    element.addEventListener("mouseenter", () => options.dispatch(view.hoverIntent as Intent));
+    bindEvent<MouseEvent>(element, "mouseenter", () =>
+      options.dispatch(view.hoverIntent as Intent),
+    );
   }
   if (view.leaveIntent !== undefined) {
-    element.addEventListener("mouseleave", () => options.dispatch(view.leaveIntent as Intent));
+    bindEvent<MouseEvent>(element, "mouseleave", () =>
+      options.dispatch(view.leaveIntent as Intent),
+    );
   }
 }
 

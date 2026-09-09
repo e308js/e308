@@ -3,6 +3,7 @@ import type { TextResolver } from "../localization/types.js";
 import type { ActionBlocker } from "../view/failures.js";
 import type { ActionView, QuantityLine, ResourceView } from "../view/models.js";
 import type { MarkView, ViewStyle } from "../view/nodes.js";
+import { bindEvent } from "./events.js";
 
 export function keyed(document: Document, tag: string, id: string): HTMLElement {
   const element = document.createElement(tag);
@@ -92,9 +93,10 @@ export function renderAction<Intent, N>(
   if (action.blockers.length > 0)
     button.dataset.blockers = action.blockers.map((item) => item.kind).join(" ");
   appendActionDetails(button, action, resolver);
-  button.addEventListener("click", () => {
+  bindEvent<MouseEvent>(button, "click", (event) => {
+    const current = event.currentTarget as HTMLButtonElement;
     if (
-      !button.disabled &&
+      !current.disabled &&
       (!action.confirm || document.defaultView?.confirm(resolver.text(action.confirm)) !== false)
     ) {
       dispatch(action.intent);
@@ -102,8 +104,9 @@ export function renderAction<Intent, N>(
   });
   const hold = action.hold;
   if (hold && startHold) {
-    button.addEventListener("pointerdown", (event) => {
-      if (!button.disabled && event.button === 0) startHold(hold, event);
+    bindEvent<PointerEvent>(button, "pointerdown", (event) => {
+      if (!(event.currentTarget as HTMLButtonElement).disabled && event.button === 0)
+        startHold(hold, event);
     });
   }
   return button;

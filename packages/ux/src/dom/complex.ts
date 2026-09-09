@@ -1,6 +1,7 @@
 import type { TextValue } from "../localization/types.js";
 import type { GridCellView, TabView, TreeNodeView, ViewNode } from "../view/nodes.js";
 import { appendMark, applyStyle, keyed, renderAction } from "./elements.js";
+import { bindEvent } from "./events.js";
 import type { InternalRenderContext } from "./internal.js";
 
 export function renderProgress<Intent, N>(
@@ -30,7 +31,9 @@ export function renderInfobox<Intent, N>(
   const details = keyed(context.document, "details", node.id) as HTMLDetailsElement;
   details.className = "e308-infobox";
   details.open = context.open.get(node.id) ?? node.initiallyOpen ?? false;
-  details.addEventListener("toggle", () => context.open.set(node.id, details.open));
+  bindEvent<Event>(details, "toggle", (event) =>
+    context.open.set(node.id, (event.currentTarget as HTMLDetailsElement).open),
+  );
   const summary = context.document.createElement("summary");
   summary.textContent = context.resolver.text(node.title);
   details.append(summary, ...context.renderMany(node.content));
@@ -76,7 +79,7 @@ function tabButton<Intent, N>(
   button.setAttribute("aria-controls", `e308-panel-${tabsId}-${tab.id}`);
   button.textContent = context.resolver.text(tab.label);
   button.dataset.tab = tab.id;
-  button.addEventListener("click", () => {
+  bindEvent<MouseEvent>(button, "click", () => {
     context.tabs.set(tabsId, tab.id);
     context.requestRender();
   });
