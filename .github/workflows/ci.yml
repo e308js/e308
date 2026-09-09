@@ -35,5 +35,6 @@ jobs:
             packages/*/dist/
             games/*/dist/
             examples/finished-games/dist/
+            site-dist/
             playwright-report/
             test-results/
