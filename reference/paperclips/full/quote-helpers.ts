@@ -1,24 +1,27 @@
-import type { Snapshot } from "@e308/core";
-import type { ConstraintEvidence, LegalActionQuote } from "@e308/core/testing";
+import type { Snapshot as EngineSnapshot } from "../../../packages/core/src/index.js";
+import type {
+  LegalActionQuote as ActionQuote,
+  ConstraintEvidence as QuoteConstraint,
+} from "../../../packages/core/src/testing/index.js";
 import type { PaperclipsIntent } from "./types.js";
 
 export function requireAmount(
-  snapshot: Snapshot<number>,
+  snapshot: EngineSnapshot<number>,
   id: string,
   amount: number,
-  constraints: ConstraintEvidence[],
+  constraints: QuoteConstraint[],
 ): void {
   if ((snapshot.resources[id] ?? 0) < amount)
     constraints.push({ kind: "insufficient-input", id, detail: String(amount) });
 }
 
 export function quote(
-  snapshot: Snapshot<number>,
+  snapshot: EngineSnapshot<number>,
   id: string,
   intent: PaperclipsIntent,
-  constraints: readonly ConstraintEvidence[],
+  constraints: readonly QuoteConstraint[],
   rank: number,
-): LegalActionQuote<PaperclipsIntent> {
+): ActionQuote<PaperclipsIntent> {
   return {
     id,
     revision: snapshot.revision.toString(),

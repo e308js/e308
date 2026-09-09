@@ -41,7 +41,10 @@ function makeClip(count: number): Command<number> {
   return {
     id: "make-clip",
     execute(transaction) {
-      requirePhase(transaction, "business");
+      const industrial = transaction.hasProgress("milestone", "industry-phase");
+      const ending = transaction.get(paperclipsResources.dismantleStage) >= 4;
+      if (industrial && !ending)
+        transaction.reject({ code: "disabled", actionId: "business", reasonKey: "phase-complete" });
       if (!Number.isSafeInteger(count) || count < 1 || count > 1_000) {
         transaction.reject({ code: "invalid-count", requested: count });
       }
@@ -49,7 +52,7 @@ function makeClip(count: number): Command<number> {
       if (produced < 1) spend(transaction, paperclipsResources.wire, 1);
       transaction.add(paperclipsResources.wire, -produced);
       transaction.add(paperclipsResources.clips, produced);
-      transaction.add(paperclipsResources.unsold, produced);
+      if (!ending) transaction.add(paperclipsResources.unsold, produced);
       transaction.add(paperclipsResources.manualClips, produced);
       transaction.addProduction(paperclipsResources.clips.id, produced);
     },

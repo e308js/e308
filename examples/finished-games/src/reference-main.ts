@@ -1,6 +1,11 @@
 import { mountReferenceLabs } from "./reference-labs.js";
 
-mountReferenceLabs(required("ad-lab"), required("kittens-lab"), required("array-lab"));
+mountReferenceLabs(
+  required("ad-lab"),
+  required("kittens-lab"),
+  required("array-lab"),
+  required("paperclips-lab"),
+);
 
 function required(id: string): HTMLElement {
   const value = document.getElementById(id);

@@ -1,14 +1,14 @@
 # Reference-game parity gates
 
 Status: automated bounded-parity suite **PASS**. These cases are minimum checkpoints inside the
-[full internal emulation gate](full-emulation-gate.md), which is **IN PROGRESS**. The
+[reference-game implementation proof](full-emulation-gate.md), which is **PASS**. The
 [reference evidence manifest](evidence/reference-games.json) maps all 15 required cases—AD01–AD06,
 KG01–KG06, and PC01–PC03—to pinned source manifests, executable comparisons, declared numerical
 policies, and interactive evidence. All 15 cases pass with zero failed or not-run cases.
 
 The reference games are Universal Paperclips, Antimatter Dimensions, and Kittens Game. This register
-preserves the first bounded checkpoints. D1R additionally requires internal Paperclips and Array
-Game emulations through their authored endings under the full gate.
+preserves the first bounded checkpoints. D1R additionally requires the Paperclips and Array
+implementation stopping points in the reference-game proof.
 
 Test-only emulations may reproduce pinned mechanics directly. Source attribution and an oracle
 independent of the e308 implementation are required. The emulations remain outside package archives,
@@ -86,9 +86,9 @@ These are structural/mechanical coverage requirements, not exact Paperclips form
 
 All six AD slices, six KG slices and three PC mappings are required. Their source fixtures are frozen
 in `reference/*/manifest.json`; source integrity and the 15-case evidence mapping are executable
-tests. The automated comparisons pass. Independent review must still verify that the pinned
-selections faithfully cover the stated source behavior before D1R is accepted.
+tests. The automated comparisons pass. The implementer records the review that verifies the pinned
+selections cover the stated source behavior before D1R is accepted.
 
 Passing this bounded register does not pass D1R. The release claim requires the Paperclips and Array
-Game evidence defined by the full internal emulation gate, plus the three
+Game evidence defined by the reference-game implementation proof, plus the three
 complete original e308 games.

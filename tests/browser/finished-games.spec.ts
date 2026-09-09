@@ -50,7 +50,7 @@ test("plays and persists each distinct finished-game composition", async ({ page
 });
 
 test("keeps reference clones on a separate evidence-only page", async ({ page }) => {
-  await expect(page.locator("#ad-lab, #kittens-lab, #array-lab")).toHaveCount(0);
+  await expect(page.locator("#ad-lab, #kittens-lab, #array-lab, #paperclips-lab")).toHaveCount(0);
   await page.goto("/examples/finished-games/reference-labs.html");
   await page.getByRole("button", { name: "Tick 100 ms" }).click();
   await expect(page.locator("#ad-lab output")).toHaveText("legal action applied");
@@ -62,6 +62,12 @@ test("keeps reference clones on a separate evidence-only page", async ({ page })
   await expect(page.locator("#array-lab pre")).toContainText("1e180");
   await page.locator("#array-lab").getByRole("button", { name: "Advance 16 ms" }).click();
   await expect(page.locator("#array-lab output")).toHaveText("legal action applied");
+  await page.locator("#paperclips-lab").getByLabel("Source case").selectOption("3");
+  await page
+    .locator("#paperclips-lab")
+    .getByRole("button", { name: "Enter next universe" })
+    .click();
+  await expect(page.locator("#paperclips-lab pre")).toContainText('"phase": "complete"');
 });
 
 test("keeps primary choices usable at a touch viewport", async ({ page }) => {

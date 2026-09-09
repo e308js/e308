@@ -12,15 +12,24 @@ import {
   kittensEntitlement,
   subjectState as kittensState,
 } from "../../../reference/kittens/subject.js";
+import {
+  createPaperclipsReference,
+  importPaperclipsReference,
+  paperclipsBuyables,
+  paperclipsPhase,
+  paperclipsResources,
+} from "../../../reference/paperclips/full/index.js";
 
 export function mountReferenceLabs(
   adRoot: HTMLElement,
   kittensRoot: HTMLElement,
   arrayRoot: HTMLElement,
+  paperclipsRoot: HTMLElement,
 ): void {
   mountAd(adRoot);
   mountKittens(kittensRoot);
   mountArray(arrayRoot);
+  mountPaperclips(paperclipsRoot);
 }
 
 function mountAd(root: HTMLElement): void {
@@ -193,6 +202,60 @@ function arrayLabState(subject: ReturnType<typeof createArrayReference>) {
     B: encode(required(snapshot.resources["array-b"], "array-b")),
     generators: { A: values("A"), B: values("B") },
     upgrades: Object.keys(snapshot.progression.upgrades),
+    gameTimeMs: snapshot.gameTimeMs,
+  };
+}
+
+function mountPaperclips(root: HTMLElement): void {
+  let subject = paperclipsLabCase(0);
+  const frame = createFrame(root, "Universal Paperclips · implementation slice", [
+    ["Make 100 clips", () => subject.dispatch({ type: "make-clip", count: 100 })],
+    ["Advance one second", () => subject.advance(1_000)],
+    ["Buy AutoClipper", () => subject.dispatch({ type: "buy", id: "auto-clipper" })],
+    ["Enter next universe", () => subject.dispatch({ type: "project", id: "universe-next-door" })],
+    ["Save round-trip", () => (subject = importPaperclipsReference(subject.exportSave(1_000)))],
+  ]);
+  const wired = wireFrame(frame, () => paperclipsLabState(subject));
+  root.prepend(
+    casePicker(["Retail opening", "Powered industry", "Probe expansion", "Ending"], (index) => {
+      subject = paperclipsLabCase(index);
+      wired.render();
+    }),
+  );
+}
+
+function paperclipsLabCase(index: number): ReturnType<typeof createPaperclipsReference> {
+  const subject = createPaperclipsReference();
+  if (index === 0) return subject;
+  subject.game.dispatch({
+    id: "paperclips-lab-case",
+    execute: (transaction) => {
+      transaction.setProgress("milestone", "industry-phase");
+      transaction.set(paperclipsResources.clips, index === 1 ? 1e24 : 5e31);
+      if (index >= 2) {
+        transaction.setProgress("milestone", "space-phase");
+        transaction.set(paperclipsResources.probeTrust, 20);
+        transaction.set(paperclipsResources.probes, 1e9);
+      }
+      if (index === 3) {
+        transaction.setProgress("upgrade", "accept-exile");
+        transaction.set(paperclipsResources.operations, 300_000);
+      }
+    },
+  });
+  return subject;
+}
+
+function paperclipsLabState(subject: ReturnType<typeof createPaperclipsReference>) {
+  const snapshot = subject.getSnapshot();
+  return {
+    phase: paperclipsPhase(snapshot),
+    clips: snapshot.resources.clips,
+    funds: snapshot.resources.funds,
+    wire: snapshot.resources.wire,
+    probes: snapshot.resources.probes,
+    factories: snapshot.purchaseCounts[paperclipsBuyables.factory.id] ?? 0,
+    projects: Object.keys(snapshot.progression.upgrades).length,
     gameTimeMs: snapshot.gameTimeMs,
   };
 }

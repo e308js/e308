@@ -71,12 +71,14 @@ function industryQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<P
 }
 
 function spaceQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<PaperclipsIntent>[] {
+  const dismantling = (snapshot.resources[paperclipsResources.dismantleStage.id] ?? 0) >= 4;
   return [
     ...spaceProjects.map((project) => projectQuote(snapshot, project)),
     ...persistentPaperclipsProjects.map((project) => projectQuote(snapshot, project)),
     ...probeDesignQuotes(snapshot),
     tournamentQuote(snapshot),
     ...computeQuotes(snapshot),
+    ...(dismantling ? [makeQuote(snapshot)] : []),
   ];
 }
 

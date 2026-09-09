@@ -14,7 +14,8 @@
     "../../reference/array/model.ts",
     "../../reference/array/production.ts",
     "../../reference/array/runtime.ts",
-    "../../reference/kittens/**/*.ts"
+    "../../reference/kittens/**/*.ts",
+    "../../reference/paperclips/full/**/*.ts"
   ],
   "references": [{ "path": "../../packages/core" }, { "path": "../../packages/ux" }]
 }

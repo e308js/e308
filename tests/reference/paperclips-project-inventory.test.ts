@@ -54,18 +54,18 @@ describe("Universal Paperclips complete project inventory", () => {
     expect(inventory.projects.every((project) => project.effectWrites.length > 0)).toBe(true);
   });
 
-  it("maps every currently implemented campaign project to one source object", () => {
+  it("maps every campaign project to exactly one source object", () => {
     const sourceVariables = new Set(inventory.projects.map((project) => project.sourceVariable));
     const implementationIds = Object.values(paperclipsProjectSourceMap);
-    expect(Object.keys(paperclipsProjectSourceMap)).toHaveLength(73);
+    expect(Object.keys(paperclipsProjectSourceMap)).toHaveLength(96);
     expect(Object.keys(paperclipsProjectSourceMap).every((id) => sourceVariables.has(id))).toBe(
       true,
     );
-    expect(new Set(implementationIds).size).toBe(73);
+    expect(new Set(implementationIds).size).toBe(96);
     expect(new Set(implementationIds)).toEqual(
       new Set(allPaperclipsProjects.map((project) => project.id)),
     );
-    expect(inventory.count - implementationIds.length).toBe(23);
+    expect(inventory.count - implementationIds.length).toBe(0);
   });
 
   it("captures dynamic, repeatable, story, prestige, and dismantling projects", () => {

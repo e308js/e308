@@ -32,6 +32,12 @@ export type PaperclipsProjectEffect =
   | { readonly kind: "theory-of-mind" }
   | { readonly kind: "drone-rate"; readonly multiplier: number }
   | { readonly kind: "drone-cohesion"; readonly multiplier: number }
+  | { readonly kind: "threnody" }
+  | { readonly kind: "memory-release" }
+  | { readonly kind: "prestige"; readonly target: "universe" | "simulation" }
+  | { readonly kind: "dismantle"; readonly stage: number }
+  | { readonly kind: "temporal-reversion" }
+  | { readonly kind: "reset-compute" }
   | {
       readonly kind: "unlock";
       readonly system:

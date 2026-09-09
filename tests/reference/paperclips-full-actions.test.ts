@@ -178,7 +178,7 @@ describe("Universal Paperclips campaign action boundaries", () => {
     expect(game.getSnapshot().purchaseCounts[paperclipsBuyables.factory.id]).toBe(1);
   });
 
-  it("stops the space simulation after either terminal choice", () => {
+  it("stops probe simulation while exposing the selected ending path", () => {
     for (const ending of ["accept-exile", "reject-exile"] as const) {
       const game = createPaperclipsReference();
       seed(game, (transaction) => {
@@ -186,11 +186,31 @@ describe("Universal Paperclips campaign action boundaries", () => {
         transaction.setProgress("milestone", "space-phase");
         transaction.setProgress("upgrade", ending);
         transaction.set(paperclipsResources.probes, 100);
+        transaction.set(paperclipsResources.operations, 300_000);
+        transaction.set(paperclipsResources.creativity, 300_000);
+        transaction.set(paperclipsResources.computeCapacity, 300);
+        transaction.setAllocation("compute", "processors", 0);
+        transaction.setAllocation("compute", "memory", 300);
       });
       const before = game.getSnapshot().resources.probes;
       game.advance(60_000);
-      expect(game.getSnapshot().resources.probes).toBe(before);
-      expect(paperclipsFullQuotes(game.getSnapshot())).toEqual([]);
+      if (ending === "accept-exile") {
+        expect(game.getSnapshot().resources.probes).toBe(before);
+      } else {
+        expect(game.getSnapshot().resources.probes).not.toBe(before);
+      }
+      const legalProjects = paperclipsFullQuotes(game.getSnapshot())
+        .filter((quote) => quote.legal)
+        .map((quote) => quote.id);
+      expect(legalProjects).not.toContain(`project:${ending}`);
+      if (ending === "accept-exile") {
+        expect(legalProjects).toEqual(
+          expect.arrayContaining(["project:universe-next-door", "project:universe-within"]),
+        );
+        expect(legalProjects).not.toContain("project:reject-exile");
+      } else {
+        expect(legalProjects).not.toContain("project:accept-exile");
+      }
     }
   });
 

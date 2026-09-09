@@ -76,6 +76,15 @@ function applyProjectEffect(transaction: Transaction<number>, project: Paperclip
   if (effect.kind === "drone-cohesion") {
     transaction.set(paperclipsResources.droneBoost, effect.multiplier);
   }
+  if (effect.kind === "threnody") applyThrenody(transaction);
+  if (effect.kind === "memory-release") applyMemoryRelease(transaction);
+  if (effect.kind === "prestige") applyPrestige(transaction, effect.target);
+  if (effect.kind === "dismantle") applyDismantle(transaction, effect.stage);
+  if (effect.kind === "temporal-reversion") transaction.setWon(true);
+  if (effect.kind === "reset-compute") {
+    transaction.setAllocation(computeAllocation.id, "processors", 0);
+    transaction.setAllocation(computeAllocation.id, "memory", 0);
+  }
   if (effect.kind === "unlock" && effect.system === "investment") {
     transaction.set(paperclipsResources.investmentLevel, 1);
   }
@@ -139,6 +148,28 @@ function requireSpecialTrigger(transaction: Transaction<number>, id: string): vo
   if (id === "token-of-goodwill" && (trust < 85 || trust >= 100))
     rejectSourceTrigger(transaction, id);
   if (id === "another-token-of-goodwill" && trust >= 100) rejectSourceTrigger(transaction, id);
+  if (id === "accept-exile" && transaction.hasProgress("upgrade", "reject-exile"))
+    rejectSourceTrigger(transaction, id);
+  if (id === "reject-exile" && transaction.hasProgress("upgrade", "accept-exile"))
+    rejectSourceTrigger(transaction, id);
+  if (id === "memory-release") {
+    const memory = transaction.getAllocation(computeAllocation.id, "memory");
+    if (memory < 10 || transaction.get(paperclipsResources.probes) !== 0)
+      rejectSourceTrigger(transaction, id);
+  }
+  if (id === "threnody") {
+    const cost = transaction.get(paperclipsResources.threnodyCost);
+    if (
+      transaction.get(paperclipsResources.creativity) < cost ||
+      transaction.get(paperclipsResources.yomi) < (cost * 2) / 5
+    )
+      rejectSourceTrigger(transaction, id);
+  }
+  if (
+    id === "quantum-temporal-reversion" &&
+    transaction.get(paperclipsResources.operations) > -10_000
+  )
+    rejectSourceTrigger(transaction, id);
 }
 
 function spendProjectCosts(transaction: Transaction<number>, project: PaperclipsProject): void {
@@ -164,6 +195,11 @@ function spendProjectCosts(transaction: Transaction<number>, project: Paperclips
   if (project.effect.kind === "goodwill" && project.effect.repeatable) {
     spend(transaction, paperclipsResources.funds, transaction.get(paperclipsResources.bribe));
   }
+  if (project.effect.kind === "threnody") {
+    const cost = transaction.get(paperclipsResources.threnodyCost);
+    spend(transaction, paperclipsResources.creativity, cost);
+    spend(transaction, paperclipsResources.yomi, (cost * 2) / 5);
+  }
 }
 
 function applyTransition(transaction: Transaction<number>, project: PaperclipsProject): void {
@@ -180,7 +216,60 @@ function applyTransition(transaction: Transaction<number>, project: PaperclipsPr
     transaction.set(paperclipsResources.probes, 1);
   }
   if (project.id === "glory") transaction.add(paperclipsResources.glory, 1);
-  if (project.effect.kind === "ending") transaction.setWon(true);
+}
+
+function applyThrenody(transaction: Transaction<number>): void {
+  transaction.add(paperclipsResources.threnodyCost, 10_000);
+  transaction.add(paperclipsResources.honor, 10_000);
+}
+
+function applyMemoryRelease(transaction: Transaction<number>): void {
+  const memory = transaction.getAllocation(computeAllocation.id, "memory");
+  transaction.setAllocation(computeAllocation.id, "memory", memory - 10);
+  transaction.add(paperclipsResources.clips, 1e22);
+}
+
+function applyPrestige(transaction: Transaction<number>, target: "universe" | "simulation"): void {
+  transaction.add(
+    target === "universe"
+      ? paperclipsResources.universePrestige
+      : paperclipsResources.simulationPrestige,
+    1,
+  );
+  transaction.setWon(true);
+}
+
+function applyDismantle(transaction: Transaction<number>, stage: number): void {
+  transaction.set(paperclipsResources.dismantleStage, stage);
+  if (stage === 1) {
+    transaction.set(paperclipsResources.probes, 0);
+    transaction.set(paperclipsResources.endingTimer1, 0);
+    addRecoveredClips(transaction, 100);
+  }
+  if (stage === 2) {
+    transaction.setPurchase(paperclipsBuyables.harvester.id, 0);
+    transaction.setPurchase(paperclipsBuyables.wireDrone.id, 0);
+    addRecoveredClips(transaction, 100);
+  }
+  if (stage === 3) {
+    transaction.setPurchase(paperclipsBuyables.factory.id, 0);
+    addRecoveredClips(transaction, 15);
+  }
+  if (stage === 4) transaction.add(paperclipsResources.wire, 50);
+  if (stage === 5) transaction.set(paperclipsResources.endingTimer4, 0);
+  if (stage === 6) {
+    transaction.setAllocation(computeAllocation.id, "processors", 0);
+    transaction.add(paperclipsResources.wire, 20);
+  }
+  if (stage === 7) {
+    transaction.set(paperclipsResources.operations, 0);
+    transaction.setAllocation(computeAllocation.id, "memory", 0);
+    transaction.add(paperclipsResources.wire, 20);
+  }
+}
+
+function addRecoveredClips(transaction: Transaction<number>, amount: number): void {
+  transaction.add(paperclipsResources.clips, amount);
 }
 
 function applyGoodwill(transaction: Transaction<number>, repeatable: boolean): void {

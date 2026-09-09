@@ -251,6 +251,15 @@ export const businessProjects: readonly PaperclipsProject[] = [
     persistent: true,
     effect: unlock("auto-tourney"),
   }),
+  project("limerick-continuation", "Limerick (cont.)", {
+    creativity: 1_000_000,
+    effect: { kind: "industry" },
+  }),
+  project("xavier-reinitialization", "Xavier Re-initialization", {
+    creativity: 100_000,
+    repeatable: true,
+    effect: { kind: "reset-compute" },
+  }),
   project("release-hypnodrones", "Release the HypnoDrones", {
     trustCost: 100,
     prerequisites: ["hypnodrones"],

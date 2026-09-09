@@ -13,11 +13,9 @@ export function updateSpace(
   design: AllocationDefinition<number>,
 ): void {
   if (!transaction.hasProgress("milestone", "space-phase")) return;
-  if (
-    transaction.hasProgress("upgrade", "accept-exile") ||
-    transaction.hasProgress("upgrade", "reject-exile")
-  )
-    return;
+  if (transaction.hasProgress("upgrade", "accept-exile")) return;
+  advanceEnding(transaction, seconds, resources);
+  if (transaction.get(required(resources, "dismantleStage")) >= 1) return;
   replicate(transaction, seconds, resources, design);
   explore(transaction, seconds, resources, design);
   buildClips(transaction, seconds, resources, design);
@@ -35,13 +33,32 @@ function replicate(
   const replication = transaction.getAllocation(design.id, "replication");
   const hazard = transaction.getAllocation(design.id, "hazard");
   const births = current * replication * 0.008 * seconds;
-  const losses = current * Math.max(0.00001, 0.0003 - hazard * 0.000025) * seconds;
+  const hull = transaction.hasProgress("upgrade", "elliptic-hull-polytopes") ? 0.5 : 1;
+  const losses = current * Math.max(0.00001, 0.0003 - hazard * 0.000025) * seconds * hull;
+  transaction.add(required(resources, "hazardLosses"), losses);
   transaction.set(probes, Math.min(1e60, Math.max(0, current + births - losses)));
   const drifters = required(resources, "drifters");
   transaction.set(
     drifters,
     Math.min(1e60, transaction.get(drifters) + current * 0.00002 * seconds),
   );
+}
+
+function advanceEnding(
+  transaction: Transaction<number>,
+  seconds: number,
+  resources: Resources,
+): void {
+  if (!transaction.hasProgress("upgrade", "reject-exile")) return;
+  const stage = transaction.get(required(resources, "dismantleStage"));
+  const increment = seconds * 100;
+  if (stage <= 1) transaction.add(required(resources, "endingTimer1"), increment);
+  if (stage === 2) transaction.add(required(resources, "endingTimer2"), increment);
+  if (stage === 3) transaction.add(required(resources, "endingTimer3"), increment);
+  if (stage >= 4 && stage <= 5) transaction.add(required(resources, "endingTimer4"), increment);
+  if (stage === 6) transaction.add(required(resources, "endingTimer5"), increment);
+  if (stage === 7 && transaction.get(required(resources, "wire")) === 0)
+    transaction.add(required(resources, "endingTimer6"), increment);
 }
 
 function explore(

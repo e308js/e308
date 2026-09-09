@@ -1,4 +1,5 @@
 import { createGameKit, geometricCurve, nativeNumbers } from "../../../packages/core/src/index.js";
+import { allPaperclipsProjects } from "./projects.js";
 import { autoClipperCurve, droneCurve, megaClipperCurve } from "./purchase-curves.js";
 import { updateBusiness } from "./update-business.js";
 import { updateIndustry } from "./update-industry.js";
@@ -95,6 +96,19 @@ export const paperclipsResources = {
   honor: paperclipsKit.resource("honor", { scope: permanent, initial: 0 }),
   glory: paperclipsKit.resource("glory", { scope: permanent, initial: 0 }),
   battles: paperclipsKit.resource("battles", { scope: permanent, initial: 0 }),
+  hazardLosses: paperclipsKit.resource("hazard-losses", { scope: space, initial: 0 }),
+  threnodyCost: paperclipsKit.resource("threnody-cost", { scope: permanent, initial: 10_000 }),
+  simulationPrestige: paperclipsKit.resource("simulation-prestige", {
+    scope: permanent,
+    initial: 0,
+  }),
+  dismantleStage: paperclipsKit.resource("dismantle-stage", { scope: space, initial: 0 }),
+  endingTimer1: paperclipsKit.resource("ending-timer-1", { scope: space, initial: 0 }),
+  endingTimer2: paperclipsKit.resource("ending-timer-2", { scope: space, initial: 0 }),
+  endingTimer3: paperclipsKit.resource("ending-timer-3", { scope: space, initial: 0 }),
+  endingTimer4: paperclipsKit.resource("ending-timer-4", { scope: space, initial: 0 }),
+  endingTimer5: paperclipsKit.resource("ending-timer-5", { scope: space, initial: 0 }),
+  endingTimer6: paperclipsKit.resource("ending-timer-6", { scope: space, initial: 0 }),
 } as const;
 
 export const computeAllocation = paperclipsKit.allocation("compute", {
@@ -191,6 +205,19 @@ const spaceUpdate = paperclipsKit.steppedRule("space-update", {
     updateSpace(transaction, seconds, paperclipsResources, probeAllocation),
 });
 
+const projectDefinitions = allPaperclipsProjects.map((project) =>
+  paperclipsKit.upgrade(project.id, {
+    scope: permanent,
+    costs: [],
+    prerequisiteIds: [],
+    unlocked: () => true,
+  }),
+);
+
+const phaseMilestones = ["industry-phase", "space-phase"].map((id) =>
+  paperclipsKit.milestone(id, { scope: permanent, when: () => false }),
+);
+
 export const paperclipsDefinition = paperclipsKit.defineGame({
   id: "paperclips-full-reference",
   simulationVersion: 4,
@@ -199,6 +226,8 @@ export const paperclipsDefinition = paperclipsKit.defineGame({
   resources: Object.values(paperclipsResources),
   buyables: Object.values(paperclipsBuyables),
   allocations: [computeAllocation, probeAllocation],
+  upgrades: projectDefinitions,
+  triggers: phaseMilestones,
   steppedRules: [businessUpdate, industryUpdate, spaceUpdate],
-  win: (state) => state.hasUpgrade("accept-exile") || state.hasUpgrade("reject-exile"),
+  win: (state) => state.get(paperclipsResources.endingTimer6) >= 500,
 });

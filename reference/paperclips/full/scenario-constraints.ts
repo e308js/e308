@@ -1,5 +1,5 @@
-import type { Snapshot } from "@e308/core";
-import type { ConstraintEvidence } from "@e308/core/testing";
+import type { Snapshot } from "../../../packages/core/src/index.js";
+import type { ConstraintEvidence } from "../../../packages/core/src/testing/index.js";
 import { paperclipsResources } from "./model.js";
 import { appendProjectTriggerConstraints } from "./project-quote-constraints.js";
 import {
@@ -23,7 +23,7 @@ export function projectConstraints(
   project: PaperclipsProject,
 ): ConstraintEvidence[] {
   const constraints: ConstraintEvidence[] = [];
-  if (snapshot.progression.upgrades[project.id])
+  if (!project.repeatable && snapshot.progression.upgrades[project.id])
     constraints.push({ kind: "other", id: project.id, detail: "project complete" });
   for (const id of project.prerequisites) {
     if (!snapshot.progression.upgrades[id])
