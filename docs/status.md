@@ -82,4 +82,9 @@ rejects reference-lab markers, and browser-tests reference-lab URLs as absent. T
 maps 447 source entries to public surfaces and executable evidence; its automated validation is
 passing locally, while independent source-review sign-off remains pending.
 
+The `1.0.0-rc.1` core and UX archives install successfully in a clean consumer. S11 also generates a
+SHA-keyed release manifest with archive hashes and D1–D8/D1R evidence paths. Automated gate status is
+kept separate from the independent source, game/usability, and physical-device reviews listed in
+[release-review.md](release-review.md).
+
 No npm package or public GitHub release has been published.

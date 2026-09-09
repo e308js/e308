@@ -1,6 +1,8 @@
 # e308 v1 definition of done
 
-Status: agreed-direction specification, not a completion claim. Every implementation/evidence gate below is currently **NOT RUN**. This document defines the release bar; [implementation-plan.md](implementation-plan.md) describes the sequence towards it. Documentation-only work continues until implementation is requested.
+Status: automated release-candidate gates are implemented and passing; independent source,
+game/usability, and physical-device review remain open. This is still not a v1 completion claim.
+The [release review procedure](release-review.md) defines the remaining sign-offs.
 
 **e308 is done when its public packages demonstrate every required TMT capability, pass defined mechanics-parity gates against Antimatter Dimensions and Kittens Game, support three mechanically and visually distinct complete games, and pass reproducible correctness, recovery, usability, and performance gates with inspectable evidence.** A feature list, three reskinned clickers, or passing engine unit tests alone does not satisfy this definition.
 
