@@ -1,0 +1,31 @@
+{
+  "reference": "Array Game v0.4.2",
+  "entry": "https://demonin.com/games/arrayGame/",
+  "captured": "2026-09-09",
+  "license": "No current source license identified; independently authored test mapping only",
+  "sourceSha256": {
+    "index.html": "96171584754403cc94cba486b027f91fdd212807a4bf24271e7a1757cfc6a420",
+    "constantsv042.js": "c8b2e9689ef2c7958d1daedf74f6d2e125eabe1053b749c1022a7187ac99d33a",
+    "script.js?v0421=1": "3d25e4a2e01a4e4b259e44e02a081cf1c2b11c50b56e51e20d1184b190da011a",
+    "changelog.txt": "6011dbe046b61a057e7b965c48ef28383dad5625db43baebdb053f2e87d18ca2"
+  },
+  "currentSlice": {
+    "implemented": [
+      "A and B generator chains",
+      "generator and upgrade purchase curves",
+      "A-to-B reset formula and scope",
+      "A amount and booster multipliers",
+      "eight B upgrades",
+      "boosterator production",
+      "numeric save round trips",
+      "source-style offline elapsed updates",
+      "pinned source-normalized A/B trace",
+      "3,750-step high-frequency performance budget",
+      "fresh-save ranked and seeded-random B-era strategies",
+      "worker protocol parity",
+      "internal beginning, middle, and endpoint inspector"
+    ],
+    "open": [],
+    "outOfScope": ["C and D layers", "eight challenges", "separators and SP", "E and F"]
+  }
+}

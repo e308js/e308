@@ -9,6 +9,8 @@ export type { CurveSegment, PurchaseCurve } from "./economy/curves.js";
 export { enumeratedCurve, geometricCurve, segmentedCurve } from "./economy/curves.js";
 export type { Modifier, ModifierBreakdown, ModifierStep } from "./economy/modifiers.js";
 export { applyModifiers } from "./economy/modifiers.js";
+export type { ProducerChainContext, ProducerChainOptions } from "./economy/producer-chain.js";
+export { advanceProducerChain } from "./economy/producer-chain.js";
 export type { RateBuilders } from "./economy/rates.js";
 export { evaluateRate } from "./economy/rates.js";
 export type { RecipeDefinition, RecipeRequest } from "./economy/recipes.js";

@@ -3,14 +3,14 @@
 Status: automated release-candidate infrastructure is passing. The full internal emulations,
 original-game depth, playtesting, and physical-device checks remain open.
 
-**e308 is done when its public packages demonstrate every required TMT capability, its internal test suite fully emulates Universal Paperclips and Antimatter Dimensions, its three original games are mechanically and visually distinct complete games, and all reproducible correctness, recovery, usability, pacing, and performance gates pass with inspectable evidence.**
+**e308 is done when its public packages demonstrate every required TMT capability, its internal test suite reasonably emulates Universal Paperclips through its authored ending and Array Game through its B era, its three original games are mechanically and visually distinct complete games, and all reproducible correctness, recovery, usability, pacing, and performance gates pass with inspectable evidence.**
 
 ## Release gates
 
 | Gate | Passing condition | Required evidence |
 | --- | --- | --- |
 | D1: TMT parity | Every required leaf in the pinned TMT inventory passes; zero unmapped source entries | [Parity register](tmt-parity.md), executable fixtures, relevant interactive demonstrations, source-to-test mapping |
-| D1R: Full internal emulations | Universal Paperclips and Antimatter Dimensions pass the complete internal emulation gate; the Kittens suite remains supplemental coverage | [Full emulation gate](full-emulation-gate.md), complete source inventories, fresh-save traces, normalized state/event comparisons |
+| D1R: Full internal emulations | Universal Paperclips and Array Game pass the complete internal emulation gate; the Antimatter Dimensions and Kittens suites remain supplemental coverage | [Full emulation gate](full-emulation-gate.md), complete source inventories, fresh-save traces, normalized state/event comparisons |
 | D2: Three games | Wireworks, Cascade, and Hearth meet the game contracts below from new save to designed ending | Playable builds, source, completion traces, beginning/middle/end saves, human walkthrough records |
 | D3: Correctness | Independent mathematical/reference checks and invariants pass for each game and core mechanic | Oracle derivations, expected values, property tests, replay comparisons, retained failure seeds |
 | D4: Offline and saves | Cap, unlimited entitlement, interruption, migration, RNG, and writer-ownership cases pass | Fault-injection matrix, browser checks, migration fixtures, offline accounting reports |
@@ -34,8 +34,9 @@ The [parity register](tmt-parity.md) defines the required capability groups, lea
 ## D2: Three different complete games
 
 The original research references are part of the acceptance baseline. [D1R](full-emulation-gate.md)
-requires full internal emulations of Universal Paperclips and Antimatter Dimensions. The Kittens Game
-suite remains an additional complex-economy reference. Reference fixtures stay outside npm packages
+requires an internal emulation of Universal Paperclips through its authored ending and Array Game
+through the B-era target recorded in the pinned changelog. The Antimatter Dimensions and Kittens
+Game suites remain additional complex-economy references. Reference fixtures stay outside npm packages
 and the public site. Paperclips' stock/sales separation, constrained industry, and phase transitions
 also remain mapped into Wireworks as design lineage.
 

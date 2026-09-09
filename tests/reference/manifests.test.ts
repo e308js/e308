@@ -40,4 +40,23 @@ describe("reference source manifests", () => {
     ])
       expect(hash).toMatch(/^[a-f0-9]{64}$/);
   });
+
+  it("pins the Array Game v0.4.2 browser sources", () => {
+    const manifest = JSON.parse(
+      readFileSync(new URL("../../reference/array/manifest.json", import.meta.url), "utf8"),
+    ) as {
+      reference: string;
+      sourceSha256: Record<string, string>;
+      currentSlice: { open: string[] };
+    };
+    expect(manifest.reference).toBe("Array Game v0.4.2");
+    expect(Object.keys(manifest.sourceSha256)).toEqual([
+      "index.html",
+      "constantsv042.js",
+      "script.js?v0421=1",
+      "changelog.txt",
+    ]);
+    for (const hash of Object.values(manifest.sourceSha256)) expect(hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(manifest.currentSlice.open).toEqual([]);
+  });
 });

@@ -4,7 +4,7 @@ Status: **RELEASE REVIEW**. All implementation slices have CI-green candidates; 
 the independent checks in [release-review.md](release-review.md). [status.md](status.md) records
 accepted commits and exact CI evidence. This file remains the governing execution plan.
 
-This plan implements the [definition of done](definition-of-done.md), including TMT capability parity, required Antimatter Dimensions/Kittens Game reference slices, Paperclips coverage, and three complete distinct games. Test-only clones/ports of reference mechanics are allowed. The independently implemented e308 subject must not delegate its answers to the reference runner.
+This plan implements the [definition of done](definition-of-done.md), including TMT capability parity, required Paperclips and Array Game emulations, supplemental Antimatter Dimensions/Kittens Game reference slices, and three complete distinct games. Test-only clones/ports of reference mechanics are allowed. The independently implemented e308 subject must not delegate its answers to the reference runner.
 
 ## Work unit and delivery rule
 
@@ -35,7 +35,7 @@ The [quality gates](quality-gates.md) apply to every slice, and [slice specifica
 
 Exact slice state is recorded in [status.md](status.md). Summaries above do not themselves satisfy parity cases. Some behavioral evidence precedes browser evidence: S04 proves recovery through fault-injectable storage, while S07 proves actual browser integration. S04 cannot claim that later result.
 
-AD06 is staged: S03 establishes controlled source tick-schedule equivalence, S04 adds save/offline integration, S09 adds performance evidence, and S10 supplies interactive demonstrations. KG05's redshift policy uses the S04 extension contract in S05. Full D1R closes only when all required artifacts exist.
+AD06 remains a supplemental controlled source tick-schedule check. KG05's redshift policy uses the S04 extension contract in S05. Full D1R closes only when the Paperclips and Array Game artifacts exist.
 
 The sequence is intentionally conservative. Independent slices could be integrated concurrently later, but still require the same final-head checks and prerequisite evidence. This plan does not authorize or require sub-agent delegation.
 

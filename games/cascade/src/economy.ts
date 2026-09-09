@@ -1,4 +1,5 @@
 import {
+  advanceProducerChain,
   buyCommand,
   type Command,
   createGameKit,
@@ -89,11 +90,7 @@ export const cascadeProductionRule = cascadeKit.steppedRule("cascade-production"
   scope: cascadeScopes.run,
   priority: 10,
   update(transaction, stepSeconds) {
-    const start = cascadeTiers.map((tier) => transaction.get(tier));
-    let sharedMultiplier = eternityNumbers.mul(
-      transaction.get(cascadeResources.multiplier),
-      q(stepSeconds),
-    );
+    let sharedMultiplier = transaction.get(cascadeResources.multiplier);
     sharedMultiplier = eternityNumbers.mul(
       sharedMultiplier,
       eternityNumbers.add(q(1), transaction.getAllocation("research", "speed")),
@@ -102,22 +99,16 @@ export const cascadeProductionRule = cascadeKit.steppedRule("cascade-production"
       sharedMultiplier = eternityNumbers.div(sharedMultiplier, q(4));
     if (transaction.isChallengeActive("automation-drought"))
       sharedMultiplier = eternityNumbers.div(sharedMultiplier, q(2));
-    const outputFor = (index: number) =>
-      eternityNumbers.mul(
-        eternityNumbers.mul(start[index] as EternityQuantity, sharedMultiplier),
-        purchasedTierMultiplier(transaction.getPurchase(cascadeBuyables[index]?.id ?? "")),
-      );
-    const currencyOutput = outputFor(0);
-    transaction.add(cascadeResources.currency, currencyOutput);
-    transaction.addProduction(cascadeResources.currency.id, currencyOutput);
-    for (let index = 1; index < start.length; index += 1) {
-      const output = outputFor(index);
-      transaction.add(cascadeTiers[index - 1] as (typeof cascadeTiers)[number], output);
-      transaction.addProduction(
-        (cascadeTiers[index - 1] as (typeof cascadeTiers)[number]).id,
-        output,
-      );
-    }
+    advanceProducerChain(transaction, {
+      output: cascadeResources.currency,
+      tiers: cascadeTiers,
+      seconds: stepSeconds,
+      rate: ({ index, amount }) =>
+        eternityNumbers.mul(
+          eternityNumbers.mul(amount, sharedMultiplier),
+          purchasedTierMultiplier(transaction.getPurchase(cascadeBuyables[index]?.id ?? "")),
+        ),
+    });
   },
 });
 

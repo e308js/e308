@@ -1,5 +1,9 @@
 import { createGame, createSaveCodec } from "../../../packages/core/src/index.js";
 import { subjectState as adState, createAdSubject } from "../../../reference/ad/subject.js";
+import { B_UPGRADE_SPECS } from "../../../reference/array/constants.js";
+import { encode, q, required } from "../../../reference/array/math.js";
+import { arrayGenerators, arrayResources } from "../../../reference/array/model.js";
+import { createArrayReference, importArrayReference } from "../../../reference/array/runtime.js";
 import {
   assignWorkers,
   build,
@@ -9,9 +13,14 @@ import {
   subjectState as kittensState,
 } from "../../../reference/kittens/subject.js";
 
-export function mountReferenceLabs(adRoot: HTMLElement, kittensRoot: HTMLElement): void {
+export function mountReferenceLabs(
+  adRoot: HTMLElement,
+  kittensRoot: HTMLElement,
+  arrayRoot: HTMLElement,
+): void {
   mountAd(adRoot);
   mountKittens(kittensRoot);
+  mountArray(arrayRoot);
 }
 
 function mountAd(root: HTMLElement): void {
@@ -122,6 +131,70 @@ function mountKittens(root: HTMLElement): void {
     };
     return `restored ${raw.length} bytes`;
   }
+}
+
+function mountArray(root: HTMLElement): void {
+  let subject = arrayLabCase(0);
+  const frame = createFrame(root, "Array Game · A/B progression", [
+    [
+      "Buy A1 generator",
+      () => subject.dispatch({ type: "buy-generator", family: "A", tier: 1, mode: "max" }),
+    ],
+    ["Advance 16 ms", () => subject.advance(16)],
+    ["Advance one minute", () => subject.advanceAway(60_000)],
+    ["Prestige for B", () => subject.dispatch({ type: "prestige-b" })],
+    [
+      "Buy B1 generator",
+      () => subject.dispatch({ type: "buy-generator", family: "B", tier: 1, mode: "max" }),
+    ],
+    ["Save round-trip", () => (subject = importArrayReference(subject.exportSave(1_000)))],
+  ]);
+  const wired = wireFrame(frame, () => arrayLabState(subject));
+  root.prepend(
+    casePicker(["A opening", "B economy", "B-era endpoint"], (index) => {
+      subject = arrayLabCase(index);
+      wired.render();
+    }),
+  );
+}
+
+function arrayLabCase(index: number): ReturnType<typeof createArrayReference> {
+  const subject = createArrayReference();
+  if (index === 0) return subject;
+  subject.game.dispatch({
+    id: "array-lab-case",
+    execute: (transaction) => {
+      transaction.set(arrayResources.A, q(index === 1 ? "1e30" : "1e180"));
+      transaction.set(arrayResources.B, q(index === 1 ? "1000" : "1e10"));
+      transaction.setProgress("milestone", "array-b-unlocked");
+      arrayGenerators.A.amounts.forEach((resource, tier) => {
+        transaction.set(resource, q(index === 1 ? String(5 - tier) : "1e20"));
+      });
+      arrayGenerators.B.amounts.forEach((resource, tier) => {
+        transaction.set(resource, q(index === 1 ? String(5 - tier) : "1e10"));
+      });
+      if (index === 2)
+        B_UPGRADE_SPECS.forEach((upgrade) => {
+          transaction.setProgress("upgrade", upgrade.id);
+        });
+    },
+  });
+  return subject;
+}
+
+function arrayLabState(subject: ReturnType<typeof createArrayReference>) {
+  const snapshot = subject.getSnapshot();
+  const values = (family: "A" | "B") =>
+    arrayGenerators[family].amounts.map((resource) =>
+      encode(required(snapshot.resources[resource.id], resource.id)),
+    );
+  return {
+    A: encode(required(snapshot.resources["array-a"], "array-a")),
+    B: encode(required(snapshot.resources["array-b"], "array-b")),
+    generators: { A: values("A"), B: values("B") },
+    upgrades: Object.keys(snapshot.progression.upgrades),
+    gameTimeMs: snapshot.gameTimeMs,
+  };
 }
 
 type LabAction = readonly [string, () => unknown];

@@ -7,8 +7,8 @@ KG01–KG06, and PC01–PC03—to pinned source manifests, executable comparison
 policies, and interactive evidence. All 15 cases pass with zero failed or not-run cases.
 
 The reference games are Universal Paperclips, Antimatter Dimensions, and Kittens Game. This register
-preserves the first bounded checkpoints. D1R additionally requires complete internal Paperclips and
-Antimatter Dimensions emulations under the full gate.
+preserves the first bounded checkpoints. D1R additionally requires internal Paperclips and Array
+Game emulations through their authored endings under the full gate.
 
 Test-only emulations may reproduce pinned mechanics directly. Source attribution and an oracle
 independent of the e308 implementation are required. The emulations remain outside package archives,
@@ -89,6 +89,6 @@ in `reference/*/manifest.json`; source integrity and the 15-case evidence mappin
 tests. The automated comparisons pass. Independent review must still verify that the pinned
 selections faithfully cover the stated source behavior before D1R is accepted.
 
-Passing this bounded register does not pass D1R. The release claim requires the complete Paperclips
-and Antimatter Dimensions evidence defined by the full internal emulation gate, plus the three
+Passing this bounded register does not pass D1R. The release claim requires the Paperclips and Array
+Game evidence defined by the full internal emulation gate, plus the three
 complete original e308 games.

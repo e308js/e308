@@ -219,7 +219,7 @@ const randomPolicy = randomLegalPolicy({ version: "1" });
 | [`examples/pacing`](examples/pacing) | Reproducible pacing, sweep, baseline, checkpoint, and performance reports |
 
 Reference-game fixtures provide private test evidence for bounded mechanics comparisons against
-pinned Antimatter Dimensions, Kittens Game, and Universal Paperclips sources. The public game page
+pinned Array Game, Universal Paperclips, Antimatter Dimensions, and Kittens Game sources. The public game page
 features the three original e308 games.
 
 ## Develop e308

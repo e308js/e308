@@ -50,14 +50,18 @@ test("plays and persists each distinct finished-game composition", async ({ page
 });
 
 test("keeps reference clones on a separate evidence-only page", async ({ page }) => {
-  await expect(page.locator("#ad-lab, #kittens-lab")).toHaveCount(0);
+  await expect(page.locator("#ad-lab, #kittens-lab, #array-lab")).toHaveCount(0);
   await page.goto("/examples/finished-games/reference-labs.html");
   await page.getByRole("button", { name: "Tick 100 ms" }).click();
   await expect(page.locator("#ad-lab output")).toHaveText("legal action applied");
   await page.getByRole("button", { name: "Craft beam" }).click();
   await expect(page.locator("#kittens-lab output")).toHaveText("blocked by requirements");
-  await page.getByRole("button", { name: "Save round-trip" }).click();
+  await page.locator("#kittens-lab").getByRole("button", { name: "Save round-trip" }).click();
   await expect(page.locator("#kittens-lab output")).toHaveText(/restored \d+ bytes/);
+  await page.locator("#array-lab").getByLabel("Source case").selectOption("2");
+  await expect(page.locator("#array-lab pre")).toContainText("1e180");
+  await page.locator("#array-lab").getByRole("button", { name: "Advance 16 ms" }).click();
+  await expect(page.locator("#array-lab output")).toHaveText("legal action applied");
 });
 
 test("keeps primary choices usable at a touch viewport", async ({ page }) => {

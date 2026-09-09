@@ -4,39 +4,18 @@ import type { Snapshot, Transaction } from "../../packages/core/src/state/types.
 import {
   attachWorkerRuntime,
   messageEndpoint,
-  type TransferValue,
   WorkerClient,
-  type WorkerEndpoint,
   WorkerProtocolError,
   type WorkerRequest,
   type WorkerResponse,
   type WorkerTransferCodec,
 } from "../../packages/core/src/worker/index.js";
+import { TestEndpoint, workerEndpointPair } from "../helpers/worker-endpoint.js";
 
 type Intent =
   | { readonly kind: "add"; readonly amount: number }
   | { readonly kind: "reject" }
   | { readonly kind: "invalid" };
-
-class TestEndpoint<Incoming, Outgoing> implements WorkerEndpoint<Incoming, Outgoing> {
-  readonly listeners = new Set<(message: Incoming) => void>();
-  peer: TestEndpoint<Outgoing, Incoming> | undefined;
-  postMessage(message: Outgoing): void {
-    for (const listener of this.peer?.listeners ?? []) listener(message);
-  }
-  subscribe(listener: (message: Incoming) => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-}
-
-function pair<I extends TransferValue, S extends TransferValue>() {
-  const runtime = new TestEndpoint<WorkerRequest<I, S>, WorkerResponse<S>>();
-  const client = new TestEndpoint<WorkerResponse<S>, WorkerRequest<I, S>>();
-  runtime.peer = client;
-  client.peer = runtime;
-  return { runtime, client };
-}
 
 function fixture() {
   const kit = createGameKit({ numbers: nativeNumbers });
@@ -97,7 +76,7 @@ function decodeSnapshot(value: string): Snapshot<number> {
 describe("worker runtime", () => {
   it("matches main-thread advancement, dispatches intents, and caches replies", async () => {
     const subject = fixture();
-    const endpoints = pair<Intent, string>();
+    const endpoints = workerEndpointPair<Intent, string>();
     const runtime = attachWorkerRuntime({
       definition: subject.definition,
       codec: subject.codec,
@@ -164,7 +143,7 @@ describe("worker runtime", () => {
 
   it("reports stale revisions, invalid requests, intents, and simulation failures", async () => {
     const subject = fixture();
-    const endpoints = pair<Intent, string>();
+    const endpoints = workerEndpointPair<Intent, string>();
     attachWorkerRuntime({
       definition: subject.definition,
       codec: subject.codec,
@@ -248,7 +227,7 @@ describe("worker runtime", () => {
 
   it("acknowledges cancellation after the last committed chunk", async () => {
     const subject = fixture();
-    const endpoints = pair<Intent, string>();
+    const endpoints = workerEndpointPair<Intent, string>();
     const releases: (() => void)[] = [];
     attachWorkerRuntime({
       definition: subject.definition,
@@ -289,7 +268,7 @@ describe("worker runtime", () => {
 
   it("completes chunked catch-up and handles disposal", async () => {
     const subject = fixture();
-    const endpoints = pair<Intent, string>();
+    const endpoints = workerEndpointPair<Intent, string>();
     const runtime = attachWorkerRuntime({
       definition: subject.definition,
       codec: subject.codec,

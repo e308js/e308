@@ -159,6 +159,7 @@ function assertPublicPage(html) {
     "reference-lab",
     "ad-lab",
     "kittens-lab",
+    "array-lab",
     "paperclips",
     "universal paperclips",
     "antimatter dimensions",

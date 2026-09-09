@@ -1,0 +1,13 @@
+{
+  "source": "Array Game v0.4.2 A/B formulas",
+  "sourceHash": "3d25e4a2e01a4e4b259e44e02a081cf1c2b11c50b56e51e20d1184b190da011a",
+  "relativeTolerance": 1e-10,
+  "checkpoints": {
+    "initial": { "A": 10, "B": 0 },
+    "firstA1Purchase": { "A": 0, "a1": 1, "a1Bought": 1 },
+    "firstA1After1600ms": { "A": 1.6 },
+    "oneMinuteElapsedWithTenA1AndTenA2": { "A": 610, "a1": 70 },
+    "prestigeAt1e15A": { "A": 10, "B": 2 },
+    "twoBoosteratorsAfter992ms": { "boosters": 6.352611191210114 }
+  }
+}

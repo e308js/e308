@@ -7,6 +7,7 @@ export {
   rankedPolicy,
   scriptedPolicy,
 } from "./policies.js";
+export { type CommandQuoteCandidate, quoteCommands } from "./quotes.js";
 export { replayHarness, successfulTrace } from "./replay.js";
 export { aggregateMarkdown, reportJson, reportMarkdown, reportsJson } from "./report.js";
 export type { Distribution, HarnessAggregate } from "./statistics.js";
