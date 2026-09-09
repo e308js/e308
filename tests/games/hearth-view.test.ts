@@ -22,6 +22,7 @@ describe("Hearth settlement view", () => {
     );
     wait?.click();
     expect(hearth.getSnapshot().gameTimeMs).toBe(60_000);
+    expect(root.querySelector('[data-resource="herbs"]')?.textContent).toBe("herbs: 7");
     mounted.dispose();
     expect(root.childElementCount).toBe(0);
   });

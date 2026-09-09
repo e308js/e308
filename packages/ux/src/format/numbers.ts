@@ -5,6 +5,7 @@ export type QuantityNotation = "plain" | "scientific" | "engineering";
 export interface QuantityFormatOptions {
   readonly notation?: QuantityNotation;
   readonly significantDigits?: number;
+  readonly plainDecimalPlaces?: number;
   readonly trimTrailingZeros?: boolean;
 }
 
@@ -40,12 +41,25 @@ export function formatEncoded(encoded: string, options: QuantityFormatOptions = 
   const parts = scientificParts(encoded);
   const notation =
     options.notation ?? (parts && Math.abs(parts.exponent) >= 6 ? "scientific" : "plain");
-  if (!parts || notation === "plain") return encoded;
+  if (!parts) return encoded;
+  if (notation === "plain") return formatPlain(encoded, options);
   const exponent = notation === "engineering" ? Math.floor(parts.exponent / 3) * 3 : parts.exponent;
   const coefficient = parts.coefficient * 10 ** (parts.exponent - exponent);
   let rendered = coefficient.toPrecision(digits);
   if (options.trimTrailingZeros !== false) rendered = trimZeros(rendered);
   return `${parts.negative ? "-" : ""}${rendered}e${exponent >= 0 ? "+" : ""}${exponent}`;
+}
+
+function formatPlain(encoded: string, options: QuantityFormatOptions): string {
+  const places = options.plainDecimalPlaces ?? 0;
+  if (!Number.isSafeInteger(places) || places < 0 || places > 20) {
+    throw new RangeError("plainDecimalPlaces must be an integer from 0 through 20");
+  }
+  const numeric = Number(encoded);
+  if (!Number.isFinite(numeric)) return encoded;
+  const fixed = numeric.toFixed(places);
+  const rendered = options.trimTrailingZeros === false ? fixed : trimZeros(fixed);
+  return /^-0(?:\.0*)?$/.test(rendered) ? rendered.slice(1) : rendered;
 }
 
 function scientificParts(encoded: string): ScientificParts | undefined {

@@ -26,15 +26,23 @@ describe("quantity and time formatting", () => {
     expect(formatEncoded("0", { notation: "scientific" })).toBe("0e+0");
     expect(formatEncoded("custom", { notation: "scientific" })).toBe("custom");
     expect(formatEncoded("12", { notation: "plain" })).toBe("12");
+    expect(formatEncoded("3.99999999999999")).toBe("4");
+    expect(formatEncoded("7.2")).toBe("7");
+    expect(formatEncoded("-0.1")).toBe("0");
+    expect(formatEncoded("7.2", { plainDecimalPlaces: 2 })).toBe("7.2");
+    expect(formatEncoded("7.2", { plainDecimalPlaces: 2, trimTrailingZeros: false })).toBe("7.20");
     expect(() => formatEncoded("1", { significantDigits: 0 })).toThrow(/significantDigits/);
+    expect(() => formatEncoded("1", { plainDecimalPlaces: -1 })).toThrow(/plainDecimalPlaces/);
   });
 
   it("uses adapter codecs and named formats", () => {
     const formatter = createQuantityFormatter(nativeNumbers, {
       compact: { notation: "scientific", significantDigits: 2 },
+      precise: { plainDecimalPlaces: 2 },
     });
     expect(formatter.format(1e7)).toBe("1e+7");
     expect(formatter.format(1e7, "compact")).toBe("1e+7");
+    expect(formatter.format(3.125, "precise")).toBe("3.13");
     expect(() => formatter.format(1, "missing")).toThrow(/unknown/);
     expect(() => formatter.format(Number.NaN)).toThrow(/non-finite/);
   });
