@@ -14,7 +14,8 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S06 | ACCEPTED | `ab93cbd64ad7cd6c4283bc0dc576781d734e259d` | quality + browser | [run 34299737625](https://github.com/e308js/e308/actions/runs/34299737625), [details](s06-evidence.md) |
 | S07 | ACCEPTED | `a71a4b96980e83dcd0e9b747c75a3a5d77ad6620` | quality + browser/worker | [run 34303068893](https://github.com/e308js/e308/actions/runs/34303068893), [details](s07-evidence.md) |
 | S08 | ACCEPTED | `5bc041d9c898a79a1caa3c9d09879cb9ef69241d` | quality + pacing | [run 34305644935](https://github.com/e308js/e308/actions/runs/34305644935), [details](s08-evidence.md) |
-| S09–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
+| S09 | ACCEPTED | `53aadbeafe7d2cdfee5181a0b8fe99f82dc9fe5b` | quality + optimization | [run 34308069739](https://github.com/e308js/e308/actions/runs/34308069739), [details](s09-evidence.md) |
+| S10–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
@@ -61,5 +62,11 @@ bounded replayable pacing reports, reached-only aggregate statistics, parameter 
 baseline comparisons. Scripted, ranked, and goal policies reached authored goals across Wireworks,
 Cascade, and Hearth; exact-head CI also generated a real Hearth recipe-cost regression report on
 September 8, 2026.
+
+S09 added checked affine recurrence advancement, explicit approximation declarations, event-bounded
+capabilities, lossless work backlogs, and injected-clock workload profiling. Exact mode falls back to
+canonical fixed steps whenever the current definition or state does not meet the shortcut's proof
+conditions. Property, boundary, overflow, RNG, and fallback cases passed exact-head CI on September
+9, 2026; the named release-machine performance closure remains assigned to S11.
 
 No npm package or public GitHub release has been published.
