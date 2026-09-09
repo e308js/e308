@@ -65,6 +65,16 @@ node --input-type=module -e '
   if (!written.ok) process.exit(1);
 '
 node --input-type=module -e '
+  import { starterTheme } from "@e308/ux";
+  import { mountView } from "@e308/ux/dom";
+  import { renderParticleLayer } from "@e308/ux/effects";
+  import { createQuantityFormatter } from "@e308/ux/format";
+  import { createTextResolver } from "@e308/ux/localization";
+  import { actionFromQuote } from "@e308/ux/views";
+  if (![mountView, renderParticleLayer, createQuantityFormatter, createTextResolver, actionFromQuote]
+    .every(value => typeof value === "function") || !starterTheme.includes(".e308-root")) process.exit(1);
+'
+node --input-type=module -e '
   import { readFile } from "node:fs/promises";
   const pkg = JSON.parse(await readFile("node_modules/@e308/ux/package.json", "utf8"));
   if (pkg.dependencies?.["@e308/core"] !== "0.0.0") process.exit(1);

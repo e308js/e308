@@ -8,8 +8,9 @@
     "check:structure": "node --experimental-strip-types tools/quality/structure.ts",
     "format": "biome check --write .",
     "lint": "biome ci --error-on-warnings .",
-    "quality": "pnpm lint && pnpm typecheck && pnpm check:structure && pnpm build && pnpm test:coverage && pnpm test:packages",
+    "quality": "pnpm lint && pnpm typecheck && pnpm check:structure && pnpm build && pnpm test:coverage && pnpm test:packages && pnpm test:browser",
     "test": "vitest run",
+    "test:browser": "playwright test",
     "test:coverage": "vitest run --coverage",
     "test:packages": "bash tests/packages/consumer.sh",
     "test:reference": "vitest run tests/reference",
@@ -17,10 +18,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.4",
+    "@playwright/test": "1.63.0",
     "@types/node": "24.10.1",
     "@types/semver": "7.8.0",
     "@vitest/coverage-v8": "4.0.18",
     "fast-check": "4.9.0",
+    "happy-dom": "19.0.2",
     "typescript": "5.9.3",
     "vitest": "4.0.18"
   }

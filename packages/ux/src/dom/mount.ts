@@ -1,0 +1,205 @@
+import type { ActionView } from "../view/models.js";
+import type { HotkeyView, ViewDocument } from "../view/nodes.js";
+import type { InternalRenderContext } from "./internal.js";
+import { renderNode } from "./render-node.js";
+import type { MountViewOptions, ViewMount, VisualClock } from "./types.js";
+
+interface FocusState {
+  readonly key: string;
+  readonly start?: number | null;
+  readonly end?: number | null;
+}
+
+export function mountView<State, Intent, N>(
+  root: HTMLElement,
+  options: MountViewOptions<State, Intent, N>,
+): ViewMount {
+  let disposed = false;
+  let rendering = false;
+  let view = options.project(options.source.getSnapshot());
+  const renderDisposers: (() => void)[] = [];
+  const dispatch = (intent: Intent): unknown => {
+    const result = options.source.dispatch(intent);
+    options.onDispatchResult?.(result, intent);
+    return result;
+  };
+  const hold = createHoldController(root.ownerDocument, dispatch);
+  const context = createContext(root, options, dispatch, hold.start, renderDisposers, () =>
+    render(),
+  );
+  const render = (): void => {
+    if (disposed || rendering) return;
+    rendering = true;
+    const focus = captureFocus(root);
+    for (const dispose of renderDisposers.splice(0)) dispose();
+    root.replaceChildren(...context.renderMany(view.content));
+    if (view.title) root.setAttribute("aria-label", options.resolver.text(view.title));
+    else root.removeAttribute("aria-label");
+    restoreFocus(root, focus);
+    rendering = false;
+  };
+  const unsubscribe = options.source.subscribe((snapshot) => {
+    view = options.project(snapshot);
+    render();
+  });
+  const keydown = (event: KeyboardEvent): void => dispatchHotkey(event, view, dispatch);
+  root.ownerDocument.addEventListener("keydown", keydown);
+  root.ownerDocument.addEventListener("pointerup", hold.stop);
+  root.ownerDocument.addEventListener("pointercancel", hold.stop);
+  render();
+  return {
+    render,
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      unsubscribe();
+      root.ownerDocument.removeEventListener("keydown", keydown);
+      root.ownerDocument.removeEventListener("pointerup", hold.stop);
+      root.ownerDocument.removeEventListener("pointercancel", hold.stop);
+      hold.stop();
+      for (const dispose of renderDisposers.splice(0)) dispose();
+      root.replaceChildren();
+    },
+  };
+}
+
+function createContext<State, Intent, N>(
+  root: HTMLElement,
+  options: MountViewOptions<State, Intent, N>,
+  dispatch: (intent: Intent) => unknown,
+  startHold: (hold: NonNullable<ActionView<Intent>["hold"]>) => void,
+  renderDisposers: (() => void)[],
+  requestRender: () => void,
+): InternalRenderContext<Intent, N> {
+  const context: InternalRenderContext<Intent, N> = {
+    document: root.ownerDocument,
+    resolver: options.resolver,
+    dispatch,
+    reducedMotion: options.reducedMotion ?? reducedMotion(root.ownerDocument),
+    clock: options.visualClock ?? browserVisualClock(root.ownerDocument),
+    overrides: options.overrides ?? {},
+    open: new Map(),
+    tabs: new Map(),
+    claimed: new Set(),
+    renderDisposers,
+    startHold,
+    requestRender,
+    render: (node) => renderNode(node, context),
+    renderMany(nodes) {
+      return nodes
+        .map((node) => context.render(node))
+        .filter((node): node is Node => node !== undefined);
+    },
+  };
+  return context;
+}
+
+function createHoldController<Intent>(
+  document: Document,
+  dispatch: (intent: Intent) => unknown,
+): {
+  readonly start: (hold: NonNullable<ActionView<Intent>["hold"]>) => void;
+  readonly stop: () => void;
+} {
+  const window = document.defaultView;
+  if (!window) throw new TypeError("renderer document must have a window");
+  let delay: number | undefined;
+  let repeat: number | undefined;
+  const stop = (): void => {
+    if (delay !== undefined) window.clearTimeout(delay);
+    if (repeat !== undefined) window.clearInterval(repeat);
+    delay = undefined;
+    repeat = undefined;
+  };
+  return {
+    stop,
+    start(hold) {
+      stop();
+      delay = window.setTimeout(() => {
+        dispatch(hold.intent);
+        repeat = window.setInterval(() => dispatch(hold.intent), hold.repeatMs ?? 100);
+      }, hold.delayMs ?? 300);
+    },
+  };
+}
+
+function captureFocus(root: HTMLElement): FocusState | undefined {
+  const active = root.ownerDocument.activeElement;
+  if (!(active instanceof HTMLElement) || !root.contains(active)) return undefined;
+  const keyed = active.closest<HTMLElement>("[data-e308-key]");
+  if (!keyed?.dataset.e308Key) return undefined;
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+    return {
+      key: active.dataset.e308Key ?? keyed.dataset.e308Key,
+      start: active.selectionStart,
+      end: active.selectionEnd,
+    };
+  }
+  return { key: keyed.dataset.e308Key };
+}
+
+function restoreFocus(root: HTMLElement, focus: FocusState | undefined): void {
+  if (!focus) return;
+  const candidate = Array.from(root.querySelectorAll<HTMLElement>("[data-e308-key]")).find(
+    (element) => element.dataset.e308Key === focus.key,
+  );
+  candidate?.focus();
+  if (
+    (candidate instanceof HTMLInputElement || candidate instanceof HTMLTextAreaElement) &&
+    focus.start !== undefined
+  ) {
+    candidate.setSelectionRange(focus.start, focus.end ?? focus.start);
+  }
+}
+
+function dispatchHotkey<Intent, N>(
+  event: KeyboardEvent,
+  view: ViewDocument<Intent, N>,
+  dispatch: (intent: Intent) => unknown,
+): void {
+  if (event.defaultPrevented || isTypingTarget(event.target)) return;
+  const scopes = new Set(view.activeScopeIds ?? []);
+  const hotkey = view.hotkeys?.find((item) => hotkeyMatches(item, event, scopes));
+  if (!hotkey) return;
+  event.preventDefault();
+  dispatch(hotkey.intent);
+}
+
+function hotkeyMatches<Intent>(
+  hotkey: HotkeyView<Intent>,
+  event: KeyboardEvent,
+  scopes: ReadonlySet<string>,
+): boolean {
+  if (!hotkey.enabled || hotkey.key.toLowerCase() !== event.key.toLowerCase()) return false;
+  if (hotkey.scopeId && !scopes.has(hotkey.scopeId)) return false;
+  const modifiers = new Set(hotkey.modifiers ?? []);
+  return (
+    event.altKey === modifiers.has("alt") &&
+    event.ctrlKey === modifiers.has("ctrl") &&
+    event.metaKey === modifiers.has("meta") &&
+    event.shiftKey === modifiers.has("shift")
+  );
+}
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
+
+function reducedMotion(document: Document): boolean {
+  return document.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+function browserVisualClock(document: Document): VisualClock {
+  const window = document.defaultView;
+  if (!window) throw new TypeError("renderer document must have a window");
+  return {
+    now: () => window.performance.now(),
+    requestFrame: (callback) => window.requestAnimationFrame(callback),
+    cancelFrame: (id) => window.cancelAnimationFrame(id),
+  };
+}

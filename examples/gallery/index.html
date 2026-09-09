@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>e308 UX gallery</title>
+    <script type="importmap">
+      { "imports": { "@e308/ux": "/packages/ux/dist/index.js" } }
+    </script>
+    <style id="theme"></style>
+    <style>
+      body { margin: 0; }
+      header { padding: 1rem; }
+      #views { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      main { min-width: 0; }
+    </style>
+  </head>
+  <body class="e308-root">
+    <header><h1>e308 renderer gallery</h1><p>Two compositions observe one headless kernel.</p></header>
+    <div id="views"><main id="tree-view"></main><main id="panel-view"></main></div>
+    <script type="module" src="/examples/gallery/dist/main.js"></script>
+  </body>
+</html>

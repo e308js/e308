@@ -4,8 +4,8 @@
     "lib": ["ES2024", "DOM"],
     "outDir": "dist",
     "rootDir": "src",
-    "tsBuildInfoFile": "dist/ux.tsbuildinfo"
+    "tsBuildInfoFile": "dist/gallery.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../core" }]
+  "references": [{ "path": "../../packages/ux" }]
 }

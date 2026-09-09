@@ -6,9 +6,10 @@ it("allows a headless source to describe an action", () => {
     id: "buy-wire",
     label: "Buy wire",
     enabled: false,
-    blockers: [{ kind: "insufficient", resource: "money" }],
+    intent: { type: "buy-wire" },
+    blockers: [{ kind: "insufficient", resourceId: "money", required: 2, available: 1 }],
   } as const satisfies ActionView;
 
   expect(action.blockers[0].kind).toBe("insufficient");
-  expectTypeOf(action).toMatchTypeOf<ActionView>();
+  expectTypeOf(action).toExtend<ActionView>();
 });

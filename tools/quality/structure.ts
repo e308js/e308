@@ -2,7 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { extname, join, relative } from "node:path";
 import ts from "typescript";
 
-const ROOTS = ["packages", "tools", "examples", "reference"];
+const ROOTS = ["packages", "tools", "examples", "reference", "tests"];
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".css"]);
 const SKIPPED_DIRECTORIES = new Set(["dist", "node_modules", "coverage"]);
 
@@ -61,8 +61,10 @@ export async function inspectStructure(root = process.cwd()): Promise<StructureR
   for (const path of files.filter((file) => /\.[jt]sx?$/.test(file))) {
     const contents = await readFile(path, "utf8");
     const displayPath = relative(root, path).replaceAll("\\", "/");
-    inspectTypeScript(displayPath, contents, functions, forbiddenImports);
-    inspectDuplicates(displayPath, contents, tokenOwners, duplicateBlocks);
+    if (!displayPath.startsWith("tests/")) {
+      inspectTypeScript(displayPath, contents, functions, forbiddenImports);
+      inspectDuplicates(displayPath, contents, tokenOwners, duplicateBlocks);
+    }
   }
   return {
     size: await findSizeViolations(root),

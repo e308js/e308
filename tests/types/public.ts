@@ -12,7 +12,12 @@ import { type CatchupExecution, processCatchupChunk } from "@e308/core/offline";
 import { createSaveCodec, type SaveEnvelope } from "@e308/core/persistence";
 import { MemorySaveStore, type TransactionalSaveStore } from "@e308/core/storage";
 import { queueTaskCommand, type TaskDefinition } from "@e308/core/tasks";
-import type { ActionView } from "@e308/ux";
+import type { ActionView, ViewDocument, ViewSource } from "@e308/ux";
+import { mountView } from "@e308/ux/dom";
+import { renderParticleLayer } from "@e308/ux/effects";
+import { createQuantityFormatter } from "@e308/ux/format";
+import { createTextResolver } from "@e308/ux/localization";
+import { actionFromQuote } from "@e308/ux/views";
 
 const kit = createGameKit({ numbers: nativeNumbers });
 const run = kit.scope("run");
@@ -63,7 +68,8 @@ const action = {
   id: "buy",
   label: "Buy",
   enabled: false,
-  blockers: [{ kind: "locked" }],
+  intent: { type: "buy" },
+  blockers: [{ kind: "locked", prerequisiteIds: [] }],
 } as const satisfies ActionView;
 
 void adapter;
@@ -81,3 +87,10 @@ void (undefined as MarketQuote<number> | undefined);
 void queueTaskCommand;
 void currentPhase;
 void marketCommand;
+void mountView;
+void renderParticleLayer;
+void createQuantityFormatter;
+void createTextResolver;
+void actionFromQuote;
+void (undefined as ViewDocument<{ type: string }, number> | undefined);
+void (undefined as ViewSource<{ points: number }, { type: string }> | undefined);

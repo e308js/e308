@@ -14,7 +14,12 @@
       "@e308/core/persistence": ["packages/core/src/persistence/index.ts"],
       "@e308/core/storage": ["packages/core/src/storage/index.ts"],
       "@e308/core/tasks": ["packages/core/src/tasks/index.ts"],
-      "@e308/ux": ["packages/ux/src/index.ts"]
+      "@e308/ux": ["packages/ux/src/index.ts"],
+      "@e308/ux/dom": ["packages/ux/src/dom/index.ts"],
+      "@e308/ux/effects": ["packages/ux/src/effects/index.ts"],
+      "@e308/ux/format": ["packages/ux/src/format/index.ts"],
+      "@e308/ux/localization": ["packages/ux/src/localization/index.ts"],
+      "@e308/ux/views": ["packages/ux/src/view/index.ts"]
     },
     "rootDir": ".",
     "types": ["node", "vitest/globals"]
