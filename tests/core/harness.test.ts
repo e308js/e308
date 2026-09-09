@@ -5,6 +5,7 @@ import {
   type HarnessRunOptions,
   orderedPolicy,
   randomLegalPolicy,
+  rankedLegalQuotes,
   rankedPolicy,
   replayHarness,
   reportJson,
@@ -383,5 +384,14 @@ describe("headless harness", () => {
       },
     ];
     expect(ranked.decide({ ...context, quotes })).toEqual({ kind: "action", actionId: "high-b" });
+    const blocked = {
+      id: "blocked",
+      revision: "0",
+      intent: { kind: "buy-token" as const },
+      legal: false,
+      useful: true,
+      constraints: [],
+    };
+    expect(rankedLegalQuotes([...quotes, blocked])).toEqual([quotes[1], quotes[2], quotes[0]]);
   });
 });

@@ -13,7 +13,7 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.getByText("pnpm add @e308/core @e308/ux")).toBeVisible();
 
   await page.getByRole("link", { name: "Examples", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Three original prototypes" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Three original games" })).toBeVisible();
   for (const name of ["Wireworks", "Cascade", "Hearth"]) {
     await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   }
@@ -22,8 +22,8 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.locator("#host-status")).toContainText("wireworks");
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
-  await expect(page.getByRole("button", { name: "Make a clip" })).toBeEnabled();
-  await page.getByRole("button", { name: "Make a clip" }).click();
+  await expect(page.getByRole("button", { name: "Make one clip by hand" })).toBeEnabled();
+  await page.getByRole("button", { name: "Make one clip by hand" }).click();
   await expect(page.getByText("Clip inventory: 1", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Run production for 10 seconds" })).toBeHidden();
   await page.getByText("Developer tools", { exact: true }).click();

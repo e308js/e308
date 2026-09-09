@@ -1,5 +1,5 @@
 import type { Game, Snapshot } from "@e308/core";
-import type { HarnessScenario, HarnessValue } from "@e308/core/testing";
+import { type HarnessScenario, type HarnessValue, rankedLegalQuotes } from "@e308/core/testing";
 
 export function driveScenario<N, O extends HarnessValue, I extends HarnessValue>(
   scenario: HarnessScenario<N, O, I>,
@@ -16,9 +16,7 @@ export function driveScenario<N, O extends HarnessValue, I extends HarnessValue>
     decision < options.maximumDecisions && !options.stop(game.getSnapshot());
     decision += 1
   ) {
-    const quote = scenario
-      .quote(game.getSnapshot())
-      .find((candidate) => candidate.legal && candidate.useful);
+    const quote = rankedLegalQuotes(scenario.quote(game.getSnapshot()))[0];
     if (quote) {
       options.actionLog?.push(intentLabel(quote.intent, quote.id));
       game.dispatch(scenario.command(quote.intent, game.getSnapshot()));

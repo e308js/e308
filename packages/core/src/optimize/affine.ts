@@ -149,11 +149,32 @@ function linearRate(
     coefficients[index] = requireNonnegativeSafe(rate.factor);
     return { constant: 0, coefficients };
   }
+  if (rate.kind === "purchased") {
+    const count = requiredValue(snapshot.purchaseCounts, rate.buyable.id);
+    return constantRate(
+      checkedMultiply(requireNonnegativeSafe(count), requireNonnegativeSafe(rate.factor)),
+      size,
+    );
+  }
   if (rate.kind === "custom") throw new TypeError("custom-rate");
+  if (rate.kind === "sum")
+    return rate.terms.reduce(
+      (result, term) => addRates(result, linearRate(term, snapshot, indexes, size)),
+      constantRate(0, size),
+    );
   let result = constantRate(1, size);
   for (const factor of rate.factors)
     result = multiplyRates(result, linearRate(factor, snapshot, indexes, size));
   return result;
+}
+
+function addRates(left: LinearRate, right: LinearRate): LinearRate {
+  return {
+    constant: checkedAdd(left.constant, right.constant),
+    coefficients: left.coefficients.map((value, index) =>
+      checkedAdd(value, requiredIndex(right.coefficients, index)),
+    ),
+  };
 }
 
 function constantRate(value: number, size: number): LinearRate {

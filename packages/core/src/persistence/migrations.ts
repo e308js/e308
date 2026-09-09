@@ -1,4 +1,4 @@
-import type { SaveEnvelope } from "./types.js";
+import type { SaveConfiguration, SaveEnvelope } from "./types.js";
 
 export interface SaveMigration {
   readonly id: string;
@@ -12,6 +12,33 @@ export interface PendingSessionTransition {
   readonly fromSimulationVersion: number;
   readonly toSimulationVersion: number;
   transition(envelope: SaveEnvelope): SaveEnvelope;
+}
+
+export function updateEnvelopeVersion(
+  source: SaveEnvelope,
+  target: SaveConfiguration,
+): SaveEnvelope {
+  return {
+    ...source,
+    stateSchemaVersion: target.stateSchemaVersion,
+    content: { ...source.content, version: target.contentVersion, digest: target.contentDigest },
+  };
+}
+
+export function simulationTransition(
+  id: string,
+  fromSimulationVersion: number,
+  toSimulationVersion: number,
+): PendingSessionTransition {
+  return {
+    id,
+    fromSimulationVersion,
+    toSimulationVersion,
+    transition: (source) => ({
+      ...source,
+      simulation: { ...source.simulation, version: toSimulationVersion },
+    }),
+  };
 }
 
 export function migrateEnvelope(

@@ -1,9 +1,12 @@
-import { rankedPolicy, runHarness } from "@e308/core/testing";
+import { createSaveCodec } from "@e308/core";
+import { randomLegalPolicy, rankedPolicy, runHarness } from "@e308/core/testing";
 import {
   createWireworks,
   importWireworks,
+  wireworksDefinition,
   wireworksProjects,
   wireworksResources,
+  wireworksSaveCodec,
   wireworksScenario,
   wireworksTerminalView,
   wireworksView,
@@ -18,6 +21,20 @@ const limits = {
 } as const;
 
 describe("finished Wireworks", () => {
+  it("shows the full feedstock, machine, wire, and clip production chain", () => {
+    const wireworks = createWireworks();
+    expect(wireworks.dispatch({ type: "supply" })).toMatchObject({ ok: true });
+    expect(wireworks.getSnapshot().resources).toMatchObject({ cash: 10, matter: 440 });
+    expect(wireworks.dispatch({ type: "advance", milliseconds: 1_000 })).toMatchObject({
+      ok: true,
+    });
+    expect(wireworks.getSnapshot().resources.wire).toBeGreaterThan(10);
+    expect(wireworks.getSnapshot().resources.clips).toBeGreaterThan(0);
+    expect(JSON.stringify(wireworksView(wireworks.getSnapshot()))).toContain(
+      "Production chain: feedstock → wire → clips",
+    );
+  });
+
   it("makes a clip and reports both manufacturing limits", () => {
     const wireworks = createWireworks();
     expect(wireworks.dispatch({ type: "make" })).toMatchObject({ ok: true });
@@ -57,12 +74,12 @@ describe("finished Wireworks", () => {
 
     const staleRevision = produced.revision;
     expect(wireworks.dispatch({ type: "sell", band: "premium", quantity: 5 }).ok).toBe(true);
-    expect(wireworks.getSnapshot().resources.cash).toBe(55);
+    expect(wireworks.getSnapshot().resources.cash).toBe(80);
     expect(wireworks.getSnapshot().revision).toBeGreaterThan(staleRevision);
   });
 
   it("reaches the authored ending through public legal actions", () => {
-    const report = completion("premium");
+    const report = completion("hybrid");
     expect(report.outcome).toMatchObject({ kind: "reached" });
     expect(report.timing.gameAdvancedMs).toBeLessThanOrEqual(12 * 60 * 60_000);
     expect(Object.keys(report.milestones)).toEqual(
@@ -72,13 +89,32 @@ describe("finished Wireworks", () => {
   });
 
   it("reports materially different price strategies", () => {
+    const hybrid = completion("hybrid");
     const premium = completion("premium");
     const volume = completion("volume");
+    expect(hybrid.outcome.kind).toBe("reached");
     expect(premium.outcome.kind).toBe("reached");
     expect(volume.outcome.kind).toBe("reached");
-    if (premium.outcome.kind !== "reached" || volume.outcome.kind !== "reached") return;
-    expect(premium.outcome.atGameMs).not.toBe(volume.outcome.atGameMs);
-    expect(premium.constraints).not.toEqual(volume.constraints);
+    if (
+      hybrid.outcome.kind !== "reached" ||
+      premium.outcome.kind !== "reached" ||
+      volume.outcome.kind !== "reached"
+    )
+      return;
+    expect(hybrid.outcome.atGameMs).toBeLessThan(premium.outcome.atGameMs);
+    expect(hybrid.outcome.atGameMs).toBeLessThan(volume.outcome.atGameMs);
+  });
+
+  it("makes random legal play materially slower than a ranked strategy", () => {
+    const ranked = completion("hybrid");
+    const random = ["01", "02", "03"].map((seed) => randomCompletion(seed));
+    expect(ranked.outcome.kind).toBe("reached");
+    expect(random.every((report) => report.outcome.kind === "reached")).toBe(true);
+    if (ranked.outcome.kind !== "reached") return;
+    const randomTimes = random.map((report) =>
+      report.outcome.kind === "reached" ? report.outcome.atGameMs : Number.POSITIVE_INFINITY,
+    );
+    expect(Math.min(...randomTimes)).toBeGreaterThan(ranked.outcome.atGameMs * 2);
   });
 
   it("round-trips middle saves and exposes two compositions over one snapshot", () => {
@@ -104,6 +140,30 @@ describe("finished Wireworks", () => {
     expect(JSON.stringify(terminal)).toContain("terminal-stocks");
   });
 
+  it("migrates version-one saves into the production network", () => {
+    const legacy = createSaveCodec(
+      { ...wireworksDefinition, simulationVersion: 1 },
+      {
+        stateSchemaVersion: 1,
+        contentVersion: "1.0.0",
+        contentDigest: "wireworks-1.0.0-2026-09-09",
+      },
+    );
+    const raw = legacy.encode(createWireworks().getSnapshot(), {
+      wallAnchorMs: 1_000,
+      entitlement: {
+        policyVersion: "wireworks-offline-1",
+        enabled: true,
+        capMs: 8 * 60 * 60_000,
+        excess: "bank",
+      },
+      catchup: null,
+    });
+    const loaded = wireworksSaveCodec.decode(raw);
+    expect(loaded.migrationLedger).toEqual(["wireworks-content-1-to-2"]);
+    expect(loaded.snapshot.resources.matter).toBe(240);
+  });
+
   it("rejects oversubscribed power without changing allocation", () => {
     const wireworks = createWireworks();
     while (!wireworks.getSnapshot().progression.upgrades["powered-extrusion"]) {
@@ -123,16 +183,30 @@ describe("finished Wireworks", () => {
   });
 });
 
-function completion(preferredBand: "premium" | "volume") {
+function completion(strategy: "hybrid" | "premium" | "volume") {
   return runHarness({
-    scenario: wireworksScenario(preferredBand),
-    policy: rankedPolicy({ id: `wireworks-${preferredBand}`, version: "1" }),
+    scenario: wireworksScenario(strategy),
+    policy: rankedPolicy({ id: `wireworks-${strategy}`, version: "1" }),
     goalId: "final-expansion",
     schedule: [{ kind: "active", durationMs: 12 * 60 * 60_000 }],
     decisionCadenceMs: 20_000,
     gameSeed: "aa",
-    botSeed: preferredBand === "premium" ? "01" : "02",
+    botSeed: strategy === "hybrid" ? "01" : strategy === "premium" ? "02" : "03",
     limits,
-    replayCommand: `pnpm replay:game wireworks ${preferredBand}`,
+    replayCommand: `pnpm replay:game wireworks ${strategy}`,
+  });
+}
+
+function randomCompletion(botSeed: string) {
+  return runHarness({
+    scenario: wireworksScenario("hybrid"),
+    policy: randomLegalPolicy({ id: "wireworks-random", version: "1" }),
+    goalId: "final-expansion",
+    schedule: [{ kind: "active", durationMs: 12 * 60 * 60_000 }],
+    decisionCadenceMs: 20_000,
+    gameSeed: "aa",
+    botSeed,
+    limits,
+    replayCommand: `pnpm replay:game wireworks random ${botSeed}`,
   });
 }

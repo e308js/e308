@@ -15,6 +15,7 @@ function context(value: number, reward = 0) {
   const state = {
     get: (resource: typeof points | typeof stars) => resource.initial,
     getAllocation: () => 0,
+    purchaseCount: () => 0,
   };
   return { kit, points, stars, state };
 }
@@ -37,12 +38,14 @@ describe("prestige formulas", () => {
       policy.rewardFor({
         get: () => 99,
         getAllocation: () => 0,
+        purchaseCount: () => 0,
       }),
     ).toBe(0);
     expect(
       policy.canReset({
         get: () => 99,
         getAllocation: () => 0,
+        purchaseCount: () => 0,
       }),
     ).toBe(false);
   });
@@ -70,6 +73,7 @@ describe("prestige formulas", () => {
       one.canReset({
         get: (resource) => (resource.id === points.id ? 19 : 1),
         getAllocation: () => 0,
+        purchaseCount: () => 0,
       }),
     ).toBe(false);
   });

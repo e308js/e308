@@ -115,6 +115,29 @@ describe("keyed DOM reconciliation", () => {
     mounted.dispose();
   });
 
+  it("retains the rendered tree across updates at a 100 ms game cadence", async () => {
+    const root = document.createElement("main");
+    const source = new Source();
+    const mounted = mountView(root, { source, project, resolver });
+    const heading = root.querySelector("[data-e308-key=live-heading]");
+    const range = input(root);
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver((changes) => records.push(...changes));
+    observer.observe(root, { childList: true, subtree: true });
+
+    for (let tick = 1; tick <= 100; tick += 1) {
+      source.emit({ points: 12 + tick, allocation: tick % 5 });
+    }
+    await Promise.resolve();
+
+    expect(root.querySelector("[data-e308-key=live-heading]")).toBe(heading);
+    expect(input(root)).toBe(range);
+    expect(heading?.textContent).toBe("Points 112");
+    expect(records).toHaveLength(0);
+    observer.disconnect();
+    mounted.dispose();
+  });
+
   it("keeps a range gesture mounted, visible, stepped, and bounded", async () => {
     const root = document.createElement("main");
     const source = new Source();

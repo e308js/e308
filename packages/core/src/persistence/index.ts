@@ -1,6 +1,7 @@
 export type { SaveCodec } from "./codec.js";
 export { createSaveCodec } from "./codec.js";
 export type { PendingSessionTransition, SaveMigration } from "./migrations.js";
+export { simulationTransition, updateEnvelopeVersion } from "./migrations.js";
 export type {
   CatchupSegment,
   CatchupSession,

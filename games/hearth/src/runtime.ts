@@ -7,8 +7,9 @@ import {
   type Game,
   queueTaskCommand,
   recipeCommand,
-  type SaveEnvelope,
   type Snapshot,
+  simulationTransition,
+  updateEnvelopeVersion,
   upgradeCommand,
 } from "@e308/core";
 import { GameViewSource } from "@e308/ux";
@@ -29,47 +30,23 @@ export type HearthResult =
   | ReturnType<Game<number>["dispatch"]>
   | ReturnType<Game<number>["advance"]>;
 
-export const hearthSaveCodec = createSaveCodec(
-  hearthDefinition,
-  {
-    stateSchemaVersion: 2,
-    contentVersion: "1.1.0",
-    contentDigest: "hearth-1.1.0-settlement-loop-2026-09-09",
-  },
-  {
-    migrations: [
-      {
-        id: "hearth-content-1-to-2",
-        fromVersion: 1,
-        toVersion: 2,
-        migrate: updateHearthEnvelope,
-      },
-    ],
-    pendingTransitions: [
-      {
-        id: "hearth-simulation-1-to-2",
-        fromSimulationVersion: 1,
-        toSimulationVersion: 2,
-        transition: (source) => ({
-          ...source,
-          simulation: { ...source.simulation, version: 2 },
-        }),
-      },
-    ],
-  },
-);
+const hearthSaveConfiguration = {
+  stateSchemaVersion: 2,
+  contentVersion: "1.1.0",
+  contentDigest: "hearth-1.1.0-settlement-loop-2026-09-09",
+} as const;
 
-function updateHearthEnvelope(source: SaveEnvelope): SaveEnvelope {
-  return {
-    ...source,
-    stateSchemaVersion: 2,
-    content: {
-      ...source.content,
-      version: "1.1.0",
-      digest: "hearth-1.1.0-settlement-loop-2026-09-09",
+export const hearthSaveCodec = createSaveCodec(hearthDefinition, hearthSaveConfiguration, {
+  migrations: [
+    {
+      id: "hearth-content-1-to-2",
+      fromVersion: 1,
+      toVersion: 2,
+      migrate: (source) => updateEnvelopeVersion(source, hearthSaveConfiguration),
     },
-  };
-}
+  ],
+  pendingTransitions: [simulationTransition("hearth-simulation-1-to-2", 1, 2)],
+});
 
 export function createHearth(snapshot?: Snapshot<number>): HearthGame {
   return new HearthGame(createGame(hearthDefinition, snapshot ? { snapshot } : {}));

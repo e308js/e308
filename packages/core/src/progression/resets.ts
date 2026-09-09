@@ -54,6 +54,7 @@ export function prestigeCommand<N>(
       const state: ReadContext<N> = {
         get: (resource) => transaction.get(resource),
         getAllocation: (allocation, targetId) => transaction.getAllocation(allocation.id, targetId),
+        purchaseCount: (id) => transaction.getPurchase(id),
       };
       if (!prestige.canReset(state)) {
         transaction.reject({ code: "locked", prerequisiteIds: prestige.prerequisiteIds });

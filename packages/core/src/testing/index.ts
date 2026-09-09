@@ -3,6 +3,7 @@ export {
   goalPolicy,
   orderedPolicy,
   randomLegalPolicy,
+  rankedLegalQuotes,
   rankedPolicy,
   scriptedPolicy,
 } from "./policies.js";

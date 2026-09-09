@@ -5,6 +5,7 @@ import {
   type HarnessReport,
   type HarnessScenario,
   type HarnessValue,
+  rankedLegalQuotes,
   rankedPolicy,
   runHarness,
 } from "@e308/core/testing";
@@ -147,7 +148,7 @@ function drive<N, O extends HarnessValue, I extends HarnessValue>(
 ): Snapshot<N> {
   const game = scenario.create("00");
   for (let decision = 0; decision < 20_000 && !stop(game.getSnapshot()); decision += 1) {
-    const quote = scenario.quote(game.getSnapshot()).find((entry) => entry.legal && entry.useful);
+    const quote = rankedLegalQuotes(scenario.quote(game.getSnapshot()))[0];
     if (quote) game.dispatch(scenario.command(quote.intent, game.getSnapshot()));
     game.advance(cadenceMs);
   }

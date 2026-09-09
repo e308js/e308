@@ -25,6 +25,7 @@ export function runFlows<N>(
       return value;
     },
     getAllocation: (allocation, targetId) => transaction.getAllocation(allocation.id, targetId),
+    purchaseCount: (id) => transaction.getPurchase(id),
   };
 
   for (const flow of [...flows].sort(compareFlows)) {

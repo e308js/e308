@@ -126,14 +126,14 @@ function examplesPage() {
   const cards = games
     .map(
       ({ id, title, summary }) =>
-        `<article class="game-card game-card-${id}"><p>Original prototype</p><h2>${title}</h2><p>${summary}</p><a href="./${id}/">Open ${title}</a></article>`,
+        `<article class="game-card game-card-${id}"><p>Original game</p><h2>${title}</h2><p>${summary}</p><a href="./${id}/">Open ${title}</a></article>`,
     )
     .join("\n");
   return page(
     "Examples",
-    "Explore three original incremental game prototypes built with e308.",
+    "Explore three original incremental games built with e308.",
     "examples",
-    `<main class="examples-page"><header><p class="eyebrow">Examples</p><h1>Three original prototypes</h1><p class="lede">Each prototype exercises a distinct economy, progression model, offline policy, and interface.</p></header><section class="game-grid">${cards}</section></main>`,
+    `<main class="examples-page"><header><p class="eyebrow">Examples</p><h1>Three original games</h1><p class="lede">Each game has its own economy, progression model, offline policy, and interface.</p></header><section class="game-grid">${cards}</section></main>`,
   );
 }
 
@@ -143,7 +143,7 @@ function gamePage(id, title, summary) {
     `${title} is a complete incremental game built with e308.`,
     "examples",
     `<main class="play-page">
-      <header class="play-heading"><div><a href="../">← All examples</a><p class="eyebrow">Original prototype</p><h1>${title}</h1><p>${summary}</p></div><output id="host-status">Opening local save…</output></header>
+      <header class="play-heading"><div><a href="../">← All examples</a><p class="eyebrow">Original game</p><h1>${title}</h1><p>${summary}</p></div><output id="host-status">Opening local save…</output></header>
       <aside class="save-tools" aria-label="Save controls"><button type="button" id="save">Save</button><button type="button" id="export">Export</button><button type="button" id="import">Import</button><button type="button" id="reset">New save</button><textarea id="save-data" aria-label="Exported save" rows="3" placeholder="Exported save data"></textarea></aside>
       <div id="game" class="game-shell" aria-live="polite"></div>
       <details id="developer-tools" class="developer-tools"><summary>Developer tools</summary><p>Open this panel to show the manual time control inside the game.</p></details>

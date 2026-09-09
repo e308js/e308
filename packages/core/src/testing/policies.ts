@@ -43,6 +43,18 @@ export function randomLegalPolicy<O extends HarnessValue, I extends HarnessValue
   };
 }
 
+export function rankedLegalQuotes<I extends HarnessValue>(
+  quotes: readonly LegalActionQuote<I>[],
+): readonly LegalActionQuote<I>[] {
+  return quotes
+    .filter((quote) => quote.legal && quote.useful)
+    .map((quote, index) => ({ quote, index }))
+    .sort(
+      (left, right) => (right.quote.rank ?? 0) - (left.quote.rank ?? 0) || left.index - right.index,
+    )
+    .map(({ quote }) => quote);
+}
+
 export function orderedPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
   readonly id: string;
   readonly version: string;
@@ -90,9 +102,9 @@ function chooseRanked<I extends HarnessValue>(
   quotes: readonly LegalActionQuote<I>[],
   random: () => number,
 ) {
-  const legal = quotes.filter((quote) => quote.legal && quote.useful);
+  const legal = rankedLegalQuotes(quotes);
   if (legal.length === 0) return { kind: "wait" as const, reason: "no-ranked-action" };
-  const highest = Math.max(...legal.map((quote) => quote.rank ?? 0));
+  const highest = legal[0]?.rank ?? 0;
   const tied = legal.filter((quote) => (quote.rank ?? 0) === highest);
   const index = Math.min(tied.length - 1, Math.floor(random() * tied.length));
   return { kind: "action" as const, actionId: (tied[index] as LegalActionQuote<I>).id };

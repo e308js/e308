@@ -3,6 +3,7 @@ import {
   createGame,
   createGameKit,
   evaluateRate,
+  geometricCurve,
   nativeNumbers,
   type Resource,
 } from "../../packages/core/src/index.js";
@@ -194,13 +195,48 @@ describe("flows", () => {
     expect(game.getSnapshot().resources.value).toBe(10);
   });
 
-  it("supports proportional, product, and custom rates", () => {
+  it("supports proportional, sum, product, and custom rates", () => {
     const { kit, input } = economy({ input: 3 });
     const rate = kit.rates.product(
-      kit.rates.proportional(input, 2),
+      kit.rates.sum(kit.rates.proportional(input, 1), kit.rates.proportional(input, 1)),
       kit.rates.custom((state) => state.get(input) - 1),
     );
-    expect(evaluateRate(rate, { get: () => 3, getAllocation: () => 0 }, nativeNumbers)).toBe(12);
+    expect(
+      evaluateRate(
+        rate,
+        { get: () => 3, getAllocation: () => 0, purchaseCount: () => 0 },
+        nativeNumbers,
+      ),
+    ).toBe(12);
+  });
+
+  it("produces from an inspectable purchased-generator rate", () => {
+    const { kit, run, output } = economy();
+    const cash = kit.resource("cash", { scope: run, initial: 0 });
+    const generator = kit.buyable("generator", {
+      scope: run,
+      currency: cash,
+      curve: geometricCurve(nativeNumbers, { base: 10, ratio: 2 }),
+      initialCount: 2,
+      refundRate: 0,
+    });
+    const flow = kit.flow("generator-output", {
+      scope: run,
+      rate: kit.rates.purchased(generator, 3),
+      produces: [[output, 1]],
+    });
+    const game = createGame(
+      kit.defineGame({
+        id: "purchased-rate",
+        simulationVersion: 1,
+        stepMs: 1_000,
+        resources: [cash, output],
+        buyables: [generator],
+        flows: [flow],
+      }),
+    );
+    game.advance(1_000);
+    expect(game.getSnapshot().resources.output).toBe(6);
   });
 
   it("rolls back invalid custom rates", () => {
@@ -232,9 +268,26 @@ describe("flow definitions", () => {
     const { kit, run, input } = economy();
     const other = economy();
     expect(() => kit.rates.proportional(other.input, 1)).toThrow("another game kit");
+    const otherBuyable = other.kit.buyable("other", {
+      scope: other.run,
+      currency: other.input,
+      curve: geometricCurve(nativeNumbers, { base: 1, ratio: 2 }),
+      initialCount: 0,
+      refundRate: 0,
+    });
+    expect(() => kit.rates.purchased(otherBuyable, 1)).toThrow("another game kit");
     expect(() => kit.rates.constant(Number.NaN)).toThrow("must be finite");
     expect(() => kit.rates.proportional(input, Number.NaN)).toThrow("must be finite");
+    const localBuyable = kit.buyable("local", {
+      scope: run,
+      currency: input,
+      curve: geometricCurve(nativeNumbers, { base: 1, ratio: 2 }),
+      initialCount: 0,
+      refundRate: 0,
+    });
+    expect(() => kit.rates.purchased(localBuyable, Number.NaN)).toThrow("must be finite");
     expect(() => kit.rates.product()).toThrow("at least one factor");
+    expect(() => kit.rates.sum()).toThrow("at least one term");
     expect(() =>
       kit.flow("bad", {
         scope: run,

@@ -23,6 +23,7 @@ function fixture(baseAmount: number, points: number) {
     state: {
       get: (resource: typeof base | typeof reward) => resource.initial,
       getAllocation: () => 0,
+      purchaseCount: () => 0,
     },
   };
 }
