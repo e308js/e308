@@ -87,4 +87,8 @@ SHA-keyed release manifest with archive hashes and D1–D8/D1R evidence paths. A
 kept separate from the independent source, game/usability, and physical-device reviews listed in
 [release-review.md](release-review.md).
 
+A manual-only GitHub Pages workflow is prepared. It builds the tested site artifact containing all
+three original games and omits the private reference laboratories. Pages remains disabled and no
+site has been published.
+
 No npm package or public GitHub release has been published.
