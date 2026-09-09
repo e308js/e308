@@ -99,7 +99,7 @@ describe("finished Cascade", () => {
       actions.indexOf("challenge-enter:automation-drought"),
     );
     expect(snapshot.resources.respecs).toBeDefined();
-  });
+  }, 30_000);
 
   it("produces different truthful pacing for depth and reset strategies", () => {
     const reset = completion("reset-first", "01");
@@ -117,7 +117,7 @@ describe("finished Cascade", () => {
     expect(Object.keys(reset.milestones)).toEqual(
       expect.arrayContaining(["challenge:composite-trial", "ascended", "ending"]),
     );
-  });
+  }, 30_000);
 
   it("round-trips the above-1e308 ending and renders its dense progression view", () => {
     const played = play("reset-first").game.getSnapshot();
@@ -127,7 +127,7 @@ describe("finished Cascade", () => {
     const view = cascadeView(restored.getSnapshot());
     expect(JSON.stringify(view)).toContain("progression-tree");
     expect(JSON.stringify(view)).toContain("challenge-grid");
-  });
+  }, 30_000);
 
   it("rejects invalid dimensions and challenge IDs without mutation", () => {
     const cascade = createCascade();

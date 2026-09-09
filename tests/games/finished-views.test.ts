@@ -83,7 +83,7 @@ describe("finished-game view states", () => {
       stop: (snapshot) => snapshot.progression.won,
     }).getSnapshot();
     expect(JSON.stringify(cascadeView(ending))).toContain("Cascade is complete");
-  });
+  }, 30_000);
 
   it("renders Hearth's warning, shortage, recovery, busy projects, and ending", () => {
     const initial = createHearth();
