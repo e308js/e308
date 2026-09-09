@@ -2,7 +2,25 @@
   "name": "@e308/core",
   "version": "1.0.0-rc.1",
   "description": "Deterministic, headless incremental-game engine",
+  "keywords": [
+    "incremental-game",
+    "idle-game",
+    "game-engine",
+    "offline-progress",
+    "typescript"
+  ],
+  "homepage": "https://github.com/e308js/e308#readme",
+  "bugs": "https://github.com/e308js/e308/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/e308js/e308.git",
+    "directory": "packages/core"
+  },
+  "engines": {
+    "node": ">=24.14.1"
+  },
   "type": "module",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
   "exports": {
     ".": {
@@ -56,11 +74,16 @@
   },
   "files": [
     "dist",
+    "!dist/*.tsbuildinfo",
     "schema",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "dependencies": {
     "@noble/hashes": "2.4.0",

@@ -2,7 +2,25 @@
   "name": "@e308/ux",
   "version": "1.0.0-rc.1",
   "description": "Framework-independent UX contracts for e308 games",
+  "keywords": [
+    "incremental-game",
+    "idle-game",
+    "game-ui",
+    "accessible",
+    "typescript"
+  ],
+  "homepage": "https://github.com/e308js/e308#readme",
+  "bugs": "https://github.com/e308js/e308/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/e308js/e308.git",
+    "directory": "packages/ux"
+  },
+  "engines": {
+    "node": ">=24.14.1"
+  },
   "type": "module",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
   "exports": {
     ".": {
@@ -32,10 +50,15 @@
   },
   "files": [
     "dist",
+    "!dist/*.tsbuildinfo",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "dependencies": {
     "@e308/core": "workspace:*"
