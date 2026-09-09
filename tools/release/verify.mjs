@@ -1,5 +1,7 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { access, readFile, stat } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 const root = new URL("../../", import.meta.url);
 const output = new URL("../../artifacts/packages/", import.meta.url);
@@ -15,7 +17,8 @@ assert(
 );
 
 for (const item of manifest.packages) {
-  const archive = await readFile(new URL(item.file, output));
+  const archiveUrl = new URL(item.file, output);
+  const archive = await readFile(archiveUrl);
   assert(
     (await stat(new URL(item.file, output))).size === item.bytes,
     `size mismatch: ${item.file}`,
@@ -26,6 +29,12 @@ for (const item of manifest.packages) {
   );
   if (item.name === "@e308/core" || item.name === "@e308/ux")
     assert(item.version === "1.0.0-rc.1" && !item.private, `invalid public RC: ${item.name}`);
+  const contents = execFileSync("tar", ["-tzf", fileURLToPath(archiveUrl)], {
+    encoding: "utf8",
+  }).toLowerCase();
+  for (const marker of ["reference/", "paperclips", "antimatter"]) {
+    assert(!contents.includes(marker), `${item.file} includes internal fixture marker: ${marker}`);
+  }
 }
 for (const item of manifest.gates) {
   assert(item.automatedStatus === "PASS", `automated gate failed: ${item.id}`);

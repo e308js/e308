@@ -155,7 +155,14 @@ function gamePage(id, title, summary) {
 }
 
 function assertPublicPage(html) {
-  for (const marker of ["reference-lab", "ad-lab", "kittens-lab"]) {
-    if (html.includes(marker)) throw new TypeError(`Public page includes ${marker}`);
+  for (const marker of [
+    "reference-lab",
+    "ad-lab",
+    "kittens-lab",
+    "paperclips",
+    "universal paperclips",
+    "antimatter dimensions",
+  ]) {
+    if (html.toLowerCase().includes(marker)) throw new TypeError(`Public page includes ${marker}`);
   }
 }
