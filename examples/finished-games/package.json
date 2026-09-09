@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit -p tsconfig.json && esbuild src/main.ts --bundle --format=esm --outfile=dist/app.js"
+    "build": "tsc --noEmit -p tsconfig.json && esbuild src/main.ts --bundle --format=esm --outfile=dist/app.js && esbuild src/reference-main.ts --bundle --format=esm --outfile=dist/reference-labs.js"
   },
   "dependencies": {
     "@e308/core": "workspace:*",

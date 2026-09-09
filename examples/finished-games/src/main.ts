@@ -45,7 +45,6 @@ import {
   type ViewMount,
 } from "@e308/ux";
 import { HostSource } from "./host-source.js";
-import { mountReferenceLabs } from "./reference-labs.js";
 
 type Session = {
   readonly id: string;
@@ -222,4 +221,3 @@ declare global {
   }
 }
 window.e308Finished = { session: () => active.id, snapshot: () => active.host.game.getSnapshot() };
-mountReferenceLabs(required("ad-lab"), required("kittens-lab"));

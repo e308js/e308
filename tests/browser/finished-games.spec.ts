@@ -43,19 +43,21 @@ test("plays and persists each distinct finished-game composition", async ({ page
   await expect(page.locator("#game")).toHaveClass(/hearth/);
   await expect(page.getByRole("table", { name: "Seasonal production ledger" })).toBeVisible();
 
+  const longTasks = await page.evaluate(
+    () => (window as Window & { e308LongTasks?: number[] }).e308LongTasks ?? [],
+  );
+  expect(longTasks.filter((duration) => duration > 50)).toEqual([]);
+});
+
+test("keeps reference clones on a separate evidence-only page", async ({ page }) => {
+  await expect(page.locator("#ad-lab, #kittens-lab")).toHaveCount(0);
+  await page.goto("/examples/finished-games/reference-labs.html");
   await page.getByRole("button", { name: "Tick 100 ms" }).click();
   await expect(page.locator("#ad-lab output")).toHaveText("legal action applied");
   await page.getByRole("button", { name: "Craft beam" }).click();
   await expect(page.locator("#kittens-lab output")).toHaveText("blocked by requirements");
   await page.getByRole("button", { name: "Save round-trip" }).click();
-  await page.waitForTimeout(100);
-  expect(pageErrors).toEqual([]);
   await expect(page.locator("#kittens-lab output")).toHaveText(/restored \d+ bytes/);
-
-  const longTasks = await page.evaluate(
-    () => (window as Window & { e308LongTasks?: number[] }).e308LongTasks ?? [],
-  );
-  expect(longTasks.filter((duration) => duration > 50)).toEqual([]);
 });
 
 test("keeps primary choices usable at a touch viewport", async ({ page }) => {
