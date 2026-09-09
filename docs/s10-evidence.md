@@ -1,8 +1,9 @@
 # S10 evidence — finished games and clean consumers
 
-Status: **IN REVIEW**. The implementation is locally complete. Acceptance still requires the exact
-pushed commit to pass GitHub Actions and a walkthrough by someone other than the implementer on
-desktop and touch layouts.
+Status: **IN REVIEW**. Candidate commit
+`3005bca0b7a10d43ea57b01a60ef910a5acf3664` passed the complete GitHub Actions quality workflow.
+Acceptance still requires a walkthrough by someone other than the implementer on desktop and touch
+layouts.
 
 ## Delivered scope
 
@@ -50,9 +51,15 @@ Hearth. Thirty-day work remains bounded and preserves its pending backlog after 
 
 ## Open acceptance evidence
 
-- Record the implementation commit and exact GitHub Actions run after push.
 - Record an independent walkthrough of every consequential choice and ending.
 - Record desktop and touch interaction review, including the distinct layouts and Wireworks terminal
   projection.
 
 Until those items exist, this slice remains IN REVIEW rather than ACCEPTED.
+
+## Pushed evidence
+
+- Candidate: `3005bca0b7a10d43ea57b01a60ef910a5acf3664`
+- Branch: `main`
+- Workflow: [quality run 34314774684](https://github.com/e308js/e308/actions/runs/34314774684)
+- Conclusion: success, including SHA-keyed artifact upload
