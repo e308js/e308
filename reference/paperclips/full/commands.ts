@@ -26,7 +26,7 @@ export function paperclipsCommand(
   if (intent.type === "make-clip") return makeClip(intent.count ?? 1);
   if (intent.type === "buy-wire") return buyWire();
   if (intent.type === "set-price") return setPrice(intent.price);
-  if (intent.type === "buy") return buyMachine(intent.id);
+  if (intent.type === "buy") return buyMachine(intent.id, intent.count ?? 1);
   if (intent.type === "compute") return addCompute(snapshot, intent.target);
   if (intent.type === "quantum-compute") return quantumCompute();
   if (intent.type === "allocate-probe")
@@ -86,7 +86,7 @@ function setPrice(price: number): Command<number> {
   };
 }
 
-function buyMachine(id: PaperclipsBuyableId): Command<number> {
+function buyMachine(id: PaperclipsBuyableId, count: number): Command<number> {
   const buyable = paperclipsBuyable(id);
   return {
     id: `buy:${id}`,
@@ -95,7 +95,7 @@ function buyMachine(id: PaperclipsBuyableId): Command<number> {
       if (id === "mega-clipper" && !transaction.hasProgress("upgrade", "mega-clippers")) {
         transaction.reject({ code: "locked", prerequisiteIds: ["mega-clippers"] });
       }
-      buyCommand(buyable, { mode: "exact", count: 1 }).execute(transaction);
+      buyCommand(buyable, { mode: "exact", count }).execute(transaction);
       if (id === "marketing") {
         transaction.set(
           paperclipsResources.marketingLevel,

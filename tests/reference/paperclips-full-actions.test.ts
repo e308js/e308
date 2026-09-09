@@ -5,9 +5,32 @@ import {
   paperclipsBuyables,
   paperclipsResources,
 } from "../../reference/paperclips/full/index.js";
-import { paperclipsFullQuotes } from "../../reference/paperclips/full/scenario-quotes.js";
+import { requireAmount } from "../../reference/paperclips/full/quote-helpers.js";
+import {
+  paperclipsBusinessQuotes,
+  paperclipsFullQuotes,
+} from "../../reference/paperclips/full/scenario-quotes.js";
 
 describe("Universal Paperclips campaign action boundaries", () => {
+  it("quotes missing resources and probe allocation blockers", () => {
+    const game = createPaperclipsReference();
+    const constraints: Parameters<typeof requireAmount>[3] = [];
+    requireAmount(game.getSnapshot(), "missing-resource", 1, constraints);
+    expect(constraints).toEqual([
+      { kind: "insufficient-input", id: "missing-resource", detail: "1" },
+    ]);
+    seed(game, (transaction) => {
+      transaction.setProgress("milestone", "industry-phase");
+      transaction.setProgress("milestone", "space-phase");
+    });
+    expect(paperclipsBusinessQuotes(game.getSnapshot())).toEqual([]);
+    const probeQuotes = paperclipsFullQuotes(game.getSnapshot()).filter((quote) =>
+      quote.id.startsWith("probe:"),
+    );
+    expect(probeQuotes).toHaveLength(8);
+    expect(probeQuotes.every((quote) => quote.constraints[0]?.kind === "allocation")).toBe(true);
+  });
+
   it("enforces phase and project prerequisites", () => {
     const game = createPaperclipsReference();
     expect(game.dispatch({ type: "project", id: "improved-auto-clippers" })).toMatchObject({

@@ -493,6 +493,69 @@
         "standardOps": 10000,
         "tempOps": 261
       }
+    },
+    "industrySystems": {
+      "droneCosts": [
+        {
+          "harvesterLevel": 1,
+          "harvesterCost": 4756828.460010884,
+          "unusedClips": 999999000000
+        },
+        {
+          "harvesterLevel": 2,
+          "harvesterCost": 11844666.116572432,
+          "unusedClips": 999994243171.54
+        },
+        {
+          "harvesterLevel": 3,
+          "harvesterCost": 22627416.997969523,
+          "unusedClips": 999982398505.4235
+        }
+      ],
+      "unlocks": [
+        {
+          "project": "project18",
+          "standardOps": 955000,
+          "tothFlag": 1,
+          "wireProductionFlag": 0
+        },
+        {
+          "project": "project127",
+          "standardOps": 915000,
+          "tothFlag": 1,
+          "wireProductionFlag": 0
+        },
+        {
+          "project": "project41",
+          "standardOps": 880000,
+          "tothFlag": 1,
+          "wireProductionFlag": 1
+        }
+      ],
+      "initial": {
+        "harvesterRate": 26180337,
+        "wireDroneRate": 16180339,
+        "droneBoost": 1
+      },
+      "collision": {
+        "standardOps": 920000,
+        "harvesterRate": 2618033700,
+        "wireDroneRate": 1618033900,
+        "droneBoost": 1
+      },
+      "alignment": {
+        "standardOps": 820000,
+        "harvesterRate": 2618033700000,
+        "wireDroneRate": 1618033900000,
+        "droneBoost": 1
+      },
+      "cohesion": {
+        "standardOps": 820000,
+        "yomi": 0,
+        "harvesterRate": 2618033700000,
+        "wireDroneRate": 1618033900000,
+        "droneBoost": 2
+      }
     }
   }
 }

@@ -185,11 +185,15 @@ idle and absent sessions, and records bounded traces, samples, constraints, mile
 fidelity, and replay inputs.
 
 ```ts
-import { rankedPolicy, runHarness } from "@e308/core/testing";
+import { orderedPolicy, randomLegalPolicy, runHarness } from "@e308/core/testing";
 
 const report = runHarness({
   scenario,
-  policy: rankedPolicy({ version: "1" }),
+  policy: orderedPolicy({
+    id: "first-reset-route",
+    version: "1",
+    actions: ["buy-generator", "buy-upgrade", "prestige"],
+  }),
   gameSeed: "00",
   botSeed: "01",
   goalId: "first-prestige",
@@ -203,6 +207,8 @@ const report = runHarness({
   },
   replayCommand: "pnpm pacing -- first-prestige 00 01",
 });
+
+const randomPolicy = randomLegalPolicy({ version: "1" });
 ```
 
 `@e308/core/balance` aggregates reached and unreached populations, runs paired parameter sweeps,

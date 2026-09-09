@@ -3,6 +3,8 @@ import {
   type BotPolicy,
   goalPolicy,
   type HarnessRunOptions,
+  orderedPolicy,
+  randomLegalPolicy,
   rankedPolicy,
   replayHarness,
   reportJson,
@@ -161,6 +163,74 @@ describe("headless harness", () => {
     expect(report.samples).toHaveLength(1);
     expect(report.samplesTruncated).toBeGreaterThan(0);
     expect(report.actions.attempts).toBe(5);
+  });
+
+  it("replays seeded random legal actions deterministically", () => {
+    const configured = options({
+      policy: randomLegalPolicy({ version: "1" }),
+      botSeed: "aabbccdd",
+    });
+    const first = runHarness(configured);
+    const second = runHarness({
+      ...configured,
+      policy: randomLegalPolicy({ version: "1" }),
+    });
+    expect(first.outcome).toEqual({ kind: "reached", atRealMs: 6_000, atGameMs: 6_000 });
+    expect(second.trace).toEqual(first.trace);
+    expect(
+      replayHarness({ scenario: configured.scenario, report: first }).snapshot.resources.tokens,
+    ).toBe(3);
+  });
+
+  it("waits for each action in an authored route before advancing", () => {
+    const report = runHarness(
+      options({
+        policy: orderedPolicy({
+          id: "winning-route",
+          version: "1",
+          actions: ["buy-token", "buy-token", "buy-token"],
+        }),
+      }),
+    );
+    expect(report.outcome).toEqual({ kind: "reached", atRealMs: 6_000, atGameMs: 6_000 });
+    expect(report.actions).toMatchObject({ attempts: 3, successful: 3 });
+
+    const policy = orderedPolicy<HarnessObservation, HarnessIntent>({
+      id: "upgrade-route",
+      version: "1",
+      actions: ["first", "second"],
+    });
+    const context = {
+      observation: { points: 0, tokens: 0 },
+      goalId: "goal",
+      realTimeMs: 0,
+      decision: 0,
+      random: () => 0,
+    };
+    const quote = (id: string, legal: boolean) => ({
+      id,
+      revision: "0",
+      intent: { kind: "buy-token" as const },
+      legal,
+      useful: true,
+      constraints: [],
+    });
+    expect(policy.decide({ ...context, quotes: [quote("first", false)] })).toEqual({
+      kind: "wait",
+      reason: "route-wait:first",
+    });
+    expect(policy.decide({ ...context, quotes: [quote("first", true)] })).toEqual({
+      kind: "action",
+      actionId: "first",
+    });
+    expect(policy.decide({ ...context, quotes: [quote("second", true)] })).toEqual({
+      kind: "action",
+      actionId: "second",
+    });
+    expect(policy.decide({ ...context, quotes: [] })).toEqual({
+      kind: "wait",
+      reason: "route-complete",
+    });
   });
 
   it("records missing, blocked, and failed selections without privileged mutation", () => {

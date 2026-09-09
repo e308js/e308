@@ -81,7 +81,16 @@ Acceptance fixtures check curve continuity, domain failures, milestone costs, ro
 
 Each run is identified by content/simulation versions, parameter overrides, starting save hash, numeric adapter/version, simulation quantum, game seed, bot seed/policy version, decision cadence, session schedule, fidelity, and stop condition. A recorded action trace can be replayed independently of the bot. A bot may inspect only its observation interface; it cannot mutate state or read an undiscovered definition through engine internals.
 
-The baseline comparison matrix contains a scripted known path, an affordable-first policy with a declared ranking, and a game-authored goal policy, each under active, intermittent, and long-absence schedules. Stochastic scenarios use a configurable explicit seed list; twenty seeds is an initial experiment preset, not a statistical sufficiency claim. Deterministic scenarios do not pretend repeated identical seeds add evidence.
+The baseline comparison matrix contains an ordered known-winning route, a seeded random-legal policy,
+an affordable-first policy with a declared ranking, and a game-authored goal policy, each under
+active, intermittent, and long-absence schedules. Stochastic scenarios use a configurable explicit
+seed list; twenty seeds is an initial experiment preset. Deterministic scenarios use distinct policy
+paths as their evidence set.
+
+Strategy trees record their reachable branch count using the S08 definition. A fixed purchase order
+has zero branches; unlock choices, challenge order, resource allocation, and reset timing add branches.
+The lowest-complexity winning tree found, a representative winning tree, and the fastest known tree
+are separate results. A mathematical minimum is reported when bounded exhaustive search proves it.
 
 Report milestone first-passage times in real elapsed time, advanced game time, and active player time. Waiting is time with no action satisfying the policy's declared usefulness predicate. Distinguish that from no legal action at all. Report action attempts, successful actions, manual decisions, longest waiting interval, reset recovery targets, cap losses, task blocks, and resource constraints. Use separate engine wall-runtime measurements for computational performance.
 

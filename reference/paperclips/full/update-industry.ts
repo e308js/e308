@@ -61,7 +61,7 @@ function harvest(
   const source = required(resources, "availableMatter");
   const amount = Math.min(
     transaction.get(source),
-    harvesters * industryBoost(transaction) * 2e20 * seconds,
+    harvesters * droneMultiplier(transaction, resources, harvesters) * 2e20 * seconds,
   );
   transaction.add(source, -amount);
   transaction.add(required(resources, "acquiredMatter"), amount);
@@ -76,7 +76,7 @@ function extrude(
   const source = required(resources, "acquiredMatter");
   const amount = Math.min(
     transaction.get(source),
-    drones * industryBoost(transaction) * 1.5e20 * seconds,
+    drones * droneMultiplier(transaction, resources, drones) * 1.5e20 * seconds,
   );
   transaction.add(source, -amount);
   transaction.add(required(resources, "processedMatter"), amount);
@@ -116,10 +116,14 @@ function grantSwarmGifts(
   transaction.add(required(resources, "yomi"), gifts * 20);
 }
 
-function industryBoost(transaction: Transaction<number>): number {
-  if (transaction.hasProgress("upgrade", "self-correcting-supply-chain")) return 1_000;
-  if (transaction.hasProgress("upgrade", "drone-flocking")) return 20;
-  return 1;
+function droneMultiplier(
+  transaction: Transaction<number>,
+  resources: Resources,
+  count: number,
+): number {
+  const rate = transaction.get(required(resources, "droneRateMultiplier"));
+  const cohesion = transaction.get(required(resources, "droneBoost"));
+  return rate * (cohesion > 1 ? cohesion * Math.floor(count) : 1);
 }
 
 function count(transaction: Transaction<number>, buyables: Buyables, id: string): number {

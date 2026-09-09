@@ -47,7 +47,22 @@ interface GoldenTrace {
       readonly computed: Readonly<Record<string, number | readonly number[]>>;
       readonly overflow: Readonly<Record<string, number>>;
     };
+    readonly industrySystems: {
+      readonly droneCosts: readonly Readonly<Record<string, number>>[];
+      readonly unlocks: readonly Readonly<Record<string, number | string>>[];
+      readonly initial: DroneRateCheckpoint;
+      readonly collision: DroneRateCheckpoint;
+      readonly alignment: DroneRateCheckpoint;
+      readonly cohesion: DroneRateCheckpoint & { readonly yomi: number };
+    };
   };
+}
+
+interface DroneRateCheckpoint {
+  readonly standardOps?: number;
+  readonly harvesterRate: number;
+  readonly wireDroneRate: number;
+  readonly droneBoost: number;
 }
 
 const goldenSource = readFileSync(

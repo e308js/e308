@@ -16,7 +16,8 @@ export interface PaperclipsProject {
 
 export type PaperclipsProjectTrigger =
   | { readonly kind: "resource"; readonly id: string; readonly minimum: number }
-  | { readonly kind: "purchase"; readonly id: string; readonly minimum: number };
+  | { readonly kind: "purchase"; readonly id: string; readonly minimum: number }
+  | { readonly kind: "purchase-total"; readonly ids: readonly string[]; readonly minimum: number };
 
 export type PaperclipsProjectEffect =
   | { readonly kind: "clipper-boost"; readonly amount: number; readonly target: "auto" | "mega" }
@@ -29,6 +30,8 @@ export type PaperclipsProjectEffect =
   | { readonly kind: "photonic-chip" }
   | { readonly kind: "strategy"; readonly strategy: string }
   | { readonly kind: "theory-of-mind" }
+  | { readonly kind: "drone-rate"; readonly multiplier: number }
+  | { readonly kind: "drone-cohesion"; readonly multiplier: number }
   | {
       readonly kind: "unlock";
       readonly system:

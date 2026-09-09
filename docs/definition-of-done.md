@@ -80,7 +80,18 @@ The boundary suite additionally covers backward clocks, invalid timestamps, stor
 
 Render one unchanged game/save through two substantially different interfaces, replace one supplied control, and add a custom mechanic view. Mount/dispose repeatedly without duplicate commands or leaked subscriptions. Render UX against a non-core source. All major controls expose costs, blockers, focus/keyboard behavior, and touch-accessible explanations; undiscovered content must not leak through the view model.
 
-For each game run a scripted winning policy, a simple ranked/greedy policy, and a game-authored goal policy under active, intermittent, and long-absence schedules. The active-player bot stops while away. Use explicit seed lists for stochastic content and report unreached goals alongside success distributions. Include a deliberately bad policy and a mechanically certified barrier so reports distinguish strategy failure from impossibility.
+For each game run an ordered winning policy, seeded random-legal play, a simple ranked/greedy policy,
+and a game-authored goal policy under active, intermittent, and long-absence schedules. The
+active-player bot stops while away. Use explicit seed lists for stochastic content and report
+unreached goals alongside success distributions. Include a poor policy and a mechanically certified
+barrier so reports distinguish strategy failure from impossibility.
+
+Every published example has an authored final goal reachable through ordinary controls and a clear
+progression path to that goal. Its known-winning policy reaches the goal across the acceptance seed
+set. Random-legal play has a lower success rate within the fixed horizon or a slower conditional
+median completion time. Record the lowest-complexity winning strategy found, a representative winning
+strategy, and the fastest known strategy with their tree hashes, reachable branch counts, action
+counts, and completion distributions. Claims of minimum complexity require bounded exhaustive proof.
 
 A parameter sweep and two content-version baselines must detect a known changed bottleneck/milestone time. Reports contain versions, seeds, schedule, fidelity, elapsed/game/active time, actions, waits, overflow, reset recovery, and causal diagnostic evidence. A replay command or equivalent documented invocation reproduces each artifact.
 

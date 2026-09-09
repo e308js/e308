@@ -179,11 +179,15 @@ versions. `@e308/core/optimize` offers validated exact advancement with canonica
 explicitly labeled approximation contracts.
 
 ```ts
-import { rankedPolicy, runHarness } from "@e308/core/testing";
+import { orderedPolicy, randomLegalPolicy, runHarness } from "@e308/core/testing";
 
 const report = runHarness({
   scenario,
-  policy: rankedPolicy({ version: "1" }),
+  policy: orderedPolicy({
+    id: "first-reset-route",
+    version: "1",
+    actions: ["buy-generator", "buy-upgrade", "prestige"],
+  }),
   gameSeed: "00",
   botSeed: "01",
   goalId: "first-reset",
@@ -197,6 +201,8 @@ const report = runHarness({
   },
   replayCommand: "pnpm pacing -- first-reset 00 01",
 });
+
+const randomPolicy = randomLegalPolicy({ version: "1" });
 ```
 
 ## Packages and examples

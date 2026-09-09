@@ -10,7 +10,6 @@ import {
   paperclipsMachineTarget,
 } from "./buyable-map.js";
 import { paperclipsResources } from "./model.js";
-import { appendProjectTriggerConstraints } from "./project-quote-constraints.js";
 import {
   businessProjects,
   industryProjects,
@@ -19,6 +18,8 @@ import {
   spaceProjects,
 } from "./projects.js";
 import { quantumOperationYield } from "./quantum.js";
+import { quote, requireAmount } from "./quote-helpers.js";
+import { projectConstraints } from "./scenario-constraints.js";
 import { bestPaperclipsStrategy } from "./strategy-state.js";
 import {
   type PaperclipsBuyableId,
@@ -56,18 +57,7 @@ export function paperclipsFullQuotes(
   return [];
 }
 
-export function fullConstraints(snapshot: Snapshot<number>): readonly ConstraintEvidence[] {
-  const phase = paperclipsPhase(snapshot);
-  if (phase === "business") return projectConstraints(snapshot, lastProject(businessProjects));
-  if (phase === "industry") return projectConstraints(snapshot, lastProject(industryProjects));
-  return projectConstraints(snapshot, lastProject(spaceProjects));
-}
-
-function lastProject(projects: readonly PaperclipsProject[]): PaperclipsProject {
-  const project = projects.at(-1);
-  if (!project) throw new TypeError("Paperclips phase needs a terminal project");
-  return project;
-}
+export { fullConstraints } from "./scenario-constraints.js";
 
 function industryQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<PaperclipsIntent>[] {
   const machineIds = ["solar-farm", "battery", "factory", "wire-drone", "harvester"] as const;
@@ -223,16 +213,26 @@ function machineQuote(
   const target = paperclipsMachineTarget(id);
   if (count >= target)
     constraints.push({ kind: "policy", id, detail: `campaign target ${target}` });
-  requireAmount(
-    snapshot,
-    id === "auto-clipper" || id === "mega-clipper" || id === "marketing" ? "funds" : "clips",
-    buyable.curve.unitCost(count),
-    constraints,
+  const currencyId =
+    id === "auto-clipper" || id === "mega-clipper" || id === "marketing" ? "funds" : "clips";
+  const isDrone = id === "harvester" || id === "wire-drone";
+  const factories = snapshot.purchaseCounts[paperclipsBuyable("factory").id] ?? 0;
+  if (isDrone && factories === 0 && count >= 1) {
+    constraints.push({ kind: "policy", id: "factory-capital", detail: "reserve first factory" });
+  }
+  const batchSize = isDrone && factories > 0 ? 1_000 : 1;
+  const maximum = isDrone ? Math.min(batchSize, Math.max(1, target - count)) : 1;
+  const affordable = buyable.curve.maxAffordable(
+    snapshot.resources[currencyId] ?? 0,
+    count,
+    maximum,
   );
+  const purchaseCount = Math.max(1, affordable);
+  requireAmount(snapshot, currencyId, buyable.curve.totalCost(count, purchaseCount), constraints);
   return quote(
     snapshot,
     `buy:${id}`,
-    { type: "buy", id },
+    { type: "buy", id, count: purchaseCount },
     constraints,
     paperclipsMachineRank(id, count),
   );
@@ -277,70 +277,4 @@ function makeQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsInten
   requireAmount(snapshot, "wire", 1, constraints);
   const count = Math.min(100, Math.floor(snapshot.resources.wire ?? 0));
   return quote(snapshot, "make-clip", { type: "make-clip", count }, constraints, 200);
-}
-
-function projectConstraints(
-  snapshot: Snapshot<number>,
-  project: PaperclipsProject,
-): ConstraintEvidence[] {
-  const constraints: ConstraintEvidence[] = [];
-  if (snapshot.progression.upgrades[project.id])
-    constraints.push({ kind: "other", id: project.id, detail: "project complete" });
-  for (const id of project.prerequisites) {
-    if (!snapshot.progression.upgrades[id])
-      constraints.push({ kind: "prerequisite", id, detail: project.id });
-  }
-  if (project.operations) requireAmount(snapshot, "operations", project.operations, constraints);
-  if (project.creativity) requireAmount(snapshot, "creativity", project.creativity, constraints);
-  if (project.yomi) requireAmount(snapshot, "yomi", project.yomi, constraints);
-  if (project.funds) requireAmount(snapshot, "funds", project.funds, constraints);
-  if (project.clips) requireAmount(snapshot, "clips", project.clips, constraints);
-  if (project.trustCost && project.id !== "beg-for-more-wire") {
-    requireAmount(snapshot, "trust", project.trustCost, constraints);
-  }
-  if (project.effect.kind === "photonic-chip") {
-    requireAmount(
-      snapshot,
-      "operations",
-      snapshot.resources[paperclipsResources.photonicChipCost.id] ?? 10_000,
-      constraints,
-    );
-    if ((snapshot.resources[paperclipsResources.photonicChips.id] ?? 0) >= 10) {
-      constraints.push({ kind: "policy", id: "photonic-chip", detail: "all ten chips active" });
-    }
-  }
-  appendProjectTriggerConstraints(snapshot, project, constraints);
-  if (project.id === "spectral-froth-annealment")
-    requireAmount(snapshot, paperclipsResources.wireSupply.id, 5_000, constraints);
-  if (project.id === "quantum-foam-annealment")
-    requireAmount(snapshot, paperclipsResources.wireCost.id, 125, constraints);
-  return constraints;
-}
-
-function requireAmount(
-  snapshot: Snapshot<number>,
-  id: string,
-  amount: number,
-  constraints: ConstraintEvidence[],
-): void {
-  if ((snapshot.resources[id] ?? 0) < amount)
-    constraints.push({ kind: "insufficient-input", id, detail: String(amount) });
-}
-
-function quote(
-  snapshot: Snapshot<number>,
-  id: string,
-  intent: PaperclipsIntent,
-  constraints: readonly ConstraintEvidence[],
-  rank: number,
-): LegalActionQuote<PaperclipsIntent> {
-  return {
-    id,
-    revision: snapshot.revision.toString(),
-    intent,
-    legal: constraints.length === 0,
-    useful: true,
-    rank,
-    constraints,
-  };
 }

@@ -21,6 +21,11 @@ export function appendProjectTriggerConstraints(
     const count = snapshot.purchaseCounts[trigger.id] ?? 0;
     if (count < trigger.minimum) appendSourceConstraint(constraints, trigger.id, trigger.minimum);
   }
+  if (trigger?.kind === "purchase-total") {
+    const total = trigger.ids.reduce((sum, id) => sum + (snapshot.purchaseCounts[id] ?? 0), 0);
+    if (total < trigger.minimum)
+      appendSourceConstraint(constraints, trigger.ids.join("+"), trigger.minimum);
+  }
   const trust = snapshot.resources.trust as number;
   if (project.id === "token-of-goodwill" && (trust < 85 || trust >= 100)) {
     constraints.push({ kind: "other", id: "trust", detail: "source trigger 85–99" });

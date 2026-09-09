@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  enumeratedCurve,
   eternityNumbers,
   geometricCurve,
   type NumericAdapter,
@@ -7,6 +8,34 @@ import {
   nativeNumbers,
   segmentedCurve,
 } from "../../packages/core/src/index.js";
+
+describe("enumerated curves", () => {
+  it("supports exact authored costs, bounded max-buy, and custom identities", () => {
+    const curve = enumeratedCurve(nativeNumbers, {
+      kind: "quadratic",
+      unitCost: (count) => (count + 1) ** 2,
+    });
+    expect(curve.kind).toBe("quadratic");
+    expect(curve.unitCost(2)).toBe(9);
+    expect(curve.totalCost(1, 3)).toBe(29);
+    expect(curve.maxAffordable(29, 1)).toBe(3);
+    expect(curve.maxAffordable(1_000, 0, 2)).toBe(2);
+  });
+
+  it("validates counts, balances, costs, and backend precision", () => {
+    const curve = enumeratedCurve(nativeNumbers, { unitCost: () => 1 });
+    expect(() => curve.unitCost(-1)).toThrow(TypeError);
+    expect(() => curve.totalCost(0, 1.5)).toThrow(TypeError);
+    expect(() => curve.maxAffordable(Number.POSITIVE_INFINITY, 0)).toThrow(TypeError);
+    expect(() => enumeratedCurve(nativeNumbers, { unitCost: () => 0 }).unitCost(0)).toThrow(
+      NumericFault,
+    );
+    const stuck: NumericAdapter<number> = { ...nativeNumbers, add: (left) => left };
+    expect(() => enumeratedCurve(stuck, { unitCost: () => 1 }).totalCost(0, 1)).toThrow(
+      NumericFault,
+    );
+  });
+});
 
 describe("geometric curves", () => {
   it("calculates unit, cumulative, capped, and maximum costs", () => {

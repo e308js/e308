@@ -16,9 +16,9 @@ export function paperclipsBuyable(id: PaperclipsBuyableId) {
 
 export function paperclipsMachinePrerequisite(id: PaperclipsBuyableId): string | undefined {
   const prerequisites: Partial<Record<PaperclipsBuyableId, string>> = {
-    harvester: "power-grid",
-    "wire-drone": "power-grid",
-    factory: "power-grid",
+    harvester: "harvester-drones",
+    "wire-drone": "wire-drones",
+    factory: "clip-factories",
     "solar-farm": "power-grid",
     battery: "power-grid",
   };
@@ -29,7 +29,9 @@ export function paperclipsMachineTarget(id: PaperclipsBuyableId): number {
   if (id === "auto-clipper") return 75;
   if (id === "mega-clipper") return 25;
   if (id === "marketing") return 10;
-  if (id === "factory" || id === "battery" || id === "solar-farm") return 5;
+  if (id === "harvester" || id === "wire-drone") return 25_000;
+  if (id === "factory") return 50;
+  if (id === "battery" || id === "solar-farm") return 5;
   return 10;
 }
 

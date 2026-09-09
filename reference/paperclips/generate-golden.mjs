@@ -54,6 +54,7 @@ const scenarios = {
   hypnoTransition: hypnoTransitionTrace(loadedRuntime()),
   strategyProjects: strategyProjectTrace(loadedRuntime()),
   photonicChips: photonicChipTrace(loadedRuntime()),
+  industrySystems: industrySystemTrace(loadedRuntime()),
 };
 
 await writeFile(
@@ -297,6 +298,45 @@ function photonicChipTrace(runtime) {
   runtime.run("standardOps=9900; operations=9900; tempOps=0; qComp()");
   const overflow = runtime.read(["standardOps", "tempOps"]);
   return { purchases, computed, overflow };
+}
+
+function industrySystemTrace(runtime) {
+  runtime.run("unusedClips=1000000000000");
+  const droneCosts = [];
+  for (let index = 0; index < 3; index += 1) {
+    runtime.run("makeHarvester(1)");
+    droneCosts.push(runtime.read(["harvesterLevel", "harvesterCost", "unusedClips"]));
+  }
+  runtime.run("standardOps=1000000; operations=1000000; humanFlag=0; project17.flag=1");
+  const unlocks = [];
+  for (const name of ["project18", "project127", "project41"]) {
+    runtime.run(`${name}.element=document.getElementById('${name}'); ${name}.effect()`);
+    unlocks.push({
+      project: name,
+      ...runtime.read(["standardOps", "tothFlag", "wireProductionFlag"]),
+    });
+  }
+  runtime.run("standardOps=1000000; operations=1000000; yomi=50000");
+  const initial = runtime.read(["harvesterRate", "wireDroneRate", "droneBoost"]);
+  runtime.run(
+    "harvesterLevel=250; wireDroneLevel=250; project110.element=document.getElementById('project110'); project110.effect()",
+  );
+  const collision = runtime.read(["standardOps", "harvesterRate", "wireDroneRate", "droneBoost"]);
+  runtime.run(
+    "harvesterLevel=2500; wireDroneLevel=2500; project111.element=document.getElementById('project111'); project111.effect()",
+  );
+  const alignment = runtime.read(["standardOps", "harvesterRate", "wireDroneRate", "droneBoost"]);
+  runtime.run(
+    "harvesterLevel=25000; wireDroneLevel=25000; project112.element=document.getElementById('project112'); project112.effect()",
+  );
+  const cohesion = runtime.read([
+    "standardOps",
+    "yomi",
+    "harvesterRate",
+    "wireDroneRate",
+    "droneBoost",
+  ]);
+  return { droneCosts, unlocks, initial, collision, alignment, cohesion };
 }
 
 function loadedRuntime() {

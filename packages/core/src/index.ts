@@ -6,7 +6,7 @@ export { allocationCommand } from "./economy/allocations.js";
 export type { BuyableDefinition, BuyRequest } from "./economy/buyables.js";
 export { buyCommand, sellCommand } from "./economy/buyables.js";
 export type { CurveSegment, PurchaseCurve } from "./economy/curves.js";
-export { geometricCurve, segmentedCurve } from "./economy/curves.js";
+export { enumeratedCurve, geometricCurve, segmentedCurve } from "./economy/curves.js";
 export type { Modifier, ModifierBreakdown, ModifierStep } from "./economy/modifiers.js";
 export { applyModifiers } from "./economy/modifiers.js";
 export type { RateBuilders } from "./economy/rates.js";

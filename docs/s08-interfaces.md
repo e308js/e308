@@ -16,10 +16,19 @@ attempt with a structured result; it is not applied through a privileged mutatio
 automation remains engine state and continues during all time advancement. Bot decisions occur only
 in `active` schedule segments, never in `idle-open` or `absent` segments.
 
-Scripted policies consume an explicit action-ID sequence. Ranked policies select the highest
-game-authored rank among legal useful quotes, with ties resolved by a seeded bot RNG. Goal policies
-use a game-authored scorer that sees only the same observation and quotes. Policy ID, version, seed,
-and decision cadence are report identity fields.
+Scripted policies consume an explicit action-ID sequence. Ordered policies hold each action until its
+quote becomes legal and useful, which represents purchase routes and unlock plans. Random-legal
+policies sample uniformly from current legal useful quotes with the seeded bot RNG. Ranked policies
+select the highest game-authored rank, with seeded tie resolution. Goal policies use a game-authored
+scorer that sees the same observation and quotes. Policy ID, version, seed, and decision cadence are
+report identity fields.
+
+Strategy analysis represents conditional plans as finite trees. Complexity is the total number of
+reachable alternative edges beyond the first edge at each decision node after impossible branches
+are pruned. A fixed action route has complexity zero. A minimum-winning-complexity claim requires a
+bounded exhaustive search over the declared observation, action, time, and state limits. Other reports
+label the result as the lowest-complexity winning plan found. Reports retain tree hash, branch count,
+action count, success rate, and conditional completion-time distribution.
 
 ## Outcomes and causal language
 

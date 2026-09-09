@@ -1,5 +1,5 @@
 import type { Command, Resource, Transaction } from "../../../packages/core/src/index.js";
-import { requireBalance, spend } from "./command-cost.js";
+import { spend } from "./command-cost.js";
 import { computeAllocation, paperclipsBuyables, paperclipsResources } from "./model.js";
 import {
   allPaperclipsProjects,
@@ -70,6 +70,12 @@ function applyProjectEffect(transaction: Transaction<number>, project: Paperclip
     transaction.set(paperclipsResources.yomiBoost, 2);
     transaction.set(paperclipsResources.tournamentCost, 16_000);
   }
+  if (effect.kind === "drone-rate") {
+    multiply(transaction, paperclipsResources.droneRateMultiplier, effect.multiplier);
+  }
+  if (effect.kind === "drone-cohesion") {
+    transaction.set(paperclipsResources.droneBoost, effect.multiplier);
+  }
   if (effect.kind === "unlock" && effect.system === "investment") {
     transaction.set(paperclipsResources.investmentLevel, 1);
   }
@@ -95,6 +101,10 @@ function requireProjectUnlock(transaction: Transaction<number>, project: Papercl
     if (!buyable || transaction.getPurchase(buyable.id) < trigger.minimum) {
       rejectSourceTrigger(transaction, project.id);
     }
+  }
+  if (trigger?.kind === "purchase-total") {
+    const total = trigger.ids.reduce((sum, id) => sum + transaction.getPurchase(id), 0);
+    if (total < trigger.minimum) rejectSourceTrigger(transaction, project.id);
   }
   requireSpecialTrigger(transaction, project.id);
 }
@@ -136,7 +146,7 @@ function spendProjectCosts(transaction: Transaction<number>, project: Paperclips
   if (project.creativity) spend(transaction, paperclipsResources.creativity, project.creativity);
   if (project.yomi) spend(transaction, paperclipsResources.yomi, project.yomi);
   if (project.funds) spend(transaction, paperclipsResources.funds, project.funds);
-  if (project.clips) requireBalance(transaction, paperclipsResources.clips, project.clips);
+  if (project.clips) spend(transaction, paperclipsResources.clips, project.clips);
   if (project.trustCost) {
     if (project.id === "beg-for-more-wire") {
       transaction.add(paperclipsResources.trust, -project.trustCost);

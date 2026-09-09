@@ -96,7 +96,10 @@ function inspectTypeScript(
         !path.includes("/browser/") &&
         !path.includes("/worker/")
       ) {
-        if (/^(react|vue|svelte|solid-js|lit|@angular|node:)/.test(specifier)) {
+        if (
+          /^(react|vue|svelte|solid-js|lit|@angular|node:)/.test(specifier) ||
+          /(^|\/)(games|reference|examples)(\/|$)/.test(specifier)
+        ) {
           forbiddenImports.push(`${path}: ${specifier}`);
         }
       }

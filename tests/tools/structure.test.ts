@@ -44,7 +44,7 @@ describe("structure gate", () => {
     expect(isEntrypoint(undefined)).toBe(false);
   });
 
-  it("rejects large functions, copied blocks, and headless host imports", async () => {
+  it("rejects large functions, copied blocks, and imports across core boundaries", async () => {
     const root = await mkdtemp(join(tmpdir(), "e308-structure-rules-"));
     const source = join(root, "packages", "core", "src");
     await mkdir(source, { recursive: true });
@@ -55,12 +55,19 @@ describe("structure gate", () => {
       `import fs from "node:fs";\nexport const copied = ${repeated};\nexport function tooLong() {\nlet total = 0;\n${longBody}\nreturn total;\n}`,
     );
     await writeFile(join(source, "second.ts"), `export const copiedAgain = ${repeated};`);
+    await writeFile(
+      join(source, "game-import.ts"),
+      'import "../../../../reference/paperclips/full/model.js";',
+    );
 
     const report = await inspectStructure(root);
     expect(report.functions).toEqual([
       { path: "packages/core/src/first.ts", actual: 85, limit: 80 },
     ]);
-    expect(report.forbiddenImports).toEqual(["packages/core/src/first.ts: node:fs"]);
+    expect(report.forbiddenImports).toEqual([
+      "packages/core/src/first.ts: node:fs",
+      "packages/core/src/game-import.ts: ../../../../reference/paperclips/full/model.js",
+    ]);
     expect(report.duplicateBlocks).toHaveLength(1);
     await expect(runStructureCheck(root)).resolves.toBe(1);
   });

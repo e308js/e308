@@ -1,5 +1,5 @@
 import { createGameKit, geometricCurve, nativeNumbers } from "../../../packages/core/src/index.js";
-import { autoClipperCurve, megaClipperCurve } from "./purchase-curves.js";
+import { autoClipperCurve, droneCurve, megaClipperCurve } from "./purchase-curves.js";
 import { updateBusiness } from "./update-business.js";
 import { updateIndustry } from "./update-industry.js";
 import { updateSpace } from "./update-space.js";
@@ -80,6 +80,11 @@ export const paperclipsResources = {
   processedMatter: paperclipsKit.resource("processed-matter", { scope: industry, initial: 0 }),
   storedPower: paperclipsKit.resource("stored-power", { scope: industry, initial: 0 }),
   swarmGifts: paperclipsKit.resource("swarm-gifts", { scope: permanent, initial: 0 }),
+  droneRateMultiplier: paperclipsKit.resource("drone-rate-multiplier", {
+    scope: permanent,
+    initial: 1,
+  }),
+  droneBoost: paperclipsKit.resource("drone-boost", { scope: permanent, initial: 1 }),
   probeTrust: paperclipsKit.resource("probe-trust", { scope: space, initial: 0 }),
   probes: paperclipsKit.resource("probes", { scope: space, initial: 0 }),
   universeMatter: paperclipsKit.resource("universe-matter", { scope: space, initial: 3e55 }),
@@ -135,12 +140,12 @@ export const paperclipsBuyables = {
   harvester: paperclipsKit.buyable("harvester", {
     scope: industry,
     currency: paperclipsResources.clips,
-    curve: curve(1e6, 1.15),
+    curve: droneCurve,
   }),
   wireDrone: paperclipsKit.buyable("wire-drone", {
     scope: industry,
     currency: paperclipsResources.clips,
-    curve: curve(1e6, 1.15),
+    curve: droneCurve,
   }),
   factory: paperclipsKit.buyable("factory", {
     scope: industry,
@@ -188,7 +193,7 @@ const spaceUpdate = paperclipsKit.steppedRule("space-update", {
 
 export const paperclipsDefinition = paperclipsKit.defineGame({
   id: "paperclips-full-reference",
-  simulationVersion: 3,
+  simulationVersion: 4,
   stepMs: 1_000,
   rootSeed: "7061706572636c697073",
   resources: Object.values(paperclipsResources),

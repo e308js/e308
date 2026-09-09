@@ -14,6 +14,67 @@ export interface CurveSegment<N> {
   readonly curve: PurchaseCurve<N>;
 }
 
+export function enumeratedCurve<N>(
+  numbers: NumericAdapter<N>,
+  options: { readonly kind?: string; readonly unitCost: (count: N) => N },
+): PurchaseCurve<N> {
+  const zero = numbers.fromNumber(0);
+  const one = numbers.fromNumber(1);
+  const unitCost = (count: N): N => {
+    requireWhole(count, numbers, "count");
+    const cost = options.unitCost(count);
+    if (!numbers.isFinite(cost) || numbers.cmp(cost, zero) <= 0) {
+      throw new NumericFault("enumerated unit cost must be positive and finite");
+    }
+    return cost;
+  };
+  const totalCost = (startCount: N, quantity: N): N => {
+    requireWhole(startCount, numbers, "startCount");
+    requireWhole(quantity, numbers, "quantity");
+    let cursor = startCount;
+    let remaining = quantity;
+    let total = zero;
+    while (numbers.cmp(remaining, zero) > 0) {
+      total = numbers.add(total, unitCost(cursor));
+      cursor = incrementCount(cursor, one, numbers);
+      remaining = numbers.sub(remaining, one);
+    }
+    return total;
+  };
+  const maxAffordable = (balance: N, startCount: N, maximum?: N): N => {
+    requireWhole(startCount, numbers, "startCount");
+    if (maximum !== undefined) requireWhole(maximum, numbers, "maximum");
+    if (!numbers.isFinite(balance) || numbers.cmp(balance, zero) < 0) {
+      throw new TypeError("balance must be a nonnegative finite quantity");
+    }
+    let cursor = startCount;
+    let spent = zero;
+    let bought = zero;
+    while (maximum === undefined || numbers.cmp(bought, maximum) < 0) {
+      const cost = unitCost(cursor);
+      const nextSpent = numbers.add(spent, cost);
+      if (numbers.cmp(nextSpent, balance) > 0) break;
+      spent = nextSpent;
+      cursor = incrementCount(cursor, one, numbers);
+      bought = incrementCount(bought, one, numbers);
+    }
+    return bought;
+  };
+  return Object.freeze({
+    kind: options.kind ?? "enumerated",
+    numericAdapterId: numbers.id,
+    unitCost,
+    totalCost,
+    maxAffordable,
+  });
+}
+
+function incrementCount<N>(count: N, one: N, numbers: NumericAdapter<N>): N {
+  const next = numbers.add(count, one);
+  if (numbers.cmp(next, count) <= 0) throw new NumericFault("count precision cannot advance");
+  return next;
+}
+
 export function segmentedCurve<N>(
   numbers: NumericAdapter<N>,
   input: readonly CurveSegment<N>[],

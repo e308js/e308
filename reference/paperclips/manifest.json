@@ -18,7 +18,7 @@
   "goldenTrace": {
     "path": "reference/paperclips/golden-trace.json",
     "generator": "reference/paperclips/generate-golden.mjs",
-    "sha256": "92831fbd059dcf08fa58c36a860a46601ebc09418abe349d9d9d32169c1f7309",
+    "sha256": "f9cfb8882d5abba4e079f60815a61f368ada062859aef45076da75eacd3debce",
     "scenarios": [
       "initial",
       "retail",
@@ -30,7 +30,8 @@
       "trustThresholds",
       "hypnoTransition",
       "strategyProjects",
-      "photonicChips"
+      "photonicChips",
+      "industrySystems"
     ]
   },
   "mapping": {

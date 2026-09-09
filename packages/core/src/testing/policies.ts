@@ -32,6 +32,37 @@ export function rankedPolicy<O extends HarnessValue, I extends HarnessValue>(opt
   };
 }
 
+export function randomLegalPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
+  readonly id?: string;
+  readonly version: string;
+}): BotPolicy<O, I> {
+  return {
+    id: options.id ?? "random-legal",
+    version: options.version,
+    decide: (context) => chooseUniform(context.quotes, context.random),
+  };
+}
+
+export function orderedPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
+  readonly id: string;
+  readonly version: string;
+  readonly actions: readonly string[];
+}): BotPolicy<O, I> {
+  let index = 0;
+  return {
+    id: options.id,
+    version: options.version,
+    decide: (context) => {
+      if (index >= options.actions.length) return { kind: "wait", reason: "route-complete" };
+      const actionId = options.actions[index] as string;
+      const quote = context.quotes.find((candidate) => candidate.id === actionId);
+      if (!quote?.legal || !quote.useful) return { kind: "wait", reason: `route-wait:${actionId}` };
+      index += 1;
+      return { kind: "action", actionId };
+    },
+  };
+}
+
 export function goalPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
   readonly id: string;
   readonly version: string;
@@ -65,4 +96,14 @@ function chooseRanked<I extends HarnessValue>(
   const tied = legal.filter((quote) => (quote.rank ?? 0) === highest);
   const index = Math.min(tied.length - 1, Math.floor(random() * tied.length));
   return { kind: "action" as const, actionId: (tied[index] as LegalActionQuote<I>).id };
+}
+
+function chooseUniform<I extends HarnessValue>(
+  quotes: readonly LegalActionQuote<I>[],
+  random: () => number,
+) {
+  const legal = quotes.filter((quote) => quote.legal && quote.useful);
+  if (legal.length === 0) return { kind: "wait" as const, reason: "no-random-action" };
+  const index = Math.min(legal.length - 1, Math.floor(random() * legal.length));
+  return { kind: "action" as const, actionId: (legal[index] as LegalActionQuote<I>).id };
 }

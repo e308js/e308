@@ -6,7 +6,7 @@ export type PaperclipsIntent =
   | { readonly type: "make-clip"; readonly count?: number }
   | { readonly type: "buy-wire" }
   | { readonly type: "set-price"; readonly price: number }
-  | { readonly type: "buy"; readonly id: PaperclipsBuyableId }
+  | { readonly type: "buy"; readonly id: PaperclipsBuyableId; readonly count?: number }
   | { readonly type: "compute"; readonly target: "processor" | "memory" }
   | { readonly type: "quantum-compute" }
   | { readonly type: "allocate-probe"; readonly target: ProbeTarget; readonly amount: number }
