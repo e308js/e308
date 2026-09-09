@@ -18,6 +18,7 @@ import {
   createCascade,
   encoded,
   importCascade,
+  purchasedTierMultiplier,
 } from "@e308/game-cascade";
 import { describe, expect, it } from "vitest";
 import { driveScenario } from "../helpers/finished-games.js";
@@ -79,6 +80,28 @@ describe("finished Cascade", () => {
         snapshot.purchaseCounts[topBuyable.id] as EternityQuantity,
       ),
     ).toBe(0);
+  });
+
+  it("scales each tier from its own purchased-generator thresholds", () => {
+    expect(encoded(purchasedTierMultiplier(cascadeKit.q(9)))).toBe("1");
+    expect(encoded(purchasedTierMultiplier(cascadeKit.q(10)))).toBe("2");
+    expect(encoded(purchasedTierMultiplier(cascadeKit.q(20)))).toBe("4");
+
+    const game = createGame(cascadeDefinition);
+    game.dispatch({
+      id: "tier-multiplier-fixture",
+      execute(transaction) {
+        transaction.set(cascadeResources.currency, cascadeKit.q(0));
+        transaction.set(cascadeTiers[0] as (typeof cascadeTiers)[number], cascadeKit.q(10));
+        transaction.set(cascadeTiers[1] as (typeof cascadeTiers)[number], cascadeKit.q(10));
+        transaction.setPurchase("dimension-1", cascadeKit.q(20));
+        transaction.setPurchase("dimension-2", cascadeKit.q(10));
+      },
+    });
+    game.advance(1_000);
+    const snapshot = game.getSnapshot();
+    expect(encoded(snapshot.resources.currency as EternityQuantity)).toBe("40");
+    expect(encoded(snapshot.resources["tier-1"] as EternityQuantity)).toBe("30");
   });
 
   it("completes all reset levels and challenges through quote-only play", () => {

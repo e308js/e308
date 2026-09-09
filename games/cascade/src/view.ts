@@ -1,6 +1,12 @@
 import { type EternityQuantity, eternityNumbers, type Snapshot } from "@e308/core";
 import type { ActionView, GridCellView, TreeNodeView, ViewDocument, ViewNode } from "@e308/ux";
-import { cascadeBuyables, cascadeKit, cascadeTiers, encoded } from "./economy.js";
+import {
+  cascadeBuyables,
+  cascadeKit,
+  cascadeTiers,
+  encoded,
+  purchasedTierMultiplier,
+} from "./economy.js";
 import { cascadeChallenges } from "./progression.js";
 import type { CascadeIntent } from "./runtime.js";
 
@@ -77,7 +83,6 @@ function currencyStrip(
       resourceId: id,
       label: id.replaceAll("-", " "),
       value: snapshot.resources[id] as EternityQuantity,
-      format: "scientific",
     })),
   };
 }
@@ -85,77 +90,82 @@ function currencyStrip(
 function dimensionTable(
   snapshot: Snapshot<EternityQuantity>,
 ): ViewNode<CascadeIntent, EternityQuantity>[] {
-  return cascadeTiers.map((tier, index) => {
-    const buyable = cascadeBuyables[index] as (typeof cascadeBuyables)[number];
-    const count = snapshot.purchaseCounts[buyable.id] as EternityQuantity;
-    const cost = buyable.curve.unitCost(count);
-    const currency = snapshot.resources.currency as EternityQuantity;
-    const enabled = eternityNumbers.cmp(currency, cost) >= 0;
-    const remaining = 10 - (Number(encoded(count)) % 10);
-    const groupCost = buyable.curve.totalCost(count, q(remaining));
-    return {
-      kind: "row",
-      id: `tier-row-${index + 1}`,
-      children: [
-        {
-          kind: "resource",
-          id: tier.id,
-          resource: {
-            resourceId: tier.id,
-            label: `Tier ${index + 1}`,
-            value: snapshot.resources[tier.id] as EternityQuantity,
-          },
+  return cascadeTiers.map((tier, index) => dimensionRow(snapshot, tier, index));
+}
+
+function dimensionRow(
+  snapshot: Snapshot<EternityQuantity>,
+  tier: (typeof cascadeTiers)[number],
+  index: number,
+): ViewNode<CascadeIntent, EternityQuantity> {
+  const buyable = cascadeBuyables[index] as (typeof cascadeBuyables)[number];
+  const count = snapshot.purchaseCounts[buyable.id] as EternityQuantity;
+  const currency = snapshot.resources.currency as EternityQuantity;
+  const remaining = 10 - (Number(encoded(count)) % 10);
+  const multiplier = purchasedTierMultiplier(count);
+  const nextMultiplier = eternityNumbers.mul(multiplier, q(2));
+  const nextThreshold = Number(encoded(count)) + remaining;
+  return {
+    kind: "row",
+    id: `tier-row-${index + 1}`,
+    children: [
+      {
+        kind: "resource",
+        id: tier.id,
+        resource: {
+          resourceId: tier.id,
+          label: `Tier ${index + 1} generators`,
+          value: snapshot.resources[tier.id] as EternityQuantity,
         },
-        {
-          kind: "action",
-          id: `buy-${index + 1}`,
-          action: {
-            id: `buy-${index + 1}`,
-            label: `Buy tier ${index + 1}`,
-            enabled,
-            intent: { type: "buy", tier: index + 1, count: 1 },
-            blockers: enabled
-              ? []
-              : [
-                  {
-                    kind: "insufficient",
-                    resourceId: "currency",
-                    required: cost,
-                    available: currency,
-                  },
-                ],
-            costs: [{ resourceId: "currency", label: "Currency", value: cost }],
-            hold: { intent: { type: "buy", tier: index + 1, count: 1 } },
+      },
+      {
+        kind: "description",
+        id: `tier-${index + 1}-multiplier`,
+        content: [
+          {
+            kind: "text",
+            value: `${encoded(count)} bought · ×${encoded(multiplier)} production · next ×${encoded(nextMultiplier)} at ${nextThreshold}`,
           },
-          ...(eternityNumbers.cmp(count, q(10)) >= 0
-            ? { mark: { label: "×2", tone: "positive" as const } }
-            : {}),
-        },
-        {
-          kind: "action",
-          id: `buy-group-${index + 1}`,
-          action: {
-            id: `buy-group-${index + 1}`,
-            label: `Buy ${remaining} for ×2`,
-            enabled: eternityNumbers.cmp(currency, groupCost) >= 0,
-            intent: { type: "buy", tier: index + 1, count: remaining },
-            blockers:
-              eternityNumbers.cmp(currency, groupCost) >= 0
-                ? []
-                : [
-                    {
-                      kind: "insufficient",
-                      resourceId: "currency",
-                      required: groupCost,
-                      available: currency,
-                    },
-                  ],
-            costs: [{ resourceId: "currency", label: "Currency", value: groupCost }],
-          },
-        },
-      ],
-    };
-  });
+        ],
+      },
+      purchaseNode(index, 1, buyable.curve.unitCost(count), currency, multiplier),
+      purchaseNode(
+        index,
+        remaining,
+        buyable.curve.totalCost(count, q(remaining)),
+        currency,
+        nextMultiplier,
+      ),
+    ],
+  };
+}
+
+function purchaseNode(
+  index: number,
+  count: number,
+  cost: EternityQuantity,
+  currency: EternityQuantity,
+  multiplier: EternityQuantity,
+): ViewNode<CascadeIntent, EternityQuantity> {
+  const enabled = eternityNumbers.cmp(currency, cost) >= 0;
+  const tier = index + 1;
+  const label =
+    count === 1 ? `Buy Tier ${tier} generator` : `Buy ${count} for ×${encoded(multiplier)}`;
+  return {
+    kind: "action",
+    id: count === 1 ? `buy-${tier}` : `buy-group-${tier}`,
+    action: {
+      id: count === 1 ? `buy-${tier}` : `buy-group-${tier}`,
+      label,
+      enabled,
+      intent: { type: "buy", tier, count },
+      blockers: enabled
+        ? []
+        : [{ kind: "insufficient", resourceId: "currency", required: cost, available: currency }],
+      costs: [{ resourceId: "currency", label: "Currency", value: cost }],
+      ...(count === 1 ? { hold: { intent: { type: "buy" as const, tier, count } } } : {}),
+    },
+  };
 }
 
 function progressionTree(

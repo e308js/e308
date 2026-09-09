@@ -38,7 +38,7 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.getByText("1 of 4 workers available.", { exact: false })).toBeVisible();
   await page.getByLabel("miner").evaluate((input: HTMLInputElement) => {
     input.value = "1";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
   });
   await expect(page.getByText("0 of 4 workers available.", { exact: false })).toBeVisible();
   await expect(page.getByLabel("scholar")).toHaveAttribute("max", "0");
@@ -47,9 +47,14 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.locator("#host-status")).toContainText("cascade");
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
-  await expect(page.getByRole("button", { name: "Buy tier 1" })).toBeEnabled();
-  await page.getByRole("button", { name: "Buy tier 1" }).click();
-  await expect(page.getByText("Tier 1: 1", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Buy Tier 1 generator" })).toBeEnabled();
+  await page.getByRole("button", { name: "Buy Tier 1 generator" }).click();
+  await expect(page.getByText("Tier 1 generators: 1", { exact: true })).toBeVisible();
+  const advance = page.getByRole("button", { name: "Advance one minute" });
+  await advance.click();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(1_250);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
   for (const path of [
     "reference-labs.html",

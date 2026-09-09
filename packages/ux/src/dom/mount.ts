@@ -143,7 +143,7 @@ function restoreFocus(root: HTMLElement, focus: FocusState | undefined): void {
   const candidate = Array.from(root.querySelectorAll<HTMLElement>("[data-e308-key]")).find(
     (element) => element.dataset.e308Key === focus.key,
   );
-  candidate?.focus();
+  candidate?.focus({ preventScroll: true });
   if (
     (candidate instanceof HTMLInputElement || candidate instanceof HTMLTextAreaElement) &&
     focus.start !== undefined

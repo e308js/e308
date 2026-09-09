@@ -15,6 +15,12 @@ export const cascadeScopes = {
 } as const;
 
 const q = cascadeKit.q;
+const cascadeMath = (() => {
+  const math = eternityNumbers.transcendental;
+  if (!math) throw new TypeError("Cascade requires exponential number operations");
+  return math;
+})();
+const tierMultiplierCache = new WeakMap<object, EternityQuantity>();
 export const cascadeResources = {
   currency: cascadeKit.resource("currency", { scope: cascadeScopes.run, initial: q(10) }),
   multiplier: cascadeKit.resource("multiplier", { scope: cascadeScopes.run, initial: q(1) }),
@@ -66,41 +72,46 @@ export const buyTenMilestones = cascadeBuyables.map((buyable, index) =>
     scope: cascadeScopes.run,
     priority: index,
     when: (state) => eternityNumbers.cmp(state.purchaseCount(buyable.id), q(10)) >= 0,
-    apply: (transaction) =>
-      transaction.set(
-        cascadeResources.multiplier,
-        eternityNumbers.mul(transaction.get(cascadeResources.multiplier), q(2)),
-      ),
+    apply: () => undefined,
   }),
 );
+
+export function purchasedTierMultiplier(count: EternityQuantity): EternityQuantity {
+  const cached = tierMultiplierCache.get(count);
+  if (cached) return cached;
+  const groups = eternityNumbers.floor(eternityNumbers.div(count, q(10)));
+  const multiplier = cascadeMath.pow(q(2), groups);
+  tierMultiplierCache.set(count, multiplier);
+  return multiplier;
+}
 
 export const cascadeProductionRule = cascadeKit.steppedRule("cascade-production", {
   scope: cascadeScopes.run,
   priority: 10,
   update(transaction, stepSeconds) {
     const start = cascadeTiers.map((tier) => transaction.get(tier));
-    let multiplier = eternityNumbers.mul(
+    let sharedMultiplier = eternityNumbers.mul(
       transaction.get(cascadeResources.multiplier),
       q(stepSeconds),
     );
-    multiplier = eternityNumbers.mul(
-      multiplier,
+    sharedMultiplier = eternityNumbers.mul(
+      sharedMultiplier,
       eternityNumbers.add(q(1), transaction.getAllocation("research", "speed")),
     );
     if (transaction.isChallengeActive("slow-foundation"))
-      multiplier = eternityNumbers.div(multiplier, q(4));
+      sharedMultiplier = eternityNumbers.div(sharedMultiplier, q(4));
     if (transaction.isChallengeActive("automation-drought"))
-      multiplier = eternityNumbers.div(multiplier, q(2));
-    transaction.add(
-      cascadeResources.currency,
-      eternityNumbers.mul(start[0] as EternityQuantity, multiplier),
-    );
-    transaction.addProduction(
-      cascadeResources.currency.id,
-      eternityNumbers.mul(start[0] as EternityQuantity, multiplier),
-    );
+      sharedMultiplier = eternityNumbers.div(sharedMultiplier, q(2));
+    const outputFor = (index: number) =>
+      eternityNumbers.mul(
+        eternityNumbers.mul(start[index] as EternityQuantity, sharedMultiplier),
+        purchasedTierMultiplier(transaction.getPurchase(cascadeBuyables[index]?.id ?? "")),
+      );
+    const currencyOutput = outputFor(0);
+    transaction.add(cascadeResources.currency, currencyOutput);
+    transaction.addProduction(cascadeResources.currency.id, currencyOutput);
     for (let index = 1; index < start.length; index += 1) {
-      const output = eternityNumbers.mul(start[index] as EternityQuantity, multiplier);
+      const output = outputFor(index);
       transaction.add(cascadeTiers[index - 1] as (typeof cascadeTiers)[number], output);
       transaction.addProduction(
         (cascadeTiers[index - 1] as (typeof cascadeTiers)[number]).id,

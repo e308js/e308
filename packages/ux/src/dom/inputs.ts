@@ -22,11 +22,9 @@ export function renderInput<Intent, N>(
     input.max = String(view.max);
     input.step = String(view.step);
   }
-  input.addEventListener("input", () => {
-    dispatch(
-      view.kind === "text-input" ? view.intent(input.value) : view.intent(input.valueAsNumber),
-    );
-  });
+  if (view.kind === "text-input")
+    input.addEventListener("input", () => dispatch(view.intent(input.value)));
+  else input.addEventListener("change", () => dispatch(view.intent(input.valueAsNumber)));
   label.append(input);
   return label;
 }

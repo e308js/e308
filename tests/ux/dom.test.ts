@@ -381,6 +381,8 @@ describe("DOM renderer", () => {
     const range = required(root.querySelector<HTMLInputElement>("[data-e308-key='range:control']"));
     range.value = "4";
     range.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(source.intents.at(-1)).toEqual({ type: "name", value: "Grace" });
+    range.dispatchEvent(new Event("change", { bubbles: true }));
     const select = required(
       root.querySelector<HTMLSelectElement>("[data-e308-key='select:control']"),
     );
@@ -423,7 +425,9 @@ describe("DOM renderer", () => {
     const details = required(root.querySelector<HTMLDetailsElement>("details"));
     details.open = false;
     details.dispatchEvent(new Event("toggle"));
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
     source.emit({ ...source.state, points: 13 });
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(document.activeElement?.getAttribute("data-e308-key")).toBe("name:control");
     expect((document.activeElement as HTMLInputElement).selectionStart).toBe(1);
     expect(root.querySelector<HTMLDetailsElement>("details")?.open).toBe(false);

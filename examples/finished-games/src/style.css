@@ -116,7 +116,15 @@ button:disabled {
 }
 .cascade .e308-row {
   display: grid;
-  grid-template-columns: minmax(10rem, 1fr) 1fr;
+  grid-template-columns: minmax(12rem, 1fr) minmax(15rem, 1.4fr) repeat(2, minmax(11rem, auto));
+  align-items: center;
+  padding-block: 0.6rem;
+  border-bottom: 1px solid #ffffff18;
+}
+.cascade .e308-row p {
+  margin: 0;
+  color: #c9c0eb;
+  font-size: 0.9rem;
 }
 .hearth {
   background: #271b12;
@@ -182,5 +190,8 @@ button:disabled {
   .game-shell {
     width: calc(100% - 1rem);
     padding: 0.75rem;
+  }
+  .cascade .e308-row {
+    grid-template-columns: 1fr;
   }
 }
