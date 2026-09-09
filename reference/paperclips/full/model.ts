@@ -1,4 +1,5 @@
 import { createGameKit, geometricCurve, nativeNumbers } from "../../../packages/core/src/index.js";
+import { autoClipperCurve, megaClipperCurve } from "./purchase-curves.js";
 import { updateBusiness } from "./update-business.js";
 import { updateIndustry } from "./update-industry.js";
 import { updateSpace } from "./update-space.js";
@@ -72,12 +73,12 @@ export const paperclipsBuyables = {
   autoClipper: paperclipsKit.buyable("auto-clipper", {
     scope: business,
     currency: paperclipsResources.funds,
-    curve: curve(5, 1.1),
+    curve: autoClipperCurve,
   }),
   megaClipper: paperclipsKit.buyable("mega-clipper", {
     scope: business,
     currency: paperclipsResources.funds,
-    curve: curve(500, 1.07),
+    curve: megaClipperCurve,
   }),
   marketing: paperclipsKit.buyable("marketing", {
     scope: business,

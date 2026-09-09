@@ -1,0 +1,145 @@
+{
+  "schema": "e308-paperclips-golden-trace",
+  "schemaVersion": 1,
+  "sources": {
+    "combat.js": "c7226d012193c32a00bed53d7cb0119d4d3f91cb556b8e8d1b98dd3375be811a",
+    "globals.js": "968abd83c7090f24b6817842b4453b6d24de0e03e06d7ccb5ec4d15bee520919",
+    "main.js": "ee599076de868869e533490505189ddcb72dcc8748909ceeebe11e789f1b3a0a",
+    "projects.js": "05034c51809bc0632e8963e671c8e68c68604ca3643da291e0c6fabc86152774"
+  },
+  "random": {
+    "kind": "constant",
+    "value": 0.5
+  },
+  "scenarios": {
+    "initial": {
+      "clips": 0,
+      "unusedClips": 0,
+      "unsoldClips": 0,
+      "funds": 0,
+      "margin": 0.25,
+      "wire": 1000,
+      "wireCost": 20,
+      "wireSupply": 1000,
+      "clipmakerLevel": 0,
+      "clipperCost": 5,
+      "megaClipperLevel": 0,
+      "megaClipperCost": 500,
+      "marketingLvl": 1,
+      "adCost": 100,
+      "processors": 1,
+      "memory": 1,
+      "operations": 0,
+      "trust": 2
+    },
+    "retail": {
+      "afterManual": {
+        "clips": 10,
+        "unusedClips": 10,
+        "unsoldClips": 10,
+        "wire": 990
+      },
+      "afterSale": {
+        "funds": 0.75,
+        "income": 0.75,
+        "clipsSold": 3,
+        "unsoldClips": 7
+      },
+      "afterPrice": {
+        "margin": 0.26
+      }
+    },
+    "machineCosts": {
+      "autoClippers": [
+        {
+          "clipmakerLevel": 1,
+          "clipperCost": 6.1,
+          "funds": 19995
+        },
+        {
+          "clipmakerLevel": 2,
+          "clipperCost": 6.21,
+          "funds": 19988.9
+        },
+        {
+          "clipmakerLevel": 3,
+          "clipperCost": 6.331,
+          "funds": 19982.690000000002
+        }
+      ],
+      "megaClippers": [
+        {
+          "megaClipperLevel": 1,
+          "megaClipperCost": 1070,
+          "funds": 19500
+        },
+        {
+          "megaClipperLevel": 2,
+          "megaClipperCost": 1144.9,
+          "funds": 18430
+        },
+        {
+          "megaClipperLevel": 3,
+          "megaClipperCost": 1225.0430000000001,
+          "funds": 17285.1
+        }
+      ],
+      "marketing": [
+        {
+          "marketingLvl": 2,
+          "adCost": 200,
+          "funds": 19900
+        },
+        {
+          "marketingLvl": 3,
+          "adCost": 400,
+          "funds": 19700
+        },
+        {
+          "marketingLvl": 4,
+          "adCost": 800,
+          "funds": 19300
+        }
+      ]
+    },
+    "autoClipperProjects": [
+      {
+        "clipperBoost": 1.25,
+        "boostLvl": 1,
+        "standardOps": 19250
+      },
+      {
+        "clipperBoost": 1.75,
+        "boostLvl": 2,
+        "standardOps": 16750
+      },
+      {
+        "clipperBoost": 2.5,
+        "boostLvl": 3,
+        "standardOps": 11750
+      }
+    ],
+    "wireProjects": [
+      {
+        "wireSupply": 1500,
+        "standardOps": 48250
+      },
+      {
+        "wireSupply": 2625,
+        "standardOps": 44750
+      },
+      {
+        "wireSupply": 5250,
+        "standardOps": 37250
+      },
+      {
+        "wireSupply": 15750,
+        "standardOps": 25250
+      },
+      {
+        "wireSupply": 173250,
+        "standardOps": 10250
+      }
+    ]
+  }
+}

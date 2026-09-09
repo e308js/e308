@@ -54,13 +54,13 @@ describe("Universal Paperclips campaign action boundaries", () => {
     expect(game.dispatch({ type: "project", id: "new-slogan" })).toMatchObject({ ok: true });
     expect(game.getSnapshot().resources.demand).toBeGreaterThan(1);
     expect(game.dispatch({ type: "project", id: "beg-for-more-wire" })).toMatchObject({ ok: true });
-    expect(game.getSnapshot().resources[paperclipsResources.wireSupply.id]).toBe(2_000);
+    expect(game.getSnapshot().resources.wire).toBe(1_000);
     expect(game.dispatch({ type: "project", id: "improved-wire-extrusion" })).toMatchObject({
       ok: true,
     });
     seed(game, (transaction) => transaction.set(paperclipsResources.wire, 0));
     expect(game.dispatch({ type: "buy-wire" })).toMatchObject({ ok: true });
-    expect(game.getSnapshot().resources.wire).toBe(3_000);
+    expect(game.getSnapshot().resources.wire).toBe(1_500);
   });
 
   it("runs each tournament family and moves funds through investments", () => {

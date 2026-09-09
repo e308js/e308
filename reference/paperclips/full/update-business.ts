@@ -130,9 +130,9 @@ function trustThresholdsReached(clips: number): number {
 
 function clipperBoost(transaction: Transaction<number>): number {
   let boost = 1;
-  if (transaction.hasProgress("upgrade", "improved-auto-clippers")) boost *= 1.25;
-  if (transaction.hasProgress("upgrade", "even-better-auto-clippers")) boost *= 1.5;
-  if (transaction.hasProgress("upgrade", "optimized-auto-clippers")) boost *= 1.75;
+  if (transaction.hasProgress("upgrade", "improved-auto-clippers")) boost += 0.25;
+  if (transaction.hasProgress("upgrade", "even-better-auto-clippers")) boost += 0.5;
+  if (transaction.hasProgress("upgrade", "optimized-auto-clippers")) boost += 0.75;
   return boost;
 }
 

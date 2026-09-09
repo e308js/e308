@@ -101,7 +101,7 @@ function tournamentQuote(snapshot: Snapshot<number>): LegalActionQuote<Paperclip
     "tournament:minimax",
     { type: "tournament", strategy: "minimax" },
     constraints,
-    900,
+    990,
   );
 }
 

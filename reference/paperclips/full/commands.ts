@@ -59,11 +59,7 @@ function buyWire(): Command<number> {
       requirePhase(transaction, "business");
       const cost = transaction.get(paperclipsResources.wireCost);
       spend(transaction, paperclipsResources.funds, cost);
-      const extrusion = wireMultiplier(transaction);
-      transaction.add(
-        paperclipsResources.wire,
-        transaction.get(paperclipsResources.wireSupply) * extrusion,
-      );
+      transaction.add(paperclipsResources.wire, transaction.get(paperclipsResources.wireSupply));
       transaction.set(
         paperclipsResources.wireCost,
         Math.min(
@@ -134,13 +130,29 @@ function applyProject(transaction: Transaction<number>, project: PaperclipsProje
   spendProjectCosts(transaction, project);
   transaction.setProgress("upgrade", project.id);
   if (project.effect === "wire" && project.id === "beg-for-more-wire") {
-    transaction.set(paperclipsResources.wireSupply, 2_000);
+    transaction.set(paperclipsResources.wire, transaction.get(paperclipsResources.wireSupply));
   }
+  applyWireProject(transaction, project.id);
   if (project.effect === "demand") {
     transaction.set(paperclipsResources.demand, transaction.get(paperclipsResources.demand) * 1.5);
   }
   if (project.effect === "investment") transaction.set(paperclipsResources.investmentLevel, 1);
   applyTransition(transaction, project);
+}
+
+function applyWireProject(transaction: Transaction<number>, id: string): void {
+  const multipliers: Readonly<Record<string, number>> = {
+    "improved-wire-extrusion": 1.5,
+    "optimized-wire-extrusion": 1.75,
+    "microlattice-shapecasting": 2,
+  };
+  const multiplier = multipliers[id];
+  if (multiplier) {
+    transaction.set(
+      paperclipsResources.wireSupply,
+      transaction.get(paperclipsResources.wireSupply) * multiplier,
+    );
+  }
 }
 
 function spendProjectCosts(transaction: Transaction<number>, project: PaperclipsProject): void {
@@ -249,13 +261,6 @@ function withdraw(): Command<number> {
       transaction.add(paperclipsResources.funds, bankroll);
     },
   };
-}
-
-function wireMultiplier(transaction: Transaction<number>): number {
-  if (transaction.hasProgress("upgrade", "microlattice-shapecasting")) return 2;
-  if (transaction.hasProgress("upgrade", "optimized-wire-extrusion")) return 1.75;
-  if (transaction.hasProgress("upgrade", "improved-wire-extrusion")) return 1.5;
-  return 1;
 }
 
 function strategyScore(strategy: PaperclipsStrategy): number {

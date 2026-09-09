@@ -15,6 +15,12 @@
     "count": 96,
     "sha256": "ea56435dcd9f2f8769153ab966f40ebd497ad62226164060057e3aa413450fbd"
   },
+  "goldenTrace": {
+    "path": "reference/paperclips/golden-trace.json",
+    "generator": "reference/paperclips/generate-golden.mjs",
+    "sha256": "4dde794584b51c8e5eb7716a72c9ed2d958b75d0e3ffbd95be88f7f4806857f6",
+    "scenarios": ["initial", "retail", "machineCosts", "autoClipperProjects", "wireProjects"]
+  },
   "mapping": {
     "PC01": "Wire becomes unsold inventory; a separate demand-limited market action creates cash.",
     "PC02": "Matter feeds wire extrusion; power allocation limits industrial throughput.",

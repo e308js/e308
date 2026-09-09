@@ -79,7 +79,7 @@ later progression eras, a fresh-save completion trace, and end-to-end golden com
 | Paperclips source scripts pinned | Four exact SHA-256 hashes | PASS |
 | Paperclips project inventory | 96 unique source variables and DOM IDs | PASS |
 | Paperclips campaign skeleton | 36 source-mapped projects; three phases; one ending trace | PARTIAL |
-| Paperclips exact golden traces | Source runner and boundary traces | OPEN |
+| Paperclips exact golden traces | Initial state, retail actions, machine curves, and early production projects | PARTIAL |
 | Antimatter minimum mechanics | AD01–AD06 | PASS |
 | Antimatter full source inventory | Complete reachable-content ledger | OPEN |
 | Antimatter full campaign | Fresh-save trace through the pinned ending | OPEN |
