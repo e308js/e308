@@ -58,6 +58,18 @@ function applyProjectEffect(transaction: Transaction<number>, project: Paperclip
     applyTrustEffect(transaction, effect.trust);
   }
   if (effect.kind === "goodwill") applyGoodwill(transaction, effect.repeatable);
+  if (effect.kind === "photonic-chip") {
+    transaction.add(paperclipsResources.photonicChips, 1);
+    transaction.add(paperclipsResources.photonicChipCost, 5_000);
+  }
+  if (effect.kind === "strategy") {
+    transaction.add(paperclipsResources.strategyCount, 1);
+    transaction.add(paperclipsResources.tournamentCost, 1_000);
+  }
+  if (effect.kind === "theory-of-mind") {
+    transaction.set(paperclipsResources.yomiBoost, 2);
+    transaction.set(paperclipsResources.tournamentCost, 16_000);
+  }
   if (effect.kind === "unlock" && effect.system === "investment") {
     transaction.set(paperclipsResources.investmentLevel, 1);
   }
@@ -104,6 +116,9 @@ function requireSpecialTrigger(transaction: Transaction<number>, id: string): vo
       rejectSourceTrigger(transaction, id);
     }
   }
+  if (id === "photonic-chip" && transaction.get(paperclipsResources.photonicChips) >= 10) {
+    rejectSourceTrigger(transaction, id);
+  }
   if (
     id === "spectral-froth-annealment" &&
     transaction.get(paperclipsResources.wireSupply) < 5_000
@@ -128,6 +143,13 @@ function spendProjectCosts(transaction: Transaction<number>, project: Paperclips
     } else {
       spend(transaction, paperclipsResources.trust, project.trustCost);
     }
+  }
+  if (project.effect.kind === "photonic-chip") {
+    spend(
+      transaction,
+      paperclipsResources.operations,
+      transaction.get(paperclipsResources.photonicChipCost),
+    );
   }
   if (project.effect.kind === "goodwill" && project.effect.repeatable) {
     spend(transaction, paperclipsResources.funds, transaction.get(paperclipsResources.bribe));
@@ -184,6 +206,7 @@ function rejectSourceTrigger(transaction: Transaction<number>, id: string): neve
 }
 
 function requireProjectPhase(transaction: Transaction<number>, project: PaperclipsProject): void {
+  if (project.persistent) return;
   const industry = transaction.hasProgress("milestone", "industry-phase");
   const space = transaction.hasProgress("milestone", "space-phase");
   const valid = businessProjects.includes(project)

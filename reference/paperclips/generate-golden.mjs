@@ -52,6 +52,8 @@ const scenarios = {
   trustProjects: trustProjectTrace(loadedRuntime()),
   trustThresholds: trustThresholdTrace(loadedRuntime()),
   hypnoTransition: hypnoTransitionTrace(loadedRuntime()),
+  strategyProjects: strategyProjectTrace(loadedRuntime()),
+  photonicChips: photonicChipTrace(loadedRuntime()),
 };
 
 await writeFile(
@@ -243,6 +245,58 @@ function hypnoTransitionTrace(runtime) {
       "humanFlag",
     ]),
   };
+}
+
+function strategyProjectTrace(runtime) {
+  runtime.run(
+    "standardOps=300000; operations=300000; creativity=75000; tourneyCost=1000; trust=90",
+  );
+  const checkpoints = [];
+  for (const name of [
+    "project60",
+    "project61",
+    "project62",
+    "project63",
+    "project64",
+    "project65",
+    "project66",
+  ]) {
+    runtime.run(`${name}.element=document.getElementById('${name}'); ${name}.effect()`);
+    checkpoints.push({
+      project: name,
+      ...runtime.read(["standardOps", "tourneyCost"]),
+      strategies: runtime.run("strats.length"),
+    });
+  }
+  runtime.run("project119.element=document.getElementById('project119'); project119.effect()");
+  const theoryOfMind = runtime.read(["standardOps", "creativity", "tourneyCost", "yomiBoost"]);
+  runtime.run(
+    "project20.flag=1; project118.element=document.getElementById('project118'); project118.effect()",
+  );
+  const autoTourney = runtime.read(["creativity", "autoTourneyFlag"]);
+  return { checkpoints, theoryOfMind, autoTourney };
+}
+
+function photonicChipTrace(runtime) {
+  runtime.run("standardOps=500000; operations=500000; project50.flag=1");
+  const purchases = [];
+  for (let index = 0; index < 10; index += 1) {
+    runtime.run("project51.element=document.getElementById('project51'); project51.effect()");
+    purchases.push({
+      ...runtime.read(["standardOps", "qChipCost", "nextQchip"]),
+      active: runtime.run("qChips.filter(chip => chip.active === 1).length"),
+    });
+  }
+  runtime.run("standardOps=0; operations=0; tempOps=0; memory=10; processors=0");
+  for (let index = 0; index < 100; index += 1) runtime.run("quantumCompute()");
+  runtime.run("qComp()");
+  const computed = {
+    ...runtime.read(["qClock", "standardOps", "tempOps"]),
+    values: runtime.run("qChips.map(chip => chip.value)"),
+  };
+  runtime.run("standardOps=9900; operations=9900; tempOps=0; qComp()");
+  const overflow = runtime.read(["standardOps", "tempOps"]);
+  return { purchases, computed, overflow };
 }
 
 function loadedRuntime() {

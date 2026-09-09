@@ -46,6 +46,19 @@ export const paperclipsResources = {
   bankroll: paperclipsKit.resource("bankroll", { scope: permanent, initial: 0 }),
   investmentLevel: paperclipsKit.resource("investment-level", { scope: permanent, initial: 0 }),
   tournaments: paperclipsKit.resource("tournaments", { scope: permanent, initial: 0 }),
+  tournamentCost: paperclipsKit.resource("tournament-cost", { scope: permanent, initial: 1_000 }),
+  strategyCount: paperclipsKit.resource("strategy-count", { scope: permanent, initial: 1 }),
+  yomiBoost: paperclipsKit.resource("yomi-boost", { scope: permanent, initial: 1 }),
+  quantumClock: paperclipsKit.resource("quantum-clock", { scope: permanent, initial: 0 }),
+  photonicChips: paperclipsKit.resource("photonic-chips", { scope: permanent, initial: 0 }),
+  photonicChipCost: paperclipsKit.resource("photonic-chip-cost", {
+    scope: permanent,
+    initial: 10_000,
+  }),
+  temporaryOperations: paperclipsKit.resource("temporary-operations", {
+    scope: permanent,
+    initial: 0,
+  }),
   megaClipperBoost: paperclipsKit.resource("mega-clipper-boost", {
     scope: permanent,
     initial: 1,
@@ -175,7 +188,7 @@ const spaceUpdate = paperclipsKit.steppedRule("space-update", {
 
 export const paperclipsDefinition = paperclipsKit.defineGame({
   id: "paperclips-full-reference",
-  simulationVersion: 2,
+  simulationVersion: 3,
   stepMs: 1_000,
   rootSeed: "7061706572636c697073",
   resources: Object.values(paperclipsResources),

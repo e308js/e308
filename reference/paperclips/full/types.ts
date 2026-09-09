@@ -8,6 +8,7 @@ export type PaperclipsIntent =
   | { readonly type: "set-price"; readonly price: number }
   | { readonly type: "buy"; readonly id: PaperclipsBuyableId }
   | { readonly type: "compute"; readonly target: "processor" | "memory" }
+  | { readonly type: "quantum-compute" }
   | { readonly type: "allocate-probe"; readonly target: ProbeTarget; readonly amount: number }
   | { readonly type: "project"; readonly id: string }
   | { readonly type: "tournament"; readonly strategy: PaperclipsStrategy }

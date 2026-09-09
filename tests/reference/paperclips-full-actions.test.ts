@@ -5,6 +5,7 @@ import {
   paperclipsBuyables,
   paperclipsResources,
 } from "../../reference/paperclips/full/index.js";
+import { paperclipsFullQuotes } from "../../reference/paperclips/full/scenario-quotes.js";
 
 describe("Universal Paperclips campaign action boundaries", () => {
   it("enforces phase and project prerequisites", () => {
@@ -89,6 +90,23 @@ describe("Universal Paperclips campaign action boundaries", () => {
       transaction.set(paperclipsResources.operations, 20_000);
       transaction.set(paperclipsResources.funds, 1_000);
     });
+    expect(game.dispatch({ type: "tournament", strategy: "minimax" })).toMatchObject({
+      ok: false,
+      error: { code: "locked", prerequisiteIds: ["strategy-minimax"] },
+    });
+    seed(game, (transaction) => {
+      for (const id of [
+        "strategy-a100",
+        "strategy-b100",
+        "strategy-greedy",
+        "strategy-generous",
+        "strategy-minimax",
+        "strategy-tit-for-tat",
+        "strategy-beat-last",
+      ]) {
+        transaction.setProgress("upgrade", id);
+      }
+    });
     for (const strategy of ["minimax", "greedy", "a100", "random"] as const) {
       expect(game.dispatch({ type: "tournament", strategy })).toMatchObject({ ok: true });
     }
@@ -149,6 +167,7 @@ describe("Universal Paperclips campaign action boundaries", () => {
       const before = game.getSnapshot().resources.probes;
       game.advance(60_000);
       expect(game.getSnapshot().resources.probes).toBe(before);
+      expect(paperclipsFullQuotes(game.getSnapshot())).toEqual([]);
     }
   });
 
@@ -169,6 +188,27 @@ describe("Universal Paperclips campaign action boundaries", () => {
     const beforeHyperspeed = game.getSnapshot().resources.clips as number;
     game.advance(1_000);
     expect((game.getSnapshot().resources.clips as number) - beforeHyperspeed).toBeCloseTo(1e23);
+  });
+
+  it("spends swarm gifts on persistent compute and research after retail", () => {
+    const game = createPaperclipsReference();
+    seed(game, (transaction) => {
+      transaction.setProgress("milestone", "industry-phase");
+      transaction.setProgress("upgrade", "strategy-beat-last");
+      transaction.set(paperclipsResources.creativity, 25_000);
+      transaction.set(paperclipsResources.trust, 0);
+      transaction.set(paperclipsResources.swarmGifts, 1);
+    });
+    expect(game.dispatch({ type: "compute", target: "memory" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot()).toMatchObject({
+      resources: { "swarm-gifts": 0, "compute-capacity": 3 },
+      allocations: { compute: { processors: 1, memory: 2 } },
+    });
+    expect(game.dispatch({ type: "project", id: "theory-of-mind" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot().resources).toMatchObject({
+      "tournament-cost": 16_000,
+      "yomi-boost": 2,
+    });
   });
 });
 

@@ -61,11 +61,6 @@ export const industryProjects: readonly PaperclipsProject[] = [
 export const spaceProjects: readonly PaperclipsProject[] = [
   project("combat", "Combat", { operations: 150_000, effect: { kind: "space" } }),
   project("momentum", "Momentum", { creativity: 20_000, effect: { kind: "space" } }),
-  project("theory-of-mind", "Theory of Mind", {
-    creativity: 25_000,
-    prerequisites: ["combat"],
-    effect: { kind: "space" },
-  }),
   project("ooda-loop", "The OODA Loop", {
     operations: 175_000,
     yomi: 45_000,
@@ -109,3 +104,7 @@ export const allPaperclipsProjects = Object.freeze([
   ...industryProjects,
   ...spaceProjects,
 ]);
+
+export const persistentPaperclipsProjects = Object.freeze(
+  businessProjects.filter((project) => project.persistent),
+);

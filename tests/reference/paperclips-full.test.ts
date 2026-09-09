@@ -35,7 +35,7 @@ describe("Universal Paperclips full-campaign reference", () => {
   });
 
   it("keeps the pinned business project chain represented as executable data", () => {
-    expect(businessProjects).toHaveLength(40);
+    expect(businessProjects).toHaveLength(50);
     expect(businessProjects.map((project) => project.id)).toEqual(
       expect.arrayContaining([
         "strategic-modeling",

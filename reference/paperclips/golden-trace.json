@@ -359,6 +359,140 @@
         "nanoWire": 4321,
         "humanFlag": 0
       }
+    },
+    "strategyProjects": {
+      "checkpoints": [
+        {
+          "project": "project60",
+          "standardOps": 285000,
+          "tourneyCost": 2000,
+          "strategies": 2
+        },
+        {
+          "project": "project61",
+          "standardOps": 267500,
+          "tourneyCost": 3000,
+          "strategies": 3
+        },
+        {
+          "project": "project62",
+          "standardOps": 247500,
+          "tourneyCost": 4000,
+          "strategies": 4
+        },
+        {
+          "project": "project63",
+          "standardOps": 225000,
+          "tourneyCost": 5000,
+          "strategies": 5
+        },
+        {
+          "project": "project64",
+          "standardOps": 200000,
+          "tourneyCost": 6000,
+          "strategies": 6
+        },
+        {
+          "project": "project65",
+          "standardOps": 170000,
+          "tourneyCost": 7000,
+          "strategies": 7
+        },
+        {
+          "project": "project66",
+          "standardOps": 137500,
+          "tourneyCost": 8000,
+          "strategies": 8
+        }
+      ],
+      "theoryOfMind": {
+        "standardOps": 137500,
+        "creativity": 50000,
+        "tourneyCost": 16000,
+        "yomiBoost": 2
+      },
+      "autoTourney": {
+        "creativity": 0,
+        "autoTourneyFlag": 1
+      }
+    },
+    "photonicChips": {
+      "purchases": [
+        {
+          "standardOps": 490000,
+          "qChipCost": 15000,
+          "nextQchip": 1,
+          "active": 1
+        },
+        {
+          "standardOps": 475000,
+          "qChipCost": 20000,
+          "nextQchip": 2,
+          "active": 2
+        },
+        {
+          "standardOps": 455000,
+          "qChipCost": 25000,
+          "nextQchip": 3,
+          "active": 3
+        },
+        {
+          "standardOps": 430000,
+          "qChipCost": 30000,
+          "nextQchip": 4,
+          "active": 4
+        },
+        {
+          "standardOps": 400000,
+          "qChipCost": 35000,
+          "nextQchip": 5,
+          "active": 5
+        },
+        {
+          "standardOps": 365000,
+          "qChipCost": 40000,
+          "nextQchip": 6,
+          "active": 6
+        },
+        {
+          "standardOps": 325000,
+          "qChipCost": 45000,
+          "nextQchip": 7,
+          "active": 7
+        },
+        {
+          "standardOps": 280000,
+          "qChipCost": 50000,
+          "nextQchip": 8,
+          "active": 8
+        },
+        {
+          "standardOps": 230000,
+          "qChipCost": 55000,
+          "nextQchip": 9,
+          "active": 9
+        },
+        {
+          "standardOps": 175000,
+          "qChipCost": 60000,
+          "nextQchip": 10,
+          "active": 10
+        }
+      ],
+      "computed": {
+        "qClock": 1.0000000000000007,
+        "standardOps": 1805,
+        "tempOps": 0,
+        "values": [
+          0.09983341664682822, 0.19866933079506136, 0.29552020666133977, 0.38941834230865074,
+          0.4794255386042033, 0.5646424733950357, 0.6442176872376913, 0.7173560908995231,
+          0.7833269096274837, 0.8414709848078968
+        ]
+      },
+      "overflow": {
+        "standardOps": 10000,
+        "tempOps": 261
+      }
     }
   }
 }

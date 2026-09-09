@@ -129,10 +129,10 @@ function runCompute(
   resources: BusinessResources,
   compute: AllocationDefinition<number>,
 ): void {
+  transaction.add(required(resources, "quantumClock"), seconds);
   const processors = transaction.getAllocation(compute.id, "processors");
   const memory = transaction.getAllocation(compute.id, "memory");
-  const capacity =
-    memory * (transaction.hasProgress("upgrade", "quantum-computing") ? 10_000 : 1_000);
+  const capacity = memory * 1_000;
   const current = transaction.get(required(resources, "operations"));
   const next = Math.min(capacity, current + processors * 10 * seconds);
   transaction.set(required(resources, "operations"), next);

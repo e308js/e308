@@ -14,6 +14,8 @@ import {
   probeAllocation,
 } from "./model.js";
 import { paperclipsProjectCommand } from "./project-command.js";
+import { quantumOperationYield } from "./quantum.js";
+import { paperclipsStrategyProjectIds } from "./strategy-state.js";
 import type { PaperclipsBuyableId, PaperclipsIntent, PaperclipsStrategy } from "./types.js";
 import { purchaseWire } from "./wire-purchase.js";
 
@@ -26,6 +28,7 @@ export function paperclipsCommand(
   if (intent.type === "set-price") return setPrice(intent.price);
   if (intent.type === "buy") return buyMachine(intent.id);
   if (intent.type === "compute") return addCompute(snapshot, intent.target);
+  if (intent.type === "quantum-compute") return quantumCompute();
   if (intent.type === "allocate-probe")
     return allocationCommand(probeAllocation, intent.target, intent.amount);
   if (intent.type === "project") return paperclipsProjectCommand(intent.id);
@@ -113,7 +116,11 @@ function addCompute(snapshot: Snapshot<number>, target: "processor" | "memory"):
       const used =
         transaction.getAllocation(computeAllocation.id, "processors") +
         transaction.getAllocation(computeAllocation.id, "memory");
-      if (used >= transaction.get(paperclipsResources.trust)) {
+      const industrial = transaction.hasProgress("milestone", "industry-phase");
+      if (industrial) {
+        spend(transaction, paperclipsResources.swarmGifts, 1);
+        transaction.add(paperclipsResources.computeCapacity, 1);
+      } else if (used >= transaction.get(paperclipsResources.trust)) {
         transaction.reject({
           code: "insufficient",
           resourceId: paperclipsResources.trust.id,
@@ -122,6 +129,31 @@ function addCompute(snapshot: Snapshot<number>, target: "processor" | "memory"):
         });
       }
       allocation.execute(transaction);
+    },
+  };
+}
+
+function quantumCompute(): Command<number> {
+  return {
+    id: "quantum-compute",
+    execute(transaction) {
+      const active = transaction.get(paperclipsResources.photonicChips);
+      if (active < 1) transaction.reject({ code: "locked", prerequisiteIds: ["photonic-chip"] });
+      const clock = transaction.get(paperclipsResources.quantumClock);
+      let quantumOperations = quantumOperationYield(clock, active);
+      const memory = transaction.getAllocation(computeAllocation.id, "memory");
+      const operations = transaction.get(paperclipsResources.operations);
+      const buffer = memory * 1_000 - operations;
+      if (quantumOperations > buffer) {
+        const temporary = transaction.get(paperclipsResources.temporaryOperations);
+        const damper = temporary / 100 + 5;
+        transaction.add(
+          paperclipsResources.temporaryOperations,
+          Math.ceil(quantumOperations / damper) - buffer,
+        );
+        quantumOperations = buffer;
+      }
+      transaction.add(paperclipsResources.operations, quantumOperations);
     },
   };
 }
@@ -151,14 +183,28 @@ function tournament(strategy: PaperclipsStrategy): Command<number> {
     id: `tournament:${strategy}`,
     execute(transaction) {
       requireOwned(transaction, "strategic-modeling");
-      spend(transaction, paperclipsResources.operations, 1_000);
+      requireStrategy(transaction, strategy);
+      spend(
+        transaction,
+        paperclipsResources.operations,
+        transaction.get(paperclipsResources.tournamentCost),
+      );
       const skill = strategyScore(strategy);
       const draw = transaction.random(["tournament", strategy]).uniform();
-      const reward = Math.floor(500 + skill * 1_000 + draw * 500);
+      const reward =
+        Math.floor(500 + skill * 1_000 + draw * 500) *
+        transaction.get(paperclipsResources.yomiBoost);
       transaction.add(paperclipsResources.yomi, reward);
       transaction.add(paperclipsResources.tournaments, 1);
     },
   };
+}
+
+function requireStrategy(transaction: Transaction<number>, strategy: PaperclipsStrategy): void {
+  const projectId = paperclipsStrategyProjectIds[strategy];
+  if (projectId && !transaction.hasProgress("upgrade", projectId)) {
+    transaction.reject({ code: "locked", prerequisiteIds: [projectId] });
+  }
 }
 
 function invest(amount: number): Command<number> {

@@ -10,6 +10,7 @@ export interface PaperclipsProject {
   readonly prerequisites: readonly string[];
   readonly trigger?: PaperclipsProjectTrigger;
   readonly repeatable?: boolean;
+  readonly persistent?: boolean;
   readonly effect: PaperclipsProjectEffect;
 }
 
@@ -25,6 +26,9 @@ export type PaperclipsProjectEffect =
   | { readonly kind: "marketing"; readonly multiplier: number }
   | { readonly kind: "demand"; readonly multiplier: number; readonly trust: number }
   | { readonly kind: "goodwill"; readonly repeatable: boolean }
+  | { readonly kind: "photonic-chip" }
+  | { readonly kind: "strategy"; readonly strategy: string }
+  | { readonly kind: "theory-of-mind" }
   | {
       readonly kind: "unlock";
       readonly system:
@@ -35,7 +39,8 @@ export type PaperclipsProjectEffect =
         | "wire-buyer"
         | "quantum"
         | "hypnodrones"
-        | "revtracker";
+        | "revtracker"
+        | "auto-tourney";
     }
   | { readonly kind: "transition" }
   | { readonly kind: "industry" }

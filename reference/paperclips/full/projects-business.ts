@@ -92,6 +92,54 @@ export const businessProjects: readonly PaperclipsProject[] = [
     prerequisites: ["donkey-space"],
     effect: unlock("strategy"),
   }),
+  project("strategy-a100", "New Strategy: A100", {
+    operations: 15_000,
+    prerequisites: ["strategic-modeling"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "a100" },
+  }),
+  project("strategy-b100", "New Strategy: B100", {
+    operations: 17_500,
+    prerequisites: ["strategy-a100"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "b100" },
+  }),
+  project("strategy-greedy", "New Strategy: GREEDY", {
+    operations: 20_000,
+    prerequisites: ["strategy-b100"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "greedy" },
+  }),
+  project("strategy-generous", "New Strategy: GENEROUS", {
+    operations: 22_500,
+    prerequisites: ["strategy-greedy"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "generous" },
+  }),
+  project("strategy-minimax", "New Strategy: MINIMAX", {
+    operations: 25_000,
+    prerequisites: ["strategy-generous"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "minimax" },
+  }),
+  project("strategy-tit-for-tat", "New Strategy: TIT FOR TAT", {
+    operations: 30_000,
+    prerequisites: ["strategy-minimax"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "tit-for-tat" },
+  }),
+  project("strategy-beat-last", "New Strategy: BEAT LAST", {
+    operations: 32_500,
+    prerequisites: ["strategy-tit-for-tat"],
+    persistent: true,
+    effect: { kind: "strategy", strategy: "beat-last" },
+  }),
+  project("theory-of-mind", "Theory of Mind", {
+    creativity: 25_000,
+    prerequisites: ["strategy-beat-last"],
+    persistent: true,
+    effect: { kind: "theory-of-mind" },
+  }),
   project("algorithmic-trading", "Algorithmic Trading", {
     operations: 10_000,
     trigger: resource("trust", 8),
@@ -187,7 +235,21 @@ export const businessProjects: readonly PaperclipsProject[] = [
   project("quantum-computing", "Quantum Computing", {
     operations: 10_000,
     trigger: resource("processors", 5),
+    persistent: true,
     effect: unlock("quantum"),
+  }),
+  project("photonic-chip", "Photonic Chip", {
+    prerequisites: ["quantum-computing"],
+    repeatable: true,
+    persistent: true,
+    effect: { kind: "photonic-chip" },
+  }),
+  project("auto-tourney", "AutoTourney", {
+    creativity: 50_000,
+    prerequisites: ["strategic-modeling"],
+    trigger: resource("trust", 90),
+    persistent: true,
+    effect: unlock("auto-tourney"),
   }),
   project("release-hypnodrones", "Release the HypnoDrones", {
     trustCost: 100,
@@ -211,7 +273,8 @@ function unlock(
     | "wire-buyer"
     | "quantum"
     | "hypnodrones"
-    | "revtracker",
+    | "revtracker"
+    | "auto-tourney",
 ) {
   return { kind: "unlock", system } as const;
 }

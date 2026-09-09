@@ -3,15 +3,23 @@ import type {
   ConstraintEvidence,
   LegalActionQuote,
 } from "../../../packages/core/src/testing/index.js";
-import { paperclipsBuyable } from "./buyable-map.js";
+import {
+  paperclipsBuyable,
+  paperclipsMachinePrerequisite,
+  paperclipsMachineRank,
+  paperclipsMachineTarget,
+} from "./buyable-map.js";
 import { paperclipsResources } from "./model.js";
 import { appendProjectTriggerConstraints } from "./project-quote-constraints.js";
 import {
   businessProjects,
   industryProjects,
   type PaperclipsProject,
+  persistentPaperclipsProjects,
   spaceProjects,
 } from "./projects.js";
+import { quantumOperationYield } from "./quantum.js";
+import { bestPaperclipsStrategy } from "./strategy-state.js";
 import {
   type PaperclipsBuyableId,
   type PaperclipsIntent,
@@ -26,7 +34,9 @@ export function paperclipsBusinessQuotes(
   return [
     ...businessProjects.map((project) => projectQuote(snapshot, project)),
     investmentQuote(snapshot),
+    withdrawalQuote(snapshot),
     tournamentQuote(snapshot),
+    quantumQuote(snapshot),
     wireQuote(snapshot),
     ...computeQuotes(snapshot),
     machineQuote(snapshot, "mega-clipper"),
@@ -63,6 +73,7 @@ function industryQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<P
   const machineIds = ["solar-farm", "battery", "factory", "wire-drone", "harvester"] as const;
   return [
     ...industryProjects.map((project) => projectQuote(snapshot, project)),
+    ...persistentPaperclipsProjects.map((project) => projectQuote(snapshot, project)),
     tournamentQuote(snapshot),
     ...computeQuotes(snapshot),
     ...machineIds.map((id) => machineQuote(snapshot, id)),
@@ -72,6 +83,7 @@ function industryQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<P
 function spaceQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<PaperclipsIntent>[] {
   return [
     ...spaceProjects.map((project) => projectQuote(snapshot, project)),
+    ...persistentPaperclipsProjects.map((project) => projectQuote(snapshot, project)),
     ...probeDesignQuotes(snapshot),
     tournamentQuote(snapshot),
     ...computeQuotes(snapshot),
@@ -95,16 +107,36 @@ function tournamentQuote(snapshot: Snapshot<number>): LegalActionQuote<Paperclip
   const constraints: ConstraintEvidence[] = [];
   if (!snapshot.progression.upgrades["strategic-modeling"])
     constraints.push({ kind: "prerequisite", id: "strategic-modeling", detail: "strategy engine" });
-  requireAmount(snapshot, "operations", 1_000, constraints);
+  requireAmount(
+    snapshot,
+    "operations",
+    snapshot.resources[paperclipsResources.tournamentCost.id] ?? 1_000,
+    constraints,
+  );
   if ((snapshot.resources.yomi ?? 0) >= 100_000)
     constraints.push({ kind: "policy", id: "yomi", detail: "campaign reserve reached" });
   return quote(
     snapshot,
-    "tournament:minimax",
-    { type: "tournament", strategy: "minimax" },
+    `tournament:${bestPaperclipsStrategy(snapshot)}`,
+    { type: "tournament", strategy: bestPaperclipsStrategy(snapshot) },
     constraints,
     990,
   );
+}
+
+function quantumQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
+  const constraints: ConstraintEvidence[] = [];
+  if ((snapshot.resources[paperclipsResources.photonicChips.id] ?? 0) < 1) {
+    constraints.push({ kind: "prerequisite", id: "photonic-chip", detail: "quantum compute" });
+  }
+  const yieldAmount = quantumOperationYield(
+    snapshot.resources[paperclipsResources.quantumClock.id] ?? 0,
+    snapshot.resources[paperclipsResources.photonicChips.id] ?? 0,
+  );
+  if (yieldAmount <= 0) {
+    constraints.push({ kind: "policy", id: "quantum-wave", detail: "positive operation yield" });
+  }
+  return quote(snapshot, "quantum-compute", { type: "quantum-compute" }, constraints, 100);
 }
 
 function investmentQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
@@ -115,12 +147,23 @@ function investmentQuote(snapshot: Snapshot<number>): LegalActionQuote<Paperclip
       id: "algorithmic-trading",
       detail: "investment engine",
     });
+  if (snapshot.progression.upgrades["hostile-takeover"])
+    constraints.push({ kind: "policy", id: "hostile-takeover", detail: "position closed" });
   const bankroll = snapshot.resources.bankroll ?? 0;
   const amount = Math.min(10_000 - bankroll, snapshot.resources.funds ?? 0);
   if (bankroll >= 10_000)
     constraints.push({ kind: "policy", id: "bankroll", detail: "takeover trigger reached" });
   if (amount <= 0) requireAmount(snapshot, "funds", 1, constraints);
   return quote(snapshot, "invest", { type: "invest", amount }, constraints, 995);
+}
+
+function withdrawalQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
+  const constraints: ConstraintEvidence[] = [];
+  if (!snapshot.progression.upgrades["hostile-takeover"])
+    constraints.push({ kind: "prerequisite", id: "hostile-takeover", detail: "close investment" });
+  if ((snapshot.resources.bankroll ?? 0) <= 0)
+    constraints.push({ kind: "policy", id: "bankroll", detail: "no invested funds" });
+  return quote(snapshot, "withdraw", { type: "withdraw" }, constraints, 995);
 }
 
 function wireQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
@@ -138,10 +181,14 @@ function wireQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsInten
 
 function computeQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<PaperclipsIntent>[] {
   const trust = snapshot.resources.trust ?? 0;
+  const industrial = paperclipsPhase(snapshot) !== "business";
+  const gifts = snapshot.resources[paperclipsResources.swarmGifts.id] ?? 0;
   const processors = snapshot.allocations.compute?.processors ?? 0;
   const memory = snapshot.allocations.compute?.memory ?? 0;
   const constraints: ConstraintEvidence[] = [];
-  if (processors + memory >= trust)
+  if (industrial && gifts < 1)
+    constraints.push({ kind: "insufficient-input", id: "swarm-gifts", detail: "one gift" });
+  if (!industrial && processors + memory >= trust)
     constraints.push({ kind: "insufficient-input", id: "trust", detail: "unassigned trust" });
   return [
     quote(
@@ -149,7 +196,7 @@ function computeQuotes(snapshot: Snapshot<number>): readonly LegalActionQuote<Pa
       "compute:memory",
       { type: "compute", target: "memory" },
       constraints,
-      memory < 75 ? 850 : 40,
+      memory < 300 ? 850 : 40,
     ),
     quote(
       snapshot,
@@ -170,10 +217,10 @@ function machineQuote(
   const constraints: ConstraintEvidence[] = [];
   if (id === "mega-clipper" && !snapshot.progression.upgrades["mega-clippers"])
     constraints.push({ kind: "prerequisite", id: "mega-clippers", detail: "project" });
-  const prerequisite = machinePrerequisite(id);
+  const prerequisite = paperclipsMachinePrerequisite(id);
   if (prerequisite && !snapshot.progression.upgrades[prerequisite])
     constraints.push({ kind: "prerequisite", id: prerequisite, detail: id });
-  const target = machineTarget(id);
+  const target = paperclipsMachineTarget(id);
   if (count >= target)
     constraints.push({ kind: "policy", id, detail: `campaign target ${target}` });
   requireAmount(
@@ -182,7 +229,13 @@ function machineQuote(
     buyable.curve.unitCost(count),
     constraints,
   );
-  return quote(snapshot, `buy:${id}`, { type: "buy", id }, constraints, machineRank(id, count));
+  return quote(
+    snapshot,
+    `buy:${id}`,
+    { type: "buy", id },
+    constraints,
+    paperclipsMachineRank(id, count),
+  );
 }
 
 function probeDesignQuotes(
@@ -245,6 +298,17 @@ function projectConstraints(
   if (project.trustCost && project.id !== "beg-for-more-wire") {
     requireAmount(snapshot, "trust", project.trustCost, constraints);
   }
+  if (project.effect.kind === "photonic-chip") {
+    requireAmount(
+      snapshot,
+      "operations",
+      snapshot.resources[paperclipsResources.photonicChipCost.id] ?? 10_000,
+      constraints,
+    );
+    if ((snapshot.resources[paperclipsResources.photonicChips.id] ?? 0) >= 10) {
+      constraints.push({ kind: "policy", id: "photonic-chip", detail: "all ten chips active" });
+    }
+  }
   appendProjectTriggerConstraints(snapshot, project, constraints);
   if (project.id === "spectral-froth-annealment")
     requireAmount(snapshot, paperclipsResources.wireSupply.id, 5_000, constraints);
@@ -279,34 +343,4 @@ function quote(
     rank,
     constraints,
   };
-}
-
-function machinePrerequisite(id: PaperclipsBuyableId): string | undefined {
-  const prerequisites: Partial<Record<PaperclipsBuyableId, string>> = {
-    harvester: "power-grid",
-    "wire-drone": "power-grid",
-    factory: "power-grid",
-    "solar-farm": "power-grid",
-    battery: "power-grid",
-  };
-  return prerequisites[id];
-}
-
-function machineTarget(id: PaperclipsBuyableId): number {
-  if (id === "auto-clipper") return 75;
-  if (id === "mega-clipper") return 25;
-  if (id === "marketing") return 10;
-  if (id === "factory" || id === "battery" || id === "solar-farm") return 5;
-  return 10;
-}
-
-function machineRank(id: PaperclipsBuyableId, count: number): number {
-  if (id === "mega-clipper") return 800;
-  if (id === "auto-clipper") return 700;
-  if (id === "factory" && count === 0) return 900;
-  if (id === "solar-farm") return 890;
-  if (id === "battery") return 880;
-  if (id === "harvester") return 870;
-  if (id === "wire-drone") return 860;
-  return 750;
 }

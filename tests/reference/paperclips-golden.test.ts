@@ -37,6 +37,16 @@ interface GoldenTrace {
       readonly marketing: readonly Readonly<Record<string, number | string>>[];
       readonly released: Readonly<Record<string, number>>;
     };
+    readonly strategyProjects: {
+      readonly checkpoints: readonly Readonly<Record<string, number | string>>[];
+      readonly theoryOfMind: Readonly<Record<string, number>>;
+      readonly autoTourney: Readonly<Record<string, number>>;
+    };
+    readonly photonicChips: {
+      readonly purchases: readonly Readonly<Record<string, number>>[];
+      readonly computed: Readonly<Record<string, number | readonly number[]>>;
+      readonly overflow: Readonly<Record<string, number>>;
+    };
   };
 }
 
@@ -324,6 +334,94 @@ describe("Universal Paperclips pinned-source golden trace", () => {
     seed(game, (transaction) => transaction.set(paperclipsResources.clips, 21_000));
     game.advance(1_000);
     expectTrustCheckpoint(game, checkpoints[5]);
+  });
+
+  it("matches the seven strategy unlock costs and tournament multipliers", () => {
+    const game = createPaperclipsReference();
+    seed(game, (transaction) => {
+      transaction.setProgress("upgrade", "strategic-modeling");
+      transaction.set(paperclipsResources.operations, 300_000);
+      transaction.set(paperclipsResources.creativity, 75_000);
+      transaction.set(paperclipsResources.trust, 90);
+    });
+    const ids = [
+      "strategy-a100",
+      "strategy-b100",
+      "strategy-greedy",
+      "strategy-generous",
+      "strategy-minimax",
+      "strategy-tit-for-tat",
+      "strategy-beat-last",
+    ];
+    for (const [index, id] of ids.entries()) {
+      expect(game.dispatch({ type: "project", id })).toMatchObject({ ok: true });
+      const expected = golden.scenarios.strategyProjects.checkpoints[index];
+      expect(game.getSnapshot().resources).toMatchObject({
+        operations: expected?.standardOps,
+        "tournament-cost": expected?.tourneyCost,
+        "strategy-count": expected?.strategies,
+      });
+    }
+    expect(game.dispatch({ type: "project", id: "theory-of-mind" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot().resources).toMatchObject({
+      creativity: golden.scenarios.strategyProjects.theoryOfMind.creativity,
+      "tournament-cost": golden.scenarios.strategyProjects.theoryOfMind.tourneyCost,
+      "yomi-boost": golden.scenarios.strategyProjects.theoryOfMind.yomiBoost,
+    });
+    expect(game.dispatch({ type: "project", id: "auto-tourney" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot().resources.creativity).toBe(
+      golden.scenarios.strategyProjects.autoTourney.creativity,
+    );
+  });
+
+  it("matches all Photonic Chip prices and quantum-operation buffering", () => {
+    const game = createPaperclipsReference();
+    seed(game, (transaction) => {
+      transaction.set(paperclipsResources.operations, 510_000);
+      transaction.set(paperclipsResources.trust, 6);
+      transaction.set(paperclipsResources.computeCapacity, 6);
+      transaction.setAllocation("compute", "processors", 5);
+      transaction.setAllocation("compute", "memory", 1);
+    });
+    expect(game.dispatch({ type: "project", id: "quantum-computing" })).toMatchObject({ ok: true });
+    for (let index = 0; index < 10; index += 1) {
+      expect(game.dispatch({ type: "project", id: "photonic-chip" })).toMatchObject({ ok: true });
+      const expected = golden.scenarios.photonicChips.purchases[index];
+      expect(game.getSnapshot().resources).toMatchObject({
+        operations: expected?.standardOps,
+        "photonic-chip-cost": expected?.qChipCost,
+        "photonic-chips": expected?.active,
+      });
+    }
+    expect(game.dispatch({ type: "project", id: "photonic-chip" })).toMatchObject({
+      ok: false,
+      error: { code: "disabled" },
+    });
+    seed(game, (transaction) => {
+      transaction.set(paperclipsResources.operations, 0);
+      transaction.set(paperclipsResources.temporaryOperations, 0);
+      transaction.set(paperclipsResources.trust, 10);
+      transaction.set(paperclipsResources.computeCapacity, 10);
+      transaction.setAllocation("compute", "processors", 0);
+      transaction.setAllocation("compute", "memory", 10);
+    });
+    game.advance(1_000);
+    expect(game.dispatch({ type: "quantum-compute" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot().resources.operations).toBe(
+      golden.scenarios.photonicChips.computed.standardOps,
+    );
+    expect(game.getSnapshot().resources[paperclipsResources.quantumClock.id]).toBeCloseTo(
+      golden.scenarios.photonicChips.computed.qClock as number,
+    );
+    seed(game, (transaction) => {
+      transaction.set(paperclipsResources.operations, 9_900);
+      transaction.set(paperclipsResources.temporaryOperations, 0);
+    });
+    expect(game.dispatch({ type: "quantum-compute" })).toMatchObject({ ok: true });
+    expect(game.getSnapshot().resources).toMatchObject({
+      operations: golden.scenarios.photonicChips.overflow.standardOps,
+      "temporary-operations": golden.scenarios.photonicChips.overflow.tempOps,
+    });
   });
 });
 
