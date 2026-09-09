@@ -1,17 +1,16 @@
 # e308 v1 definition of done
 
-Status: automated release-candidate gates are implemented and passing; source, game/usability, and
-physical-device review remain open. This is still not a v1 completion claim.
-The [release review procedure](release-review.md) defines the remaining sign-offs.
+Status: automated release-candidate infrastructure is passing. The full internal emulations,
+original-game depth, playtesting, and physical-device checks remain open.
 
-**e308 is done when its public packages demonstrate every required TMT capability, pass defined mechanics-parity gates against Antimatter Dimensions and Kittens Game, support three mechanically and visually distinct complete games, and pass reproducible correctness, recovery, usability, and performance gates with inspectable evidence.** A feature list, three reskinned clickers, or passing engine unit tests alone does not satisfy this definition.
+**e308 is done when its public packages demonstrate every required TMT capability, its internal test suite fully emulates Universal Paperclips and Antimatter Dimensions, its three original games are mechanically and visually distinct complete games, and all reproducible correctness, recovery, usability, pacing, and performance gates pass with inspectable evidence.**
 
 ## Release gates
 
 | Gate | Passing condition | Required evidence |
 | --- | --- | --- |
 | D1: TMT parity | Every required leaf in the pinned TMT inventory passes; zero unmapped source entries | [Parity register](tmt-parity.md), executable fixtures, relevant interactive demonstrations, source-to-test mapping |
-| D1R: Reference-game parity | All defined Antimatter Dimensions and Kittens Game slices pass; Paperclips-to-Wireworks mapping is verified | [Reference-game register](reference-game-parity.md), pinned source fixtures, normalized state/event comparisons, visible demonstrations |
+| D1R: Full internal emulations | Universal Paperclips and Antimatter Dimensions pass the complete internal emulation gate; the Kittens suite remains supplemental coverage | [Full emulation gate](full-emulation-gate.md), complete source inventories, fresh-save traces, normalized state/event comparisons |
 | D2: Three games | Wireworks, Cascade, and Hearth meet the game contracts below from new save to designed ending | Playable builds, source, completion traces, beginning/middle/end saves, human walkthrough records |
 | D3: Correctness | Independent mathematical/reference checks and invariants pass for each game and core mechanic | Oracle derivations, expected values, property tests, replay comparisons, retained failure seeds |
 | D4: Offline and saves | Cap, unlimited entitlement, interruption, migration, RNG, and writer-ownership cases pass | Fault-injection matrix, browser checks, migration fixtures, offline accounting reports |
@@ -34,7 +33,11 @@ The [parity register](tmt-parity.md) defines the required capability groups, lea
 
 ## D2: Three different complete games
 
-The original research references are part of the acceptance baseline, not interchangeable examples. [D1R](reference-game-parity.md) requires faithful bounded mechanics slices from Antimatter Dimensions and Kittens Game. The complete original games below are a separate breadth/usability gate; they do not substitute for those comparisons. Paperclips' stock/sales separation, constrained industry, and phase transitions must remain mapped into Wireworks.
+The original research references are part of the acceptance baseline. [D1R](full-emulation-gate.md)
+requires full internal emulations of Universal Paperclips and Antimatter Dimensions. The Kittens Game
+suite remains an additional complex-economy reference. Reference fixtures stay outside npm packages
+and the public site. Paperclips' stock/sales separation, constrained industry, and phase transitions
+also remain mapped into Wireworks as design lineage.
 
 These are original, finite demonstration games inspired by three different economic structures. Small prototypes remain useful during implementation but cannot satisfy D2. Each release game has a new-player beginning, meaningful choices, multiple progression stages, a visible ending, instructions, save/export/import, offline reporting, and usable desktop/touch interfaces. All economic rules and content ship in the inspected game source.
 
@@ -91,6 +94,10 @@ Every implementation slice must be tested locally, committed, pushed, and green 
 
 CI covers clean package consumption, strict types, forbidden dependencies, Node smoke tests, unit/property/reference checks, save fixtures, and browser integration. Test native and chosen large-number adapters. Exact replay is scoped to each supported runtime configuration; cross-engine numeric tolerances and exact discrete-outcome checks follow [interfaces.md](interfaces.md#determinism-boundary).
 
-An evidence manifest ties every gate and parity leaf to package/content hashes, environment, fixtures, command, expected/actual result, artifact location, and reviewer. No required entry may be missing, skipped, or marked future. Human reviewers sign off the source-coverage audit, game distinctness/completion, and usability results. Newly discovered unsupported required features reopen D1; fixes affecting shared behavior invalidate and rerun relevant evidence.
+An evidence manifest ties every gate and parity leaf to package/content hashes, environment, fixtures,
+command, expected/actual result, and artifact location. No required entry may be missing, skipped, or
+marked future. The implementer may complete every review and playtest record. Newly discovered
+unsupported required features reopen the affected gate; fixes affecting shared behavior invalidate
+and rerun relevant evidence.
 
 Publishing to npm or creating remote repositories is not required to prove done: installable package archives and reproducible local/CI evidence suffice. The final claim must read “e308 v1 meets this pinned feature and game contract,” with its evidence bundle, not “supports any incremental game.”

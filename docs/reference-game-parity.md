@@ -1,13 +1,18 @@
 # Reference-game parity gates
 
-Status: automated bounded-parity suite **PASS**; source-review sign-off pending. The
+Status: automated bounded-parity suite **PASS**. These cases are minimum checkpoints inside the
+[full internal emulation gate](full-emulation-gate.md), which is **IN PROGRESS**. The
 [reference evidence manifest](evidence/reference-games.json) maps all 15 required cases—AD01–AD06,
 KG01–KG06, and PC01–PC03—to pinned source manifests, executable comparisons, declared numerical
 policies, and interactive evidence. All 15 cases pass with zero failed or not-run cases.
 
-The reference games are the user's original research subjects: Universal Paperclips, Antimatter Dimensions, and Kittens Game. Antimatter Dimensions and Kittens Game have mandatory bounded mechanics-parity suites. Paperclips has a mandatory source-to-showcase mapping and independent correctness scenarios. This is not a claim that e308 must clone their entire campaigns, content, branding, or pixels.
+The reference games are Universal Paperclips, Antimatter Dimensions, and Kittens Game. This register
+preserves the first bounded checkpoints. D1R additionally requires complete internal Paperclips and
+Antimatter Dimensions emulations under the full gate.
 
-Test-only clones or ports are permitted for these laboratories. They may reproduce the pinned mechanics directly; preserve source attribution and keep the oracle independent of the e308 implementation. Cloning for a test does not expand a bounded parity claim into full-game equivalence.
+Test-only emulations may reproduce pinned mechanics directly. Source attribution and an oracle
+independent of the e308 implementation are required. The emulations remain outside package archives,
+Pages, and public examples.
 
 ## Pinned sources
 
@@ -76,7 +81,7 @@ These are structural/mechanical coverage requirements, not exact Paperclips form
 3. Run an independently authored e308 definition through installed package archives. It may not call the reference implementation for its results.
 4. Compare after each significant boundary/action, not just the final balance. Numeric tolerances are predeclared for that backend/runtime; purchases, unlocks, reset retention and completion counts must agree exactly.
 5. Cross-check selected reference outputs using independently derived small arithmetic cases. A mismatch can identify an upstream bug; investigate and document it rather than copying or silently correcting it. Any required observable divergence remains an explicit failed parity case unless the scope/claim is formally revised.
-6. Demonstrate each slice interactively using a public renderer or a supplied custom view, including save/load and blockers. No requirement to reproduce the original appearance.
+6. Demonstrate each slice with the internal renderer, including save/load and blockers.
 7. Preserve fixtures, traces, versions, failures and results in the same evidence bundle as TMT and the showcase games.
 
 All six AD slices, six KG slices and three PC mappings are required. Their source fixtures are frozen
@@ -84,4 +89,6 @@ in `reference/*/manifest.json`; source integrity and the 15-case evidence mappin
 tests. The automated comparisons pass. Independent review must still verify that the pinned
 selections faithfully cover the stated source behavior before D1R is accepted.
 
-The release claim must name the scope: **TMT capability parity, Antimatter Dimensions/Kittens Game parity for the specified slices, and three complete original e308 games.** Full-game AD/Kittens parity is not implied by passing bounded slices.
+Passing this bounded register does not pass D1R. The release claim requires the complete Paperclips
+and Antimatter Dimensions evidence defined by the full internal emulation gate, plus the three
+complete original e308 games.

@@ -9,6 +9,12 @@
     "main.js?v3": "ee599076de868869e533490505189ddcb72dcc8748909ceeebe11e789f1b3a0a",
     "projects.js?v3": "05034c51809bc0632e8963e671c8e68c68604ca3643da291e0c6fabc86152774"
   },
+  "projectInventory": {
+    "path": "reference/paperclips/project-inventory.json",
+    "generator": "reference/paperclips/extract-upstream.mjs",
+    "count": 96,
+    "sha256": "ea56435dcd9f2f8769153ab966f40ebd497ad62226164060057e3aa413450fbd"
+  },
   "mapping": {
     "PC01": "Wire becomes unsold inventory; a separate demand-limited market action creates cash.",
     "PC02": "Matter feeds wire extrusion; power allocation limits industrial throughput.",

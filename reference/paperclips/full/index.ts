@@ -5,6 +5,7 @@ import type { PaperclipsIntent } from "./types.js";
 
 export * from "./commands.js";
 export * from "./model.js";
+export * from "./project-source-map.js";
 export * from "./projects.js";
 export * from "./scenario.js";
 export * from "./types.js";
