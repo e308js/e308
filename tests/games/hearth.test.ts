@@ -1,7 +1,11 @@
+import { createSaveCodec } from "@e308/core";
 import { rankedPolicy, runHarness } from "@e308/core/testing";
 import {
   createHearth,
+  hearthDefinition,
   hearthResearch,
+  hearthResources,
+  hearthSaveCodec,
   hearthScenario,
   hearthTasks,
   importHearth,
@@ -21,11 +25,30 @@ describe("finished Hearth", () => {
     const hearth = createHearth();
     expect(hearth.dispatch({ type: "advance", milliseconds: 1_000 }).ok).toBe(true);
     const snapshot = hearth.getSnapshot();
-    expect(snapshot.resources.food).toBeCloseTo(21.4, 12);
-    expect(snapshot.resources.wood).toBe(11);
+    expect(snapshot.resources.food).toBeCloseTo(21.1, 12);
+    expect(snapshot.resources.wood).toBe(10.9);
     expect(snapshot.resources.science).toBe(0);
     expect(snapshot.resources.stone).toBe(0);
-    expect(snapshot.productionTotals.food).toBe(3);
+    expect(snapshot.productionTotals.food).toBe(2.7);
+  });
+
+  it("turns crafted supplies into morale and additional workers", () => {
+    const hearth = createHearth();
+    hearth.game.dispatch({
+      id: "crafting-fixture",
+      execute(transaction) {
+        transaction.set(hearthResources.wood, 100);
+        transaction.set(hearthResources.stone, 100);
+        transaction.set(hearthResources.tools, 1);
+        transaction.set(hearthResources.meals, 2);
+        transaction.set(hearthResources.cloth, 1);
+        transaction.set(hearthResources.morale, 50);
+      },
+    });
+    expect(hearth.dispatch({ type: "recipe", recipe: "cottage", count: 1 }).ok).toBe(true);
+    expect(hearth.getSnapshot().resources.workers).toBe(5);
+    expect(hearth.dispatch({ type: "recipe", recipe: "festival", count: 1 }).ok).toBe(true);
+    expect(hearth.getSnapshot().resources.morale).toBe(75);
   });
 
   it("survives a year, recovers from shortage, exercises content, and wins legally", () => {
@@ -66,6 +89,30 @@ describe("finished Hearth", () => {
     const restored = importHearth(wrapper.exportSave(3_000_000));
     expect(restored.getSnapshot()).toEqual(played);
     expect(restored.getSnapshot().calendars.seasons?.cycle).toBeGreaterThanOrEqual(1n);
+  });
+
+  it("migrates version-one settlement saves into the revised economy", () => {
+    const legacy = createSaveCodec(
+      { ...hearthDefinition, simulationVersion: 1 },
+      {
+        stateSchemaVersion: 1,
+        contentVersion: "1.0.0",
+        contentDigest: "hearth-1.0.0-2026-09-09",
+      },
+    );
+    const raw = legacy.encode(createHearth().getSnapshot(), {
+      wallAnchorMs: 1_000,
+      entitlement: {
+        policyVersion: "hearth-offline-1",
+        enabled: true,
+        capMs: 8 * 60 * 60_000,
+        excess: "discard",
+      },
+      catchup: null,
+    });
+    const loaded = hearthSaveCodec.decode(raw);
+    expect(loaded.migrationLedger).toEqual(["hearth-content-1-to-2"]);
+    expect(loaded.snapshot.resources.workers).toBe(4);
   });
 
   it("keeps failed research and task commands atomic", () => {

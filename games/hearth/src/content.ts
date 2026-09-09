@@ -111,7 +111,19 @@ export const hearthRecipes = {
       [hearthResources.meals, 2],
       [hearthResources.cloth, 1],
     ],
-    produces: [[hearthResources.festival, 1]],
+    produces: [
+      [hearthResources.festival, 1],
+      [hearthResources.morale, 25],
+    ],
+  }),
+  cottage: hearthKit.recipe("build-cottage", {
+    scope: hearthScope,
+    consumes: [
+      [hearthResources.wood, 12],
+      [hearthResources.stone, 8],
+      [hearthResources.tools, 1],
+    ],
+    produces: [[hearthResources.workers, 1]],
   }),
 } as const;
 
@@ -217,21 +229,29 @@ function applySeasonalLedger(transaction: Transaction<number>, stepSeconds: numb
       state.elapsedMs + stepSeconds * 1_000 >= (phaseDefinition?.durationMs ?? 0))
   )
     transaction.setProgress("achievement", yearComplete.id);
-  const factor =
-    phase === "spring" ? 1.5 : phase === "summer" ? 1.2 : phase === "autumn" ? 1 : 0.35;
+  const factor = seasonFactor(phase);
   const farmers = transaction.getAllocation(hearthJobs.id, "farmer");
+  const labor = laborMultiplier(
+    transaction.get(hearthResources.tools),
+    transaction.get(hearthResources.morale),
+  );
   const foodProduced =
     farmers *
     factor *
+    labor *
     stepSeconds *
     (transaction.hasProgress("upgrade", "crop-rotation") ? 1.5 : 1);
-  const foodUsed = transaction.get(hearthResources.workers) * 0.4 * stepSeconds;
+  const foodUsed =
+    transaction.get(hearthResources.workers) *
+    0.4 *
+    foodConsumptionMultiplier(phase, transaction.get(hearthResources.preserves)) *
+    stepSeconds;
   const before = transaction.get(hearthResources.food);
   transaction.set(hearthResources.food, Math.max(0, before + foodProduced - foodUsed));
   transaction.addProduction(hearthResources.food.id, foodProduced);
-  produceJob(transaction, "woodcutter", hearthResources.wood, 1, stepSeconds);
-  produceJob(transaction, "miner", hearthResources.stone, 0.7, stepSeconds);
-  produceJob(transaction, "scholar", hearthResources.science, 0.5, stepSeconds);
+  produceJob(transaction, "woodcutter", hearthResources.wood, 1 * labor, stepSeconds);
+  produceJob(transaction, "miner", hearthResources.stone, 0.7 * labor, stepSeconds);
+  produceJob(transaction, "scholar", hearthResources.science, 0.5 * labor, stepSeconds);
   if (phase === "spring" || phase === "autumn")
     transaction.add(hearthResources.herbs, farmers * 0.08 * stepSeconds);
   if (transaction.get(hearthResources.food) === 0)
@@ -240,7 +260,22 @@ function applySeasonalLedger(transaction: Transaction<number>, stepSeconds: numb
       Math.max(0, transaction.get(hearthResources.morale) - 0.5),
     );
   else if (transaction.get(hearthResources.morale) < 100)
-    transaction.add(hearthResources.morale, 0.1 * stepSeconds);
+    transaction.add(
+      hearthResources.morale,
+      (0.1 + transaction.get(hearthResources.medicine) * 0.03) * stepSeconds,
+    );
+}
+
+export function seasonFactor(phase: string): number {
+  return phase === "spring" ? 1.5 : phase === "summer" ? 1.2 : phase === "autumn" ? 1 : 0.35;
+}
+
+export function laborMultiplier(tools: number, morale: number): number {
+  return (0.75 + Math.min(100, morale) * 0.0025) * (1 + tools * 0.08);
+}
+
+export function foodConsumptionMultiplier(phase: string, preserves: number): number {
+  return phase === "winter" ? Math.max(0.55, 1 - preserves * 0.08) : 1;
 }
 
 function produceJob(

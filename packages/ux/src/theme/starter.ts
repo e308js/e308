@@ -16,6 +16,7 @@ export const starterTheme = `
 .e308-root button { border: 1px solid var(--e308-accent); border-radius: .35rem; padding: .5rem .75rem; }
 .e308-root button:focus-visible { outline: 3px solid var(--e308-accent); outline-offset: 2px; }
 .e308-root button:disabled { opacity: .55; }
+.e308-action-description, .e308-action-costs, .e308-action-rewards, .e308-action-blockers { display: block; font-size: .85em; }
 .e308-mark { border-radius: 999px; font-size: .75em; margin-inline-start: .4rem; padding: .1rem .35rem; }
 .e308-mark[data-tone="positive"] { background: #1f6f43; }
 .e308-mark[data-tone="warning"] { background: #805d08; }

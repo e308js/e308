@@ -14,7 +14,7 @@ import {
 
 export const hearthDefinition = hearthKit.defineGame({
   id: "hearth",
-  simulationVersion: 1,
+  simulationVersion: 2,
   stepMs: 1_000,
   resources: Object.values(hearthResources),
   allocations: [hearthJobs],
@@ -26,7 +26,6 @@ export const hearthDefinition = hearthKit.defineGame({
   calendars: [hearthCalendar],
   win: (state) =>
     state.hasAchievement(yearComplete.id) &&
-    state.hasAchievement(recovery.id) &&
     hearthResearch.every((research) => state.hasUpgrade(research.id)) &&
     state.get(hearthResources.hall) >= 1,
 });

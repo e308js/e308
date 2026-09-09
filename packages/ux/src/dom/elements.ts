@@ -1,5 +1,6 @@
 import { appendDescription } from "../localization/catalog.js";
 import type { TextResolver } from "../localization/types.js";
+import type { ActionBlocker } from "../view/failures.js";
 import type { ActionView, QuantityLine, ResourceView } from "../view/models.js";
 import type { MarkView, ViewStyle } from "../view/nodes.js";
 
@@ -83,8 +84,10 @@ export function renderAction<Intent, N>(
   button.setAttribute("aria-disabled", String(!action.enabled));
   if (action.description) {
     const description = document.createElement("span");
+    description.className = "e308-action-description";
     appendDescription(description, action.description, resolver);
     button.title = description.textContent ?? "";
+    button.append(description);
   }
   if (action.blockers.length > 0)
     button.dataset.blockers = action.blockers.map((item) => item.kind).join(" ");
@@ -124,7 +127,38 @@ function appendActionDetails<Intent, N>(
   if (action.blockers.length > 0) {
     const blockers = button.ownerDocument.createElement("span");
     blockers.className = "e308-action-blockers";
-    blockers.textContent = action.blockers.map((item) => item.kind).join(", ");
+    blockers.textContent = action.blockers.map((item) => blockerText(item, resolver)).join("; ");
     button.append(blockers);
+  }
+}
+
+function blockerText<N>(blocker: ActionBlocker<N>, resolver: TextResolver<N>): string {
+  const quantity = (value: N) => resolver.argument({ kind: "quantity", value });
+  switch (blocker.kind) {
+    case "insufficient":
+      return `${blocker.resourceId}: need ${quantity(blocker.required)}, have ${quantity(blocker.available)}`;
+    case "capacity-blocked":
+      return `${blocker.resourceId}: capacity ${quantity(blocker.capacity)}`;
+    case "locked":
+      return `requires ${blocker.prerequisiteIds.join(", ")}`;
+    case "cooldown":
+      return `${blocker.actionId}: ${Math.ceil(blocker.remainingMs / 1_000)} seconds remaining`;
+    case "invalid-count":
+      return "enter a valid purchase count";
+    case "allocation-exceeded":
+      return `${blocker.allocationId}: ${quantity(blocker.assigned)} of ${quantity(blocker.budget)} assigned`;
+    case "stale-revision":
+      return "the game state changed; try again";
+    case "invalid-target":
+      return `unknown target: ${blocker.id}`;
+    case "disabled":
+      return blocker.reasonKey.replaceAll("-", " ");
+    case "budget-exceeded":
+      return `${blocker.budgetId}: limit reached`;
+    case "numeric-fault":
+    case "transaction-failed":
+      return blocker.message;
+    case "extension":
+      return blocker.fallbackKey.replaceAll("-", " ");
   }
 }

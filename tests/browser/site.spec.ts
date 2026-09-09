@@ -42,6 +42,12 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   });
   await expect(page.getByText("0 of 4 workers available.", { exact: false })).toBeVisible();
   await expect(page.getByLabel("scholar")).toHaveAttribute("max", "0");
+  await page.getByRole("tab", { name: "Crafting" }).click();
+  await expect(page.getByRole("button", { name: "build cottage" })).toBeVisible();
+  await expect(page.getByText("A cottage adds one worker")).toBeVisible();
+  await page.getByRole("tab", { name: "Projects" }).click();
+  await expect(page.getByRole("button", { name: "raise great hall" })).toBeDisabled();
+  await expect(page.getByText("wood: need 30, have 10", { exact: false })).toBeVisible();
 
   await page.goto("/site-dist/examples/cascade/");
   await expect(page.locator("#host-status")).toContainText("cascade");

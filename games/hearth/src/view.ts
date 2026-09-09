@@ -2,6 +2,13 @@ import type { Snapshot } from "@e308/core";
 import type { ActionBlocker, ActionView, ViewDocument, ViewNode } from "@e308/ux";
 import { hearthCalendar, hearthRecipes, hearthResearch, hearthTasks } from "./content.js";
 import type { HearthIntent, HearthRecipe, HearthTask } from "./runtime.js";
+import {
+  hearthGoal,
+  recipeDescription,
+  researchDescription,
+  taskDescription,
+} from "./view-copy.js";
+import { seasonalLedger } from "./view-ledger.js";
 
 export function hearthView(snapshot: Snapshot<number>): ViewDocument<HearthIntent, number> {
   return {
@@ -26,10 +33,11 @@ export function hearthView(snapshot: Snapshot<number>): ViewDocument<HearthInten
           {
             kind: "text",
             value:
-              "Assign every worker, protect food through winter, recover from the designed shortage, and raise the great hall.",
+              "Assign workers, prepare for each season, expand the settlement, and raise the great hall.",
           },
         ],
       },
+      goalPanel(snapshot),
       workforceSummary(snapshot),
       calendarPanel(snapshot),
       { kind: "row", id: "settlement-resources", children: resourceNodes(snapshot) },
@@ -67,20 +75,31 @@ export function hearthView(snapshot: Snapshot<number>): ViewDocument<HearthInten
 }
 
 function resourceNodes(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] {
-  return ["food", "wood", "stone", "science", "herbs", "tools", "meals", "cloth", "morale"].map(
-    (id) => ({
-      kind: "resource",
-      id: `resource-${id}`,
-      resource: {
-        resourceId: id,
-        label: id,
-        value: snapshot.resources[id] ?? 0,
-        ...(capacity(snapshot, id) === undefined
-          ? {}
-          : { capacity: capacity(snapshot, id) as number }),
-      },
-    }),
-  );
+  return [
+    "workers",
+    "food",
+    "wood",
+    "stone",
+    "science",
+    "herbs",
+    "tools",
+    "meals",
+    "cloth",
+    "medicine",
+    "preserves",
+    "morale",
+  ].map((id) => ({
+    kind: "resource",
+    id: `resource-${id}`,
+    resource: {
+      resourceId: id,
+      label: id,
+      value: snapshot.resources[id] ?? 0,
+      ...(capacity(snapshot, id) === undefined
+        ? {}
+        : { capacity: capacity(snapshot, id) as number }),
+    },
+  }));
 }
 
 function workforce(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] {
@@ -115,6 +134,15 @@ function workforceSummary(snapshot: Snapshot<number>): ViewNode<HearthIntent, nu
   };
 }
 
+function goalPanel(snapshot: Snapshot<number>): ViewNode<HearthIntent, number> {
+  return {
+    kind: "notification",
+    id: "current-goal",
+    text: hearthGoal(snapshot),
+    tone: "neutral",
+  };
+}
+
 function crafting(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] {
   return (Object.keys(hearthRecipes) as HearthRecipe[]).map((recipe) => ({
     kind: "action",
@@ -139,6 +167,7 @@ function recipeAction(
   return {
     id: recipe,
     label: definition.id.replaceAll("-", " "),
+    description: [{ kind: "text", value: recipeDescription(recipe) }],
     enabled: blockers.length === 0,
     intent: { type: "recipe", recipe, count: 1 },
     blockers,
@@ -176,6 +205,7 @@ function research(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] 
       action: {
         id: entry.id,
         label: entry.id.replaceAll("-", " "),
+        description: [{ kind: "text", value: researchDescription(entry.id) }],
         enabled: blockers.length === 0,
         intent: { type: "research", id: entry.id },
         blockers,
@@ -186,28 +216,69 @@ function research(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] 
 }
 
 function taskNodes(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] {
-  return (Object.keys(hearthTasks) as HearthTask[]).map((task) => {
+  return (Object.keys(hearthTasks) as HearthTask[]).flatMap((task) => {
     const definition = hearthTasks[task];
     const state = snapshot.tasks[definition.id];
     const busy = Boolean(state?.active || state?.queue.length);
-    return {
-      kind: "action",
-      id: `task-${task}`,
-      action: {
-        ...simpleAction(definition.id.replaceAll("-", " "), { type: "task", task }, !busy),
-        costs: definition.inputs.map(([resource, amount]) => ({
-          resourceId: resource.id,
-          label: resource.id,
-          value: amount,
-        })),
-        rewards: definition.outputs.map(([resource, amount]) => ({
-          resourceId: resource.id,
-          label: resource.id,
-          value: amount,
-        })),
+    const blockers: ActionBlocker<number>[] = definition.inputs
+      .filter(([resource, amount]) => (snapshot.resources[resource.id] ?? 0) < amount)
+      .map(([resource, amount]) => ({
+        kind: "insufficient",
+        resourceId: resource.id,
+        required: amount,
+        available: snapshot.resources[resource.id] ?? 0,
+      }));
+    if (busy)
+      blockers.push({
+        kind: "cooldown",
+        actionId: definition.id,
+        remainingMs: state?.active?.mode === "fixed-duration" ? state.active.remainingMs : 0,
+        clock: "game",
+      });
+    const nodes: ViewNode<HearthIntent, number>[] = [
+      {
+        kind: "action",
+        id: `task-${task}`,
+        action: {
+          id: definition.id,
+          label: definition.id.replaceAll("-", " "),
+          description: [{ kind: "text", value: taskDescription(task) }],
+          enabled: blockers.length === 0,
+          intent: { type: "task", task },
+          blockers,
+          costs: definition.inputs.map(([resource, amount]) => ({
+            resourceId: resource.id,
+            label: resource.id,
+            value: amount,
+          })),
+          rewards: definition.outputs.map(([resource, amount]) => ({
+            resourceId: resource.id,
+            label: resource.id,
+            value: amount,
+          })),
+        },
       },
-    };
+    ];
+    if (state?.active) nodes.push(taskProgress(task, state.active));
+    return nodes;
   });
+}
+
+function taskProgress(
+  task: HearthTask,
+  active: NonNullable<Snapshot<number>["tasks"][string]>["active"],
+): ViewNode<HearthIntent, number> {
+  const duration = hearthTasks[task].work;
+  const total = duration.kind === "fixed-duration" ? duration.durationMs : 1;
+  const remaining = active?.mode === "fixed-duration" ? active.remainingMs : 0;
+  return {
+    kind: "progress",
+    id: `task-${task}-progress`,
+    label: `${hearthTasks[task].id.replaceAll("-", " ")} — ${Math.ceil(remaining / 1_000)} seconds remaining`,
+    value: 1 - remaining / total,
+    direction: "right",
+    animated: true,
+  };
 }
 
 function calendarPanel(snapshot: Snapshot<number>): ViewNode<HearthIntent, number> {
@@ -220,31 +291,6 @@ function calendarPanel(snapshot: Snapshot<number>): ViewNode<HearthIntent, numbe
     value: (state?.elapsedMs ?? 0) / (phase?.durationMs ?? 1),
     direction: "right",
     animated: true,
-  };
-}
-
-function seasonalLedger(snapshot: Snapshot<number>): ViewNode<HearthIntent, number> {
-  const assignments = snapshot.allocations.jobs ?? {};
-  return {
-    kind: "custom",
-    id: "seasonal-ledger",
-    render(document) {
-      const table = document.createElement("table");
-      table.setAttribute("aria-label", "Seasonal production ledger");
-      const caption = document.createElement("caption");
-      caption.textContent = "Seasonal ledger";
-      table.append(caption);
-      for (const [job, amount] of Object.entries(assignments)) {
-        const row = document.createElement("tr");
-        const name = document.createElement("th");
-        const value = document.createElement("td");
-        name.textContent = job;
-        value.textContent = String(amount);
-        row.append(name, value);
-        table.append(row);
-      }
-      return table;
-    },
   };
 }
 

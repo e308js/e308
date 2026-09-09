@@ -25,8 +25,8 @@ export function hearthScenario(
 ): HarnessScenario<number, HearthObservation, HearthActionIntent> {
   return {
     id: "hearth",
-    contentVersion: "1.0.0",
-    contentDigest: "hearth-1.0.0-2026-09-09",
+    contentVersion: "1.1.0",
+    contentDigest: "hearth-1.1.0-settlement-loop-2026-09-09",
     parameters: { strategy },
     definition: hearthDefinition,
     goals: [

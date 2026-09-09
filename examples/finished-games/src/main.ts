@@ -69,7 +69,7 @@ developerTools?.addEventListener("toggle", () => {
   document.body.classList.toggle("debug-open", developerTools.open);
 });
 
-for (const button of document.querySelectorAll<HTMLButtonElement>("[data-game]")) {
+for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-game]")) {
   button.addEventListener("click", async () => {
     const id = button.dataset.game;
     if (!id) return;

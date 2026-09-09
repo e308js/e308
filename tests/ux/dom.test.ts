@@ -355,7 +355,7 @@ describe("DOM renderer", () => {
     expect(root.querySelectorAll(".e308-tree-branches line")).toHaveLength(2);
     expect(root.querySelector(".e308-tree-node img")?.getAttribute("alt")).toBe("Start");
     expect(root.querySelector("[data-action=locked] .e308-action-blockers")?.textContent).toBe(
-      "locked",
+      "requires known",
     );
     expect(root.querySelector(".e308-reset")?.getAttribute("data-clears")).toBe("Points");
     expect(root.querySelector(".e308-offline")?.getAttribute("data-pending-ms")).toBe("100");
