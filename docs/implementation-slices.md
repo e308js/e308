@@ -1,7 +1,7 @@
 # Capability slices and acceptance evidence
 
-Status: **implementation active**. S00 through S09 are accepted, S10 is in review, and S11 is next;
-exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist
+Status: **release review**. S00 through S09 are accepted; S10 and S11 have CI-green candidates and
+remain in independent review. Exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist
 in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These
 are AI-sized capability integrations, not small human-review-sized commits.
 

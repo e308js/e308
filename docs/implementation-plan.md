@@ -1,6 +1,8 @@
 # e308 implementation plan
 
-Status: **ACTIVE IMPLEMENTATION**. [status.md](status.md) records accepted commits and CI evidence; this file remains the governing execution plan.
+Status: **RELEASE REVIEW**. All implementation slices have CI-green candidates; S10 and S11 await
+the independent checks in [release-review.md](release-review.md). [status.md](status.md) records
+accepted commits and exact CI evidence. This file remains the governing execution plan.
 
 This plan implements the [definition of done](definition-of-done.md), including TMT capability parity, required Antimatter Dimensions/Kittens Game reference slices, Paperclips coverage, and three complete distinct games. Test-only clones/ports of reference mechanics are allowed. The independently implemented e308 subject must not delegate its answers to the reference runner.
 

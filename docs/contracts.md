@@ -1,8 +1,12 @@
 # Design decisions and acceptance contracts
 
-Status: specification only. No implementation, scaffolding, or benchmark results accompany this document. These decisions resolve the eight gaps identified in the design review. They take precedence over illustrative API shorthand in the overview.
+Status: governing behavioral specification, written before implementation. Implementation and
+evidence now live in the packages, tests, and [status.md](status.md); this document intentionally
+retains the original contract decisions and acceptance boundaries.
 
-The subsequent [interface decisions](interfaces.md) supply concrete numeric/rate/snapshot/failure/save boundaries and clarify the third-party review. Types shown there remain uncompiled documentation.
+The subsequent [interface design record](interfaces.md) supplies the original concrete
+numeric/rate/snapshot/failure/save boundaries and clarifies the third-party review. Types shown
+there remain illustrative documentation rather than the authoritative emitted declarations.
 
 The [definition of done](definition-of-done.md) adds mandatory TMT capability and AD/Kittens reference parity, plus complete-game and independent-oracle evidence. Its release requirements supersede narrower initial prototypes and include the huge-count domain and optional visual features noted in [tmt-parity.md](tmt-parity.md).
 

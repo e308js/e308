@@ -2,6 +2,10 @@
 
 Research date: September 8, 2026.
 
+Status: historical research baseline. The implementation that followed is tracked in
+[status.md](status.md); present-tense statements about an empty workspace or proposed capabilities
+describe the conditions and conclusions of this research pass.
+
 ## Recommendation
 
 Build a headless simulation library and an independently usable UX library. The strongest opportunity is to combine reliable time advancement, composable economic rules, and structured explanations of what is happening. Merely removing Vue from a clicker template would not cover the requested games.

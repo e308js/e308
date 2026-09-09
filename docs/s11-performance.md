@@ -1,6 +1,9 @@
 # S11 release-machine performance evidence
 
-Status: local release-machine matrix **PASS**; exact-head CI validation pending.
+Status: named release-machine matrix **PASS**; release-candidate CI validation **PASS** in
+[run 34320192794](https://github.com/e308js/e308/actions/runs/34320192794), followed by successful
+exact-head documentation validation in
+[run 34320913345](https://github.com/e308js/e308/actions/runs/34320913345).
 
 The declared reference system is Linux x64, Node 24.14.1, an AMD Ryzen 9 8945HS, 16 logical CPUs,
 and 65,048,330,240 bytes of memory. Measurements use the final Wireworks, Cascade, and Hearth

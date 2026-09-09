@@ -24,16 +24,17 @@ path as authored commands.
 | Runtime ownership, rollback and immutable counter state | `tests/core/definition.test.ts`, `tests/core/state.test.ts` |
 | Wireworks, Cascade and Hearth headless traces | `tests/scenarios/kernels.test.ts` |
 
-Applicable TMT groups now have partial executable coverage: T02 large quantities and counters; T03
+At S02 acceptance, applicable TMT groups had partial executable coverage: T02 large quantities and counters; T03
 dynamic costs/effects through typed rates and modifiers; T10 atomic custom-currency transactions;
 T11 rebuyables and buy-max; T12 sell-all/respec; and T32 fixed-step custom production. These group
-results remain **NOT RUN** in the final leaf-parity register until the pinned TMT differential fixtures
-are introduced in their assigned slices. S02 proves the engine surface and independent economic
-oracles; it does not claim complete TMT parity.
+results were deliberately left **NOT RUN** until the pinned TMT differential fixtures were introduced
+in their assigned later slices. The completed automated leaf register is recorded in
+[s11-evidence.md](s11-evidence.md). S02 itself proves the engine surface and independent economic
+oracles; it does not independently claim complete TMT parity.
 
 Local acceptance on September 8, 2026: 100 tests across 15 files; aggregate statements 97.09%,
 branches 92.60%, functions 100%, lines 97.54%; zero per-file threshold, size, function-size,
-duplication, or core dependency violations. The final accepted SHA, CI URL, and archive artifact are
-The accepted CI job also built both ESM packages, installed their archives into clean JavaScript and
+duplication, or core dependency violations. The accepted CI job also built both ESM packages,
+installed their archives into clean JavaScript and
 strict TypeScript consumers, and uploaded the package and coverage artifacts. No coverage, structure,
 or dependency exceptions were used.

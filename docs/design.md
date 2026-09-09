@@ -1,6 +1,8 @@
-# Proposed library design
+# Library design record
 
-Status: proposal. API examples are illustrative, not implemented exports.
+Status: historical architecture proposal. The implementation follows these boundaries, but API
+examples here remain illustrative. Use [api-reference.md](api-reference.md) and emitted declarations
+for current exports; use [status.md](status.md) for implementation evidence.
 
 The [resolved design contracts](contracts.md) define defaults, edge cases, and acceptance fixtures for the eight review gaps. This document is the architectural overview; those contracts govern detailed behavior.
 
@@ -32,9 +34,11 @@ Start with two public packages and explicit subpath exports, rather than many ti
 | `@e308/ux` | Framework-independent view models, explanations, formatting contracts |
 | `@e308/ux/dom` | Optional unstyled accessible controls and interaction bindings |
 
-The intended product has four explicit parts: a deterministic simulation core; a vocabulary of composable mechanics; a headless harness with bot players and pacing reports; and an optional, replaceable renderer built on the UX library. These are planned capabilities, not existing implementations.
+The product has four explicit parts: a deterministic simulation core; a vocabulary of composable
+mechanics; a headless harness with bot players and pacing reports; and an optional, replaceable
+renderer built on the UX library.
 
-Framework-specific adapters can follow demonstrated demand. A React hook or Vue composable must be a small adapter over the same subscription contract. Theme CSS and example layouts are explicit imports, never global styles injected by core or UX imports. The library is named **e308**. npm packages use the user-owned `@e308` organization; the planned GitHub organization is `e308js`. The initial package split remains `@e308/core` and `@e308/ux`, with testing provided through `@e308/core/testing`. GitHub organization creation and package publication remain future work.
+Framework-specific adapters can follow demonstrated demand. A React hook or Vue composable must be a small adapter over the same subscription contract. Theme CSS and example layouts are explicit imports, never global styles injected by core or UX imports. The library is named **e308**. npm packages use the user-owned `@e308` organization, and the private source repository is under the `e308js` GitHub organization. The initial package split remains `@e308/core` and `@e308/ux`, with testing provided through `@e308/core/testing`. Package publication remains a separate release action.
 
 Dependency direction:
 

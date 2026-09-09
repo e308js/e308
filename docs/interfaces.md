@@ -1,6 +1,9 @@
-# Proposed interface decisions
+# Interface design record
 
-Status: documentation-only interface pass. The declarations below communicate intended boundaries; they are not compiled declarations, exported APIs, or implemented behavior. [contracts.md](contracts.md) defines the behavioral requirements. This document makes the decisions affecting signatures concrete before implementation.
+Status: historical preimplementation design record. The declarations below explain the decisions
+that shaped the compiled APIs; they are illustrative and may omit later additions. Use
+[api-reference.md](api-reference.md) and the emitted package declarations for the current public
+surface. [contracts.md](contracts.md) defines the behavioral requirements.
 
 The subsequent [TMT parity gate](tmt-parity.md) requires numeric-backed huge buyable totals and optional tree/grid/effect capabilities for v1. The bounded-count helper sketched below remains an initial simple capability; it is not sufficient for release parity. Its large-count companion must be specified before implementing that feature, with economic counts in the numeric backend and bounded native counts only for actual iteration/queue control. Full release evidence is defined in [definition-of-done.md](definition-of-done.md).
 
