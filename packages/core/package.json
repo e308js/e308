@@ -48,6 +48,10 @@
     "./balance": {
       "types": "./dist/balance/index.d.ts",
       "import": "./dist/balance/index.js"
+    },
+    "./optimize": {
+      "types": "./dist/optimize/index.d.ts",
+      "import": "./dist/optimize/index.js"
     }
   },
   "files": [

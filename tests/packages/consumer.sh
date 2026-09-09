@@ -44,6 +44,11 @@ node --input-type=module -e '
   if (![compareBaseline, rankedPolicy, runHarness].every(value => typeof value === "function")) process.exit(1);
 '
 node --input-type=module -e '
+  import { AdvanceBacklog, advanceOptimized, profileAdvancement } from "@e308/core/optimize";
+  if (![AdvanceBacklog, advanceOptimized, profileAdvancement]
+    .every(value => typeof value === "function")) process.exit(1);
+'
+node --input-type=module -e '
   import { currentPhase } from "@e308/core/calendar";
   import { IndexedDbSaveStore } from "@e308/core/browser";
   import { quoteMarket } from "@e308/core/markets";

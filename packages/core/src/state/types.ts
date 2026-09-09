@@ -127,6 +127,7 @@ export interface CommandReceipt {
 }
 
 export interface Game<N> {
+  getDefinition(): GameDefinition<N>;
   getSnapshot(): Snapshot<N>;
   dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure<N>>;
   advance(

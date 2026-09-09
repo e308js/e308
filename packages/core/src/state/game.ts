@@ -107,6 +107,10 @@ class GameRuntime<N> implements Game<N> {
     this.#snapshot = restoreSnapshot(this.#definition, restored ?? initial);
   }
 
+  getDefinition(): GameDefinition<N> {
+    return this.#definition;
+  }
+
   getSnapshot(): Snapshot<N> {
     return this.#snapshot;
   }

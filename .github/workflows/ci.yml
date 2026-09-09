@@ -30,6 +30,7 @@ jobs:
           path: |
             coverage/
             artifacts/pacing/
+            artifacts/performance/
             packages/*/dist/
             playwright-report/
             test-results/

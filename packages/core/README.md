@@ -209,3 +209,35 @@ const report = runHarness({
 and compares versioned baselines. A failed policy run remains distinct from an authored barrier
 certificate. The workspace's `pnpm report:pacing` command exercises three deliberately different
 economy kernels and emits machine-readable JSON plus reviewer-friendly Markdown.
+
+## Checked bulk advancement
+
+`@e308/core/optimize` can reduce long native-number recurrences without changing their canonical
+economic result. Exact mode recognizes safe-integer constant, allocated, proportional, and linear
+product rates without inputs or capacities. It exponentiates their affine recurrence and stops
+before automation boundaries so the boundary command runs through an ordinary canonical step.
+
+```ts
+import { advanceOptimized } from "@e308/core/optimize";
+
+const result = advanceOptimized(game, definition, 8 * 60 * 60 * 1_000, {
+  mode: "exact",
+  limits: { maximumWork: 50_000, maximumBulkBatches: 100 },
+});
+
+if (result.status === "pending") {
+  // Persist result.snapshot and result.pendingRealMs, then resume in another work chunk.
+}
+```
+
+When any precondition fails, the driver uses canonical fixed steps and records why. Its work budget
+returns unprocessed time instead of discarding it; `AdvanceBacklog` owns that pending duration and
+refuses additions beyond a declared bound. Registered build-time capabilities declare dependencies,
+versions, and checked plans. Approximate capabilities also declare error bounds and run only when the
+caller explicitly selects `mode: "approximate"`.
+
+`profileAdvancement` accepts an injected monotonic clock. The workspace's
+`pnpm report:performance` command records machine/runtime identity, cold and warm timing samples,
+throughput, longest batches, canonical/bulk work, and pending duration for the three example kernels.
+CI timings are diagnostics; release performance claims use the separately documented reference
+machine procedure.

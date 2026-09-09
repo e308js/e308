@@ -9,6 +9,7 @@ export default defineConfig({
       "calendar",
       "markets",
       "offline",
+      "optimize",
       "persistence",
       "storage",
       "tasks",
