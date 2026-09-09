@@ -33,7 +33,7 @@ function fixture() {
   } as const;
   const scarcity = kit.challenge("scarcity", {
     ...common,
-    countsAs: ["slow"],
+    countsAs: ["slow", "limited-production"],
     replacementKeys: ["production"],
   });
   const noBuy = kit.challenge("no-buy", { ...common, replacementKeys: ["purchases"] });
@@ -66,14 +66,17 @@ describe("challenges", () => {
     game.dispatch(enterChallengeCommand(scarcity, catalog));
     game.dispatch(enterChallengeCommand(noBuy, catalog));
     expect(game.getSnapshot().progression.activeChallenges).toEqual(["no-buy", "scarcity"]);
-    let countsAs = false;
+    let countsAsSlow = false;
+    let countsAsLimited = false;
     game.dispatch({
       id: "inspect-membership",
       execute: (tx) => {
-        countsAs = challengeCountsAs(tx, catalog, "slow");
+        countsAsSlow = challengeCountsAs(tx, catalog, "slow");
+        countsAsLimited = challengeCountsAs(tx, catalog, "limited-production");
       },
     });
-    expect(countsAs).toBe(true);
+    expect(countsAsSlow).toBe(true);
+    expect(countsAsLimited).toBe(true);
     expect(game.dispatch(enterChallengeCommand(conflict, catalog))).toMatchObject({
       ok: false,
       error: { code: "disabled", reasonKey: "conflict" },
