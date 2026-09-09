@@ -15,7 +15,8 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S07 | ACCEPTED | `a71a4b96980e83dcd0e9b747c75a3a5d77ad6620` | quality + browser/worker | [run 34303068893](https://github.com/e308js/e308/actions/runs/34303068893), [details](s07-evidence.md) |
 | S08 | ACCEPTED | `5bc041d9c898a79a1caa3c9d09879cb9ef69241d` | quality + pacing | [run 34305644935](https://github.com/e308js/e308/actions/runs/34305644935), [details](s08-evidence.md) |
 | S09 | ACCEPTED | `53aadbeafe7d2cdfee5181a0b8fe99f82dc9fe5b` | quality + optimization | [run 34308069739](https://github.com/e308js/e308/actions/runs/34308069739), [details](s09-evidence.md) |
-| S10–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
+| S10 | IN REVIEW | — | quality + finished games | [local evidence](s10-evidence.md); pushed-SHA CI and independent walkthrough pending |
+| S11 | PLANNED | — | release closure | See [slice specification](implementation-slices.md) |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
@@ -68,5 +69,11 @@ capabilities, lossless work backlogs, and injected-clock workload profiling. Exa
 canonical fixed steps whenever the current definition or state does not meet the shortcut's proof
 conditions. Property, boundary, overflow, RNG, and fallback cases passed exact-head CI on September
 9, 2026; the named release-machine performance closure remains assigned to S11.
+
+S10 has a locally green release-quality candidate containing three complete original games,
+clean-archive consumers, full pacing and offline matrices, interactive bounded reference labs, and
+browser coverage. It remains IN REVIEW until the exact pushed commit passes CI and an independent
+person completes the required desktop/touch walkthrough. Public project pages will expose only the
+three original games; reference implementations and labs remain private test evidence.
 
 No npm package or public GitHub release has been published.

@@ -1,0 +1,130 @@
+import {
+  allocationCommand,
+  type Command,
+  type CommandFailure,
+  createGame,
+  createSaveCodec,
+  type Game,
+  marketCommand,
+  nativeNumbers,
+  quoteMarket,
+  type Snapshot,
+  upgradeCommand,
+} from "@e308/core";
+import { GameViewSource } from "@e308/ux";
+import {
+  wireworksAllocation,
+  wireworksDefinition,
+  wireworksMarkets,
+  wireworksProjects,
+  wireworksResources,
+} from "./content.js";
+
+export type WireworksBand = keyof typeof wireworksMarkets;
+export type WireworksIntent =
+  | { readonly type: "advance"; readonly milliseconds: number }
+  | { readonly type: "sell"; readonly band: WireworksBand; readonly quantity: number }
+  | { readonly type: "project"; readonly id: string }
+  | {
+      readonly type: "allocate";
+      readonly target: "extrusion" | "assembly";
+      readonly amount: number;
+    };
+
+export type WireworksResult =
+  | ReturnType<Game<number>["dispatch"]>
+  | ReturnType<Game<number>["advance"]>;
+
+const saveConfiguration = {
+  stateSchemaVersion: 1,
+  contentVersion: "1.0.0",
+  contentDigest: "wireworks-1.0.0-2026-09-09",
+} as const;
+
+export const wireworksSaveCodec = createSaveCodec(wireworksDefinition, saveConfiguration);
+
+export function createWireworks(snapshot?: Snapshot<number>): WireworksGame {
+  return new WireworksGame(createGame(wireworksDefinition, snapshot ? { snapshot } : {}));
+}
+
+export class WireworksGame extends GameViewSource<number, WireworksIntent, WireworksResult> {
+  constructor(game: Game<number>) {
+    super(game, (target, intent) => {
+      if (intent.type === "advance") return target.advance(intent.milliseconds);
+      return target.dispatch(wireworksCommand(target.getSnapshot(), intent));
+    });
+  }
+
+  exportSave(wallAnchorMs: number): string {
+    return wireworksSaveCodec.encode(this.game.getSnapshot(), {
+      wallAnchorMs,
+      entitlement: {
+        policyVersion: "wireworks-offline-1",
+        enabled: true,
+        capMs: 8 * 60 * 60_000,
+        excess: "bank",
+      },
+      catchup: null,
+    });
+  }
+}
+
+export function importWireworks(raw: string): WireworksGame {
+  return createWireworks(wireworksSaveCodec.decode(raw).snapshot);
+}
+
+export function wireworksCommand(
+  snapshot: Snapshot<number>,
+  intent: Exclude<WireworksIntent, { readonly type: "advance" }>,
+): Command<number> {
+  if (intent.type === "project") return projectCommand(intent.id);
+  if (intent.type === "allocate")
+    return allocationCommand(wireworksAllocation, intent.target, intent.amount);
+  return saleCommand(snapshot, intent.band, intent.quantity);
+}
+
+function projectCommand(id: string): Command<number> {
+  const project = wireworksProjects.find((candidate) => candidate.id === id);
+  if (!project) return invalidCommand(`project:${id}`, id);
+  return upgradeCommand(project);
+}
+
+function saleCommand(
+  snapshot: Snapshot<number>,
+  band: WireworksBand,
+  quantity: number,
+): Command<number> {
+  const market = wireworksMarkets[band];
+  const quote = quoteMarket(market, snapshot, "sell", quantity, nativeNumbers);
+  if (!quote.ok) return failureCommand(`sell:${band}`, quote.error);
+  const demandPerUnit = band === "volume" ? 1 : band === "standard" ? 2 : 4;
+  return {
+    id: `sell:${band}`,
+    expectedRevision: snapshot.revision,
+    execute(transaction) {
+      const required = quantity * demandPerUnit;
+      const available = transaction.get(wireworksResources.demand);
+      if (available < required) {
+        transaction.reject({
+          code: "insufficient",
+          resourceId: wireworksResources.demand.id,
+          required,
+          available,
+        });
+      }
+      marketCommand(market, quote.value).execute(transaction);
+      transaction.add(wireworksResources.demand, -required);
+    },
+  };
+}
+
+function invalidCommand(id: string, target: string): Command<number> {
+  return {
+    id,
+    execute: (transaction) => transaction.reject({ code: "invalid-target", id: target }),
+  };
+}
+
+function failureCommand(id: string, failure: CommandFailure<number>): Command<number> {
+  return { id, execute: (transaction) => transaction.reject(failure) };
+}

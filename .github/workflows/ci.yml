@@ -31,6 +31,9 @@ jobs:
             coverage/
             artifacts/pacing/
             artifacts/performance/
+            artifacts/finished-games/
             packages/*/dist/
+            games/*/dist/
+            examples/finished-games/dist/
             playwright-report/
             test-results/

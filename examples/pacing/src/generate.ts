@@ -1,24 +1,15 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { compareBaseline, runSweep } from "@e308/core/balance";
-import {
-  aggregateMarkdown,
-  aggregateReports,
-  goalPolicy,
-  rankedPolicy,
-  reportMarkdown,
-  reportsJson,
-  runHarness,
-  scriptedPolicy,
-} from "@e308/core/testing";
+import { goalPolicy, rankedPolicy, runHarness, scriptedPolicy } from "@e308/core/testing";
 import {
   hearthScenario,
   type KernelIntent,
   type KernelObservation,
   kernelScenarios,
 } from "./scenarios.js";
+import { writeReportSet } from "./write-reports.js";
 
 const output = new URL("../../../artifacts/pacing/", import.meta.url);
-await mkdir(output, { recursive: true });
 const reports = kernelScenarios().flatMap((scenario) =>
   policies(scenario.id).map((policy) =>
     runHarness({
@@ -67,16 +58,13 @@ if (!baselineReport || !currentReport)
 const baseline = compareBaseline(baselineReport, currentReport, { milestoneRelative: 0.1 });
 
 await Promise.all([
-  writeFile(new URL("reports.json", output), reportsJson(reports)),
-  writeFile(new URL("aggregate.md", output), aggregateMarkdown(aggregateReports(reports))),
+  writeReportSet({
+    output,
+    reports,
+    fileName: (report) => `${report.scenarioId}-${report.policy.id}.md`,
+  }),
   writeFile(new URL("sweep.json", output), `${JSON.stringify(sweep, null, 2)}\n`),
   writeFile(new URL("baseline.json", output), `${JSON.stringify(baseline, null, 2)}\n`),
-  ...reports.map((report) =>
-    writeFile(
-      new URL(`${report.scenarioId}-${report.policy.id}.md`, output),
-      reportMarkdown(report),
-    ),
-  ),
 ]);
 
 function policies(scenarioId: string) {

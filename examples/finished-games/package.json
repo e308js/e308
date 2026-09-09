@@ -1,0 +1,19 @@
+{
+  "name": "@e308/finished-games-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json && esbuild src/main.ts --bundle --format=esm --outfile=dist/app.js"
+  },
+  "dependencies": {
+    "@e308/core": "workspace:*",
+    "@e308/game-cascade": "workspace:*",
+    "@e308/game-hearth": "workspace:*",
+    "@e308/game-wireworks": "workspace:*",
+    "@e308/ux": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

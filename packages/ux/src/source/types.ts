@@ -14,6 +14,27 @@ export interface SelectableSource<State, Intent, DispatchResult = unknown> {
   dispatch(intent: Intent): DispatchResult;
 }
 
+export class GameViewSource<N, Intent, DispatchResult>
+  implements ViewSource<Snapshot<N>, Intent, DispatchResult>
+{
+  constructor(
+    readonly game: Game<N>,
+    readonly dispatchIntent: (game: Game<N>, intent: Intent) => DispatchResult,
+  ) {}
+
+  getSnapshot(): Snapshot<N> {
+    return this.game.getSnapshot();
+  }
+
+  subscribe(listener: (snapshot: Snapshot<N>) => void): () => void {
+    return this.game.subscribe((snapshot) => snapshot, listener);
+  }
+
+  dispatch(intent: Intent): DispatchResult {
+    return this.dispatchIntent(this.game, intent);
+  }
+}
+
 export function fromSelectableSource<State, Intent, DispatchResult>(
   source: SelectableSource<State, Intent, DispatchResult>,
 ): ViewSource<State, Intent, DispatchResult> {
@@ -38,3 +59,5 @@ export function selectSource<State, Intent, Result, Value>(
     listener(next);
   });
 }
+
+import type { Game, Snapshot } from "@e308/core";

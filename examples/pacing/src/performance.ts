@@ -2,7 +2,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { cpus, totalmem } from "node:os";
 import { createGame, type GameDefinition, type Snapshot } from "@e308/core";
 import { profileAdvancement } from "@e308/core/optimize";
-import { createCascadeKernel, createHearthKernel, createWireworksKernel } from "./kernels.js";
+import { cascadeDefinition } from "@e308/game-cascade";
+import { hearthDefinition } from "@e308/game-hearth";
+import { wireworksDefinition } from "@e308/game-wireworks";
 import { type MachineRecord, type WorkloadRecord, workloadMarkdown } from "./performance-report.js";
 
 const gaps = [
@@ -12,21 +14,19 @@ const gaps = [
   ["1 day", 24 * 60 * 60_000],
   ["30 days", 30 * 24 * 60 * 60_000],
 ] as const;
-const scenarios = [
-  scenario("wireworks", createWireworksKernel()),
-  scenario("cascade", createCascadeKernel()),
-  scenario("hearth", createHearthKernel()),
-];
 const workloads: WorkloadRecord[] = [];
+profileScenario("wireworks", wireworksDefinition, createGame(wireworksDefinition).getSnapshot());
+profileScenario("cascade", cascadeDefinition, createGame(cascadeDefinition).getSnapshot());
+profileScenario("hearth", hearthDefinition, createGame(hearthDefinition).getSnapshot());
 
-for (const item of scenarios) {
+function profileScenario<N>(id: string, definition: GameDefinition<N>, initial: Snapshot<N>): void {
   for (const [duration, durationMs] of gaps) {
     const common = {
-      fixtureId: item.id,
-      fixtureVersion: "kernel-1",
+      fixtureId: id,
+      fixtureVersion: "finished-1",
       elapsedMs: durationMs,
-      definition: item.definition,
-      createGame: () => createGame(item.definition, { snapshot: item.initial }),
+      definition,
+      createGame: () => createGame(definition, { snapshot: initial }),
       advancement: {
         mode: "exact" as const,
         limits: { maximumWork: 200_000, maximumBulkBatches: 100 },
@@ -34,7 +34,7 @@ for (const item of scenarios) {
       now: () => performance.now(),
     };
     workloads.push({
-      scenario: item.id,
+      scenario: id,
       duration,
       durationMs,
       cold: profileAdvancement({ ...common, label: "cold", repetitions: 1 }),
@@ -65,13 +65,3 @@ await Promise.all([
   ),
   writeFile(new URL("workloads.md", output), workloadMarkdown(machine, workloads)),
 ]);
-
-function scenario(
-  id: string,
-  kernel: {
-    readonly definition: GameDefinition<number>;
-    readonly game: { getSnapshot(): Snapshot<number> };
-  },
-) {
-  return { id, definition: kernel.definition, initial: kernel.game.getSnapshot() };
-}

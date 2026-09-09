@@ -48,6 +48,28 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
 
+  examples/finished-games:
+    dependencies:
+      '@e308/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@e308/game-cascade':
+        specifier: workspace:*
+        version: link:../../games/cascade
+      '@e308/game-hearth':
+        specifier: workspace:*
+        version: link:../../games/hearth
+      '@e308/game-wireworks':
+        specifier: workspace:*
+        version: link:../../games/wireworks
+      '@e308/ux':
+        specifier: workspace:*
+        version: link:../../packages/ux
+    devDependencies:
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
+
   examples/gallery:
     dependencies:
       '@e308/ux':
@@ -59,6 +81,42 @@ importers:
       '@e308/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@e308/game-cascade':
+        specifier: workspace:*
+        version: link:../../games/cascade
+      '@e308/game-hearth':
+        specifier: workspace:*
+        version: link:../../games/hearth
+      '@e308/game-wireworks':
+        specifier: workspace:*
+        version: link:../../games/wireworks
+
+  games/cascade:
+    dependencies:
+      '@e308/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@e308/ux':
+        specifier: workspace:*
+        version: link:../../packages/ux
+
+  games/hearth:
+    dependencies:
+      '@e308/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@e308/ux':
+        specifier: workspace:*
+        version: link:../../packages/ux
+
+  games/wireworks:
+    dependencies:
+      '@e308/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@e308/ux':
+        specifier: workspace:*
+        version: link:../../packages/ux
 
   packages/core:
     dependencies:

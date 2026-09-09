@@ -7,6 +7,9 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@e308/core": "workspace:*"
+    "@e308/core": "workspace:*",
+    "@e308/game-cascade": "workspace:*",
+    "@e308/game-hearth": "workspace:*",
+    "@e308/game-wireworks": "workspace:*"
   }
 }

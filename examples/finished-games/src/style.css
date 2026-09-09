@@ -1,0 +1,157 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #0b1015;
+  color: #eef4f7;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+button {
+  min-height: 44px;
+  border: 1px solid currentColor;
+  border-radius: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem clamp(1rem, 4vw, 3rem);
+  background: #101923ee;
+  border-bottom: 1px solid #ffffff24;
+  backdrop-filter: blur(12px);
+}
+.site-head div {
+  display: grid;
+  letter-spacing: 0.04em;
+}
+.site-head span {
+  color: #9fb0bc;
+  font-size: 0.75rem;
+}
+.site-head nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.save-tools {
+  display: grid;
+  grid-template-columns: 1fr repeat(4, auto);
+  gap: 0.5rem;
+  padding: 0.75rem clamp(1rem, 4vw, 3rem);
+  align-items: center;
+}
+.save-tools textarea {
+  grid-column: 1 / -1;
+  width: 100%;
+  background: #071018;
+  color: #cde;
+  border: 1px solid #456;
+  padding: 0.6rem;
+}
+.game-shell {
+  margin: 0 auto 4rem;
+  width: min(1180px, calc(100% - 2rem));
+  padding: clamp(1rem, 3vw, 2rem);
+  border-radius: 1rem;
+}
+.wireworks {
+  background: #0e1d22;
+  border: 1px solid #46d1bd55;
+  box-shadow: inset 0 0 80px #21b7a611;
+}
+.cascade {
+  background: #151128;
+  border: 1px solid #9d7cff66;
+}
+.cascade .e308-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) 1fr;
+}
+.hearth {
+  background: #271b12;
+  border: 1px solid #d59a5566;
+  font-family: Georgia, serif;
+}
+.hearth button {
+  border-radius: 0.15rem;
+}
+.custom-wait {
+  width: 100%;
+  border-color: #69e6d3;
+  background: #173b39;
+  font-weight: 700;
+}
+.labs {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto 4rem;
+  padding: 1.25rem;
+  background: #111820;
+  border: 1px solid #ffffff25;
+  border-radius: 1rem;
+}
+.lab {
+  margin-block: 1rem;
+  padding: 1rem;
+  background: #080d12;
+  border-left: 0.3rem solid #8da9ff;
+}
+.lab-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.lab pre {
+  overflow: auto;
+  max-height: 20rem;
+  color: #bce8c8;
+}
+.lab output {
+  display: block;
+  min-height: 1.5rem;
+  color: #ffd789;
+}
+.sources {
+  color: #9fb0bc;
+}
+.sources a {
+  color: #9fc5ff;
+}
+@media (max-width: 700px) {
+  .site-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .save-tools {
+    grid-template-columns: 1fr 1fr;
+  }
+  .save-tools output,
+  .save-tools textarea {
+    grid-column: 1 / -1;
+  }
+  .game-shell {
+    width: calc(100% - 1rem);
+    padding: 0.75rem;
+  }
+}

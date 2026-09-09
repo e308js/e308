@@ -24,13 +24,17 @@
       "@e308/ux/effects": ["packages/ux/src/effects/index.ts"],
       "@e308/ux/format": ["packages/ux/src/format/index.ts"],
       "@e308/ux/localization": ["packages/ux/src/localization/index.ts"],
-      "@e308/ux/views": ["packages/ux/src/view/index.ts"]
+      "@e308/ux/views": ["packages/ux/src/view/index.ts"],
+      "@e308/game-cascade": ["games/cascade/src/index.ts"],
+      "@e308/game-hearth": ["games/hearth/src/index.ts"],
+      "@e308/game-wireworks": ["games/wireworks/src/index.ts"]
     },
     "rootDir": ".",
     "types": ["node", "vitest/globals"]
   },
   "include": [
     "packages/**/*.ts",
+    "games/**/*.ts",
     "reference/**/*.ts",
     "tests/**/*.ts",
     "tools/**/*.ts",

@@ -8,6 +8,9 @@ trap 'rm -rf -- "$consumer_dir"' EXIT
 cd "$workspace_root"
 pnpm --filter @e308/core pack --pack-destination "$consumer_dir" >/dev/null
 pnpm --filter @e308/ux pack --pack-destination "$consumer_dir" >/dev/null
+pnpm --filter @e308/game-wireworks pack --pack-destination "$consumer_dir" >/dev/null
+pnpm --filter @e308/game-cascade pack --pack-destination "$consumer_dir" >/dev/null
+pnpm --filter @e308/game-hearth pack --pack-destination "$consumer_dir" >/dev/null
 npm pack "$workspace_root/packages/core/node_modules/break_eternity.js" \
   --pack-destination "$consumer_dir" --cache "$consumer_dir/.npm-cache" --silent >/dev/null
 npm pack "$workspace_root/packages/core/node_modules/@noble/hashes" \
@@ -20,6 +23,9 @@ printf '%s\n' '{"name":"e308-clean-consumer","private":true,"type":"module"}' > 
 npm install --save-exact --ignore-scripts --no-audit --offline --cache "$consumer_dir/.npm-cache" \
   "$consumer_dir/e308-core-0.0.0.tgz" \
   "$consumer_dir/e308-ux-0.0.0.tgz" \
+  "$consumer_dir/e308-game-wireworks-1.0.0.tgz" \
+  "$consumer_dir/e308-game-cascade-1.0.0.tgz" \
+  "$consumer_dir/e308-game-hearth-1.0.0.tgz" \
   "$consumer_dir/break_eternity.js-2.1.3.tgz" \
   "$consumer_dir/noble-hashes-2.4.0.tgz" \
   "$consumer_dir/semver-7.8.5.tgz" >/dev/null
@@ -76,6 +82,14 @@ node --input-type=module -e '
   const store = new MemorySaveStore();
   const written = await store.compareAndSwap("main", null, codec.encode(result.value.snapshot, { ...started, catchup: result.value.session }));
   if (!written.ok) process.exit(1);
+'
+node --input-type=module -e '
+  import { createWireworks } from "@e308/game-wireworks";
+  import { createCascade } from "@e308/game-cascade";
+  import { createHearth } from "@e308/game-hearth";
+  const games = [createWireworks(), createCascade(), createHearth()];
+  if (games.some(game => game.getSnapshot().revision !== 0n)) process.exit(1);
+  if (!games.every(game => game.dispatch({ type: "advance", milliseconds: 1000 }).ok)) process.exit(1);
 '
 node --input-type=module -e '
   import { starterTheme } from "@e308/ux";

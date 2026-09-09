@@ -1,6 +1,9 @@
 # Capability slices and acceptance evidence
 
-Status: **implementation active**. S00 through S07 are accepted and S08 is next; exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These are AI-sized capability integrations, not small human-review-sized commits.
+Status: **implementation active**. S00 through S09 are accepted, S10 is in review, and S11 is next;
+exact evidence lives in [status.md](status.md). Each entry inherits the complete delivery checklist
+in [implementation-plan.md](implementation-plan.md) and all [quality gates](quality-gates.md). These
+are AI-sized capability integrations, not small human-review-sized commits.
 
 The file paths below are proposed module areas, not prescribed individual files. Modules must obey size/dependency rules and keep semantic ownership clear. Each slice includes appropriate public type declarations, implementation, tests and authoring documentation. Follow-up corrective commits are allowed; the final pushed SHA is the acceptance subject.
 
@@ -137,6 +140,10 @@ The file paths below are proposed module areas, not prescribed individual files.
 **Commit:** `S10 complete three games and end-to-end engine evidence`.
 
 **CI evidence:** Shared gates plus full completion traces, human-reviewed walkthrough records, clean-consumer builds, D7 rerun on final game content and D1R interactive results. New modules or mechanics introduced here require the same earlier-type/oracle standards; being game content is not an exemption.
+
+**Publication boundary:** The public library site presents all three original finished examples:
+Wireworks, Cascade, and Hearth. Antimatter Dimensions, Kittens Game, Paperclips, and their bounded
+reference laboratories are evidence-only fixtures and are never deployed or marketed as e308 games.
 
 ## S11 — Release candidate and parity closure
 

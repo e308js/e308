@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>e308 finished games</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <header class="site-head">
+      <div><strong>e308</strong><span>finished-game proof</span></div>
+      <nav aria-label="Choose game">
+        <button type="button" data-game="wireworks">Wireworks</button>
+        <button type="button" data-game="cascade">Cascade</button>
+        <button type="button" data-game="hearth">Hearth</button>
+      </nav>
+    </header>
+    <aside class="save-tools" aria-label="Save controls">
+      <output id="host-status">Opening local save…</output>
+      <button type="button" id="save">Save</button>
+      <button type="button" id="export">Export</button>
+      <button type="button" id="import">Import</button>
+      <button type="button" id="reset">New save</button>
+      <textarea id="save-data" aria-label="Exported save" rows="3"></textarea>
+    </aside>
+    <main id="game" class="game-shell" aria-live="polite"></main>
+    <section class="labs" aria-labelledby="labs-title">
+      <h2 id="labs-title">Reference parity labs</h2>
+      <p>Interactive cases from the pinned source fixtures used by the parity suite.</p>
+      <div id="ad-lab" class="lab"></div>
+      <div id="kittens-lab" class="lab"></div>
+      <p class="sources">
+        Sources: <a href="https://github.com/IvarK/AntimatterDimensionsSourceCode">Antimatter Dimensions</a>
+        and <a href="https://github.com/nuclear-unicorn/kittensgame">Kittens Game</a>. These are bounded parity cases, not full-game clones.
+      </p>
+    </section>
+    <script type="module" src="./dist/app.js?v=s10"></script>
+  </body>
+</html>
