@@ -19,6 +19,18 @@ export interface CapacityLimit<N> {
   readonly room: N;
 }
 
+export function resolveCapacity<N>(
+  resource: Resource<N>,
+  current: (resource: Resource<N>) => N,
+  numbers: NumericAdapter<N>,
+): N | undefined {
+  const capacity = resource.capacityFor?.(current) ?? resource.capacity;
+  if (capacity === undefined) return undefined;
+  if (!numbers.isFinite(capacity) || numbers.cmp(capacity, numbers.fromNumber(0)) < 0)
+    throw new TypeError(`Resource ${resource.id} returned an invalid capacity`);
+  return capacity;
+}
+
 export function capacityLimits<N>(
   inputs: readonly (readonly [Resource<N>, N])[],
   outputs: readonly (readonly [Resource<N>, N])[],
@@ -28,18 +40,15 @@ export function capacityLimits<N>(
   const limits: CapacityLimit<N>[] = [];
   const consumed = new Map(combineEntries(inputs, numbers));
   for (const [resource, produced] of combineEntries(outputs, numbers)) {
-    if (resource.capacity === undefined || resource.overflow !== "block") continue;
+    const capacity = resolveCapacity(resource, current, numbers);
+    if (capacity === undefined || resource.overflow !== "block") continue;
     const netPerExecution = numbers.sub(produced, consumed.get(resource) ?? numbers.fromNumber(0));
     if (numbers.cmp(netPerExecution, numbers.fromNumber(0)) <= 0) continue;
     limits.push({
       resource,
-      capacity: resource.capacity,
+      capacity,
       netPerExecution,
-      room: maximum(
-        numbers.sub(resource.capacity, current(resource)),
-        numbers.fromNumber(0),
-        numbers,
-      ),
+      room: maximum(numbers.sub(capacity, current(resource)), numbers.fromNumber(0), numbers),
     });
   }
   return limits;

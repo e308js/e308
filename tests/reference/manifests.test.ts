@@ -22,4 +22,22 @@ describe("reference source manifests", () => {
     expect(new Set(manifest.files.map((file) => file.path)).size).toBe(fileCount);
     for (const file of manifest.files) expect(file.sha256).toMatch(/^[a-f0-9]{64}$/);
   });
+
+  it("pins the Kittens and Paperclips S05 sources", () => {
+    const kittens = JSON.parse(
+      readFileSync(new URL("../../reference/kittens/manifest.json", import.meta.url), "utf8"),
+    ) as { commit: string; sourceSha256: Record<string, string> };
+    expect(kittens.commit).toBe("781e379f79f1e7512d168849cba21ed111502644");
+    expect(Object.keys(kittens.sourceSha256)).toHaveLength(7);
+    const paperclips = JSON.parse(
+      readFileSync(new URL("../../reference/paperclips/manifest.json", import.meta.url), "utf8"),
+    ) as { sourceSha256: Record<string, string>; mapping: Record<string, string> };
+    expect(Object.keys(paperclips.sourceSha256)).toHaveLength(4);
+    expect(Object.keys(paperclips.mapping)).toEqual(["PC01", "PC02", "PC03"]);
+    for (const hash of [
+      ...Object.values(kittens.sourceSha256),
+      ...Object.values(paperclips.sourceSha256),
+    ])
+      expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
 });

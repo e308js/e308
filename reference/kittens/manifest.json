@@ -1,0 +1,68 @@
+{
+  "reference": "Kittens Game",
+  "repository": "https://github.com/nuclear-unicorn/kittensgame",
+  "commit": "781e379f79f1e7512d168849cba21ed111502644",
+  "license": "WET PAWS LICENSE; test/reference use only",
+  "fixtures": {
+    "calendar": {
+      "ticksPerDay": 10,
+      "daysPerSeason": 100,
+      "phases": [
+        { "id": "spring", "catnip": 1.5 },
+        { "id": "summer", "catnip": 1 },
+        { "id": "autumn", "catnip": 1 },
+        { "id": "winter", "catnip": 0.25 }
+      ],
+      "weather": null,
+      "randomEvents": false
+    },
+    "jobsPerTick": {
+      "woodcutter": { "wood": 0.018 },
+      "farmer": { "catnip": 1 },
+      "scholar": { "science": 0.035 },
+      "miner": { "minerals": 0.05 }
+    },
+    "population": { "catnipPerKittenPerTick": -0.85 },
+    "buildings": {
+      "hut": { "wood": 5, "priceRatio": 2.5, "maxKittens": 2 },
+      "barn": {
+        "wood": 50,
+        "priceRatio": 1.75,
+        "capacity": { "catnip": 5000, "wood": 200, "minerals": 250 }
+      }
+    },
+    "crafts": {
+      "wood": { "catnip": 100, "output": 1 },
+      "beam": { "wood": 175, "output": 1 },
+      "slab": { "minerals": 250, "output": 1 }
+    },
+    "redshift": {
+      "millisecondsPerDay": 2000,
+      "rounding": "Math.round",
+      "minimumDays": 3,
+      "initialMaximumYears": 10,
+      "progressedMaximumYears": 40,
+      "progression": "calendar year >= 1000 or paragon > 0",
+      "subsystemOrder": [
+        "resources",
+        "calendar",
+        "buildings",
+        "workshop",
+        "village",
+        "space",
+        "religion",
+        "enforce-resource-limits"
+      ]
+    },
+    "reset": { "retainedResource": "paragon", "settlementCleared": true }
+  },
+  "sourceSha256": {
+    "js/resources.js": "1eaa51172a6151e9f967b126f288ac3b540a7b24ab7af270a7ecf61107a47bd1",
+    "js/time.js": "b992c65f6090b548c6039213402318ab34d525b04ca67bf9137156c9cfa58e75",
+    "js/calendar.js": "ca96c67c9500749f565fb84212a6600e80e89dc1a22813a783e7721106c9be97",
+    "js/buildings.js": "7523ea85c08cc5068a935025e2c1f90a2ee706dc6e989d3d1a085b71742ed448",
+    "js/village.js": "13d460c6712d70f9e6e240e5ea07c71449d61f583635eb4e8828b6ca3a3c536a",
+    "js/workshop.js": "267cc98c8d2480c2af1c3f8ee9d0f0608ca62eedb5fc4f42fb312957c1dbcbdb",
+    "game.js": "dd2e8709d1c059578cd8428d552f39a5eb78bfd5442903949e0bc72878e12f95"
+  }
+}

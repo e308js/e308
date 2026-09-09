@@ -1,12 +1,18 @@
+import { type CalendarOptions, createCalendar } from "../calendar/builders.js";
+import type { CalendarDefinition } from "../calendar/types.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import type { PurchaseCurve } from "../economy/curves.js";
 import { createRateBuilders, type RateBuilders } from "../economy/rates.js";
 import type { RecipeDefinition } from "../economy/recipes.js";
 import type { FlowDefinition, Rate } from "../economy/types.js";
+import { createMarket, type MarketOptions } from "../markets/builders.js";
+import type { MarketDefinition } from "../markets/types.js";
 import type { NumericAdapter } from "../numbers/types.js";
 import type { ScopeActivationDefinition } from "../progression/activation.js";
 import type { SteppedRuleDefinition } from "../simulation/rules.js";
+import { createTask, type TaskOptions } from "../tasks/builders.js";
+import type { TaskDefinition } from "../tasks/types.js";
 import { defineOwnedGame, type GameContentInput } from "./definition.js";
 import type { Resource, Scope } from "./handles.js";
 import { owned } from "./handles.js";
@@ -33,6 +39,7 @@ interface ResourceOptions<N> {
   readonly scope: Scope;
   readonly initial: N;
   readonly capacity?: N;
+  readonly capacityFor?: (get: (resource: Resource<N>) => N) => N;
   readonly overflow?: "block" | "clamp" | "discard";
 }
 
@@ -82,6 +89,9 @@ export interface GameKit<N> {
   achievement(id: string, options: Omit<TriggerOptions<N>, "kind">): TriggerDefinition<N>;
   challenge(id: string, options: ChallengeOptions<N>): ChallengeDefinition<N>;
   automation(id: string, options: AutomationOptions<N>): AutomationDefinition<N>;
+  task(id: string, options: TaskOptions<N>): TaskDefinition<N>;
+  calendar(id: string, options: CalendarOptions): CalendarDefinition;
+  market(id: string, options: MarketOptions<N>): MarketDefinition<N>;
   scopeActivation(
     id: string,
     options: Omit<ScopeActivationDefinition<N>, "id">,
@@ -114,6 +124,9 @@ export function createGameKit<N>(options: { readonly numbers: NumericAdapter<N> 
     achievement: (id, value) => createTrigger(id, { ...value, kind: "achievement" }, owner),
     challenge: (id, value) => createChallenge(id, value, owner),
     automation: (id, value) => createAutomation(id, value, owner),
+    task: (id, value) => createTask(id, value, owner, numbers),
+    calendar: (id, value) => createCalendar(id, value, owner),
+    market: (id, value) => createMarket(id, value, owner, numbers),
     scopeActivation: (id, value) => {
       validId(id, "scope activation");
       assertOwner(value.scope, owner, `Scope for ${id}`);
@@ -160,6 +173,7 @@ function createResource<N>(
       scope: options.scope,
       initial: options.initial,
       ...(options.capacity === undefined ? {} : { capacity: options.capacity }),
+      ...(options.capacityFor === undefined ? {} : { capacityFor: options.capacityFor }),
       overflow: options.overflow ?? "block",
     } as Resource<N>,
     owner,

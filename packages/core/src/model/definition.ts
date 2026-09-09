@@ -1,8 +1,10 @@
 import type { AutomationDefinition } from "../automation/scheduler.js";
+import type { CalendarDefinition } from "../calendar/types.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import type { RecipeDefinition } from "../economy/recipes.js";
 import type { FlowDefinition } from "../economy/types.js";
+import type { MarketDefinition } from "../markets/types.js";
 import type { NumericAdapter } from "../numbers/types.js";
 import type { ScopeActivationDefinition } from "../progression/activation.js";
 import type { ChallengeDefinition } from "../progression/challenges.js";
@@ -10,6 +12,7 @@ import type { ProgressionContext } from "../progression/context.js";
 import type { TriggerDefinition, UpgradeDefinition } from "../progression/features.js";
 import type { PrestigeDefinition } from "../progression/resets.js";
 import type { SteppedRuleDefinition } from "../simulation/rules.js";
+import type { TaskDefinition } from "../tasks/types.js";
 
 declare const gameIdBrand: unique symbol;
 
@@ -37,6 +40,9 @@ export interface GameDefinition<N = never> {
   readonly scopeActivations?: readonly ScopeActivationDefinition<N>[];
   readonly win?: (state: ProgressionContext<N>) => boolean;
   readonly steppedRules?: readonly SteppedRuleDefinition<N>[];
+  readonly tasks?: readonly TaskDefinition<N>[];
+  readonly calendars?: readonly CalendarDefinition[];
+  readonly markets?: readonly MarketDefinition<N>[];
 }
 
 export interface GameDefinitionInput {
@@ -60,6 +66,9 @@ export interface GameContentInput<N> extends GameDefinitionInput {
   readonly scopeActivations?: readonly ScopeActivationDefinition<N>[];
   readonly win?: (state: ProgressionContext<N>) => boolean;
   readonly steppedRules?: readonly SteppedRuleDefinition<N>[];
+  readonly tasks?: readonly TaskDefinition<N>[];
+  readonly calendars?: readonly CalendarDefinition[];
+  readonly markets?: readonly MarketDefinition<N>[];
 }
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/;
@@ -115,6 +124,13 @@ export function defineOwnedGame<N>(
   validateOwnedIds(input.automation ?? [], owner, "Automation");
   validateOwnedIds(input.scopeActivations ?? [], owner, "Scope activation");
   validateOwnedIds(input.steppedRules ?? [], owner, "Stepped rule");
+  validateOwnedIds(input.tasks ?? [], owner, "Task");
+  validateOwnedIds(input.calendars ?? [], owner, "Calendar");
+  validateOwnedIds(input.markets ?? [], owner, "Market");
+  for (const calendar of input.calendars ?? []) {
+    if (calendar.phases.some((phase) => phase.durationMs % base.stepMs !== 0))
+      throw new TypeError(`Calendar ${calendar.id} phase durations must align to stepMs`);
+  }
   return owned(
     {
       id: base.id,
@@ -135,6 +151,9 @@ export function defineOwnedGame<N>(
       scopeActivations: Object.freeze([...(input.scopeActivations ?? [])]),
       ...(input.win === undefined ? {} : { win: input.win }),
       steppedRules: Object.freeze([...(input.steppedRules ?? [])]),
+      tasks: Object.freeze([...(input.tasks ?? [])]),
+      calendars: Object.freeze([...(input.calendars ?? [])]),
+      markets: Object.freeze([...(input.markets ?? [])]),
     },
     owner,
   );
@@ -174,6 +193,9 @@ export function definitionScopes<N>(definition: GameDefinition<N>): readonly Sco
     definition.automation ?? [],
     definition.scopeActivations ?? [],
     definition.steppedRules ?? [],
+    definition.tasks ?? [],
+    definition.calendars ?? [],
+    definition.markets ?? [],
   ];
   const scopes = new Map<string, Scope>();
   for (const group of groups) {

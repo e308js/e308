@@ -1,9 +1,12 @@
 import { type AutomationDefinition, runAutomation } from "../automation/scheduler.js";
+import { runCalendars } from "../calendar/runtime.js";
+import type { CalendarDefinition } from "../calendar/types.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import { validateAllocations } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import { runFlows } from "../economy/flows.js";
 import type { FlowDefinition } from "../economy/types.js";
+import type { MarketDefinition } from "../markets/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import { definitionOwner, definitionScopes } from "../model/definition.js";
 import type { Resource } from "../model/handles.js";
@@ -12,8 +15,18 @@ import { resolveTriggers, resolveWin, type TriggerDefinition } from "../progress
 import { RandomStreams } from "../random/xoshiro.js";
 import { planAdvance } from "../simulation/clock.js";
 import { runSteppedRules, type SteppedRuleDefinition } from "../simulation/rules.js";
-import { cloneProgression, freezeProgression, initialProgression } from "./progression-state.js";
+import { runTasks } from "../tasks/runtime.js";
+import type { TaskDefinition } from "../tasks/types.js";
+import { cloneProgression, initialProgression } from "./progression-state.js";
 import { restoreSnapshot } from "./restore.js";
+import { makeSnapshot } from "./snapshot.js";
+import {
+  cloneCalendars,
+  cloneTasks,
+  initialCalendars,
+  initialMarkets,
+  initialTasks,
+} from "./timed-state.js";
 import { failureFrom, makeTransaction, setTransactionTime } from "./transaction.js";
 import type {
   Command,
@@ -42,6 +55,9 @@ type CompleteDefinition<N> = GameDefinition<N> & {
   readonly automation: readonly AutomationDefinition<N>[];
   readonly scopeActivations: readonly ScopeActivationDefinition<N>[];
   readonly steppedRules: readonly SteppedRuleDefinition<N>[];
+  readonly tasks: readonly TaskDefinition<N>[];
+  readonly calendars: readonly CalendarDefinition[];
+  readonly markets: readonly MarketDefinition<N>[];
 };
 
 export function createGame<N>(
@@ -62,30 +78,33 @@ class GameRuntime<N> implements Game<N> {
   constructor(definition: GameDefinition<N>, restored?: Snapshot<N>) {
     this.#definition = definition as CompleteDefinition<N>;
     this.#owner = definitionOwner(definition);
-    this.#snapshot = makeSnapshot(
-      0n,
-      0,
-      0,
-      Object.fromEntries(
+    const initial = makeSnapshot<N>({
+      revision: 0n,
+      gameTimeMs: 0,
+      remainderMs: 0,
+      resources: Object.fromEntries(
         this.#definition.resources.map((resource) => [resource.id, resource.initial]),
       ),
-      Object.fromEntries(
+      purchaseCounts: Object.fromEntries(
         this.#definition.buyables.map((buyable) => [buyable.id, buyable.initialCount]),
       ),
-      Object.fromEntries(
+      allocations: Object.fromEntries(
         this.#definition.allocations.map((allocation) => [allocation.id, allocation.initial]),
       ),
-      Object.fromEntries(
+      productionTotals: Object.fromEntries(
         this.#definition.resources.map((resource) => [
           resource.id,
           this.#definition.numbers.fromNumber(0),
         ]),
       ),
-      initialScopeGenerations(this.#definition),
-      initialProgression(),
-      new RandomStreams(this.#definition.rootSeed ?? "00").snapshot(),
-    );
-    if (restored) this.#snapshot = restoreSnapshot(this.#definition, restored);
+      scopeGenerations: initialScopeGenerations(this.#definition),
+      progression: initialProgression(),
+      random: new RandomStreams(this.#definition.rootSeed ?? "00").snapshot(),
+      tasks: initialTasks(this.#definition),
+      calendars: initialCalendars(this.#definition),
+      markets: initialMarkets(this.#definition),
+    });
+    this.#snapshot = restoreSnapshot(this.#definition, restored ?? initial);
   }
 
   getSnapshot(): Snapshot<N> {
@@ -142,10 +161,17 @@ class GameRuntime<N> implements Game<N> {
           runFlows(transaction, this.#definition.flows, this.#definition.numbers, seconds);
           runSteppedRules(transaction, this.#definition.steppedRules, seconds);
           step?.(transaction, seconds);
+          runTasks(transaction, this.#definition.tasks, this.#definition.stepMs);
           resolveTriggers(transaction, this.#definition.triggers);
           runAutomation(transaction, this.#definition.automation, boundaryMs);
           resolveTriggers(transaction, this.#definition.triggers);
           resolveWin(transaction, this.#definition.win);
+          runCalendars(
+            transaction,
+            this.#definition.calendars,
+            this.#definition.stepMs,
+            boundaryMs,
+          );
         }
       },
       plan.gameTimeMs,
@@ -206,6 +232,11 @@ class GameRuntime<N> implements Game<N> {
     const scopeGenerations = { ...this.#snapshot.scopeGenerations };
     const progression = cloneProgression(this.#snapshot.progression);
     const random = new RandomStreams(this.#snapshot.random.rootSeed, this.#snapshot.random.streams);
+    const tasks = cloneTasks(this.#snapshot.tasks);
+    const calendars = cloneCalendars(this.#snapshot.calendars);
+    const markets = Object.fromEntries(
+      Object.entries(this.#snapshot.markets).map(([id, state]) => [id, { ...state }]),
+    );
     try {
       const transaction = makeTransaction(
         this.#owner,
@@ -217,6 +248,9 @@ class GameRuntime<N> implements Game<N> {
         this.#definition,
         progression,
         random,
+        tasks,
+        calendars,
+        markets,
         this.#snapshot.gameTimeMs,
         this.#definition.numbers,
       );
@@ -237,6 +271,9 @@ class GameRuntime<N> implements Game<N> {
       scopeGenerations,
       progression,
       random.snapshot(),
+      tasks,
+      calendars,
+      markets,
     );
     return { ok: true, value: this.#snapshot };
   }
@@ -251,9 +288,12 @@ class GameRuntime<N> implements Game<N> {
     scopeGenerations: Readonly<Record<string, bigint>> = this.#snapshot.scopeGenerations,
     progression = cloneProgression(this.#snapshot.progression),
     random = this.#snapshot.random,
+    tasks = cloneTasks(this.#snapshot.tasks),
+    calendars = cloneCalendars(this.#snapshot.calendars),
+    markets = { ...this.#snapshot.markets },
   ): void {
-    this.#snapshot = makeSnapshot(
-      this.#snapshot.revision + 1n,
+    this.#snapshot = makeSnapshot({
+      revision: this.#snapshot.revision + 1n,
       gameTimeMs,
       remainderMs,
       resources,
@@ -263,42 +303,16 @@ class GameRuntime<N> implements Game<N> {
       scopeGenerations,
       progression,
       random,
-    );
+      tasks,
+      calendars,
+      markets,
+    });
     publish(this.#subscribers, this.#snapshot);
   }
 }
 
 function initialScopeGenerations<N>(definition: CompleteDefinition<N>): Record<string, bigint> {
   return Object.fromEntries(definitionScopes(definition).map((scope) => [scope.id, 0n]));
-}
-
-function makeSnapshot<N>(
-  revision: bigint,
-  gameTimeMs: number,
-  remainderMs: number,
-  resources: Readonly<Record<string, N>>,
-  purchaseCounts: Readonly<Record<string, N>>,
-  allocations: Readonly<Record<string, Readonly<Record<string, N>>>>,
-  productionTotals: Readonly<Record<string, N>>,
-  scopeGenerations: Readonly<Record<string, bigint>>,
-  progression: ReturnType<typeof initialProgression<N>>,
-  random: Snapshot<N>["random"],
-): Snapshot<N> {
-  const frozenAllocations = Object.fromEntries(
-    Object.entries(allocations).map(([id, assignments]) => [id, Object.freeze(assignments)]),
-  );
-  return Object.freeze({
-    revision,
-    gameTimeMs,
-    remainderMs,
-    resources: Object.freeze(resources),
-    purchaseCounts: Object.freeze(purchaseCounts),
-    allocations: Object.freeze(frozenAllocations),
-    productionTotals: Object.freeze(productionTotals),
-    scopeGenerations: Object.freeze(scopeGenerations),
-    progression: freezeProgression(progression),
-    random,
-  });
 }
 
 function publish<N>(subscribers: Set<Subscriber<N>>, snapshot: Snapshot<N>): void {

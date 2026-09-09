@@ -15,9 +15,7 @@ export function serializeCheckpoint<N>(
   if (!numbers) throw new TypeError("Game definition has no numeric adapter");
   validateMetadata(metadata);
   const registry = scopeRegistry(definition);
-  const scopes = Object.fromEntries(
-    registry.scopes.map((id) => [id, emptyScope(snapshot.scopeGenerations[id] ?? 0n)]),
-  ) as Record<string, MutableSerializedScope>;
+  const scopes = createScopes(registry.scopes, snapshot.scopeGenerations);
   for (const [id, value] of Object.entries(snapshot.resources))
     requiredScope(scopes, registry.resourceScopes[id], id).resources[id] =
       numbers.codec.serialize(value);
@@ -35,6 +33,7 @@ export function serializeCheckpoint<N>(
     );
   }
   addProgression(scopes, registry, snapshot, numbers.codec.serialize);
+  addTimedState(scopes, registry, snapshot, numbers.codec.serialize);
   const payload: Omit<SaveEnvelope, "checksum"> = {
     format: "e308-save",
     formatVersion: 1,
@@ -91,6 +90,13 @@ export function serializeCheckpoint<N>(
   return completeEnvelope(payload);
 }
 
+function createScopes(
+  ids: readonly string[],
+  generations: Readonly<Record<string, bigint>>,
+): Record<string, MutableSerializedScope> {
+  return Object.fromEntries(ids.map((id) => [id, emptyScope(generations[id] ?? 0n)]));
+}
+
 function completeEnvelope(payload: Omit<SaveEnvelope, "checksum">): SaveEnvelope {
   const envelope = { ...payload, checksum: envelopeChecksum(payload) };
   validateEnvelope(envelope);
@@ -108,6 +114,9 @@ interface MutableSerializedScope {
   achievements: string[];
   activeChallenges: string[];
   challengeCompletions: Record<string, string>;
+  tasks: Record<string, import("./types.js").SerializedTaskState>;
+  calendars: Record<string, import("./types.js").SerializedCalendarState>;
+  markets: Record<string, { bought: string; sold: string }>;
 }
 
 function emptyScope(generation: bigint): MutableSerializedScope {
@@ -122,6 +131,9 @@ function emptyScope(generation: bigint): MutableSerializedScope {
     achievements: [],
     activeChallenges: [],
     challengeCompletions: {},
+    tasks: {},
+    calendars: {},
+    markets: {},
   };
 }
 
@@ -145,6 +157,63 @@ function addProgression<N>(
   }
   for (const [id, state] of Object.entries(snapshot.progression.automation))
     requiredScope(scopes, registry.automationScopes[id], id).automation[id] = { ...state };
+}
+
+function addTimedState<N>(
+  scopes: Record<string, MutableSerializedScope>,
+  registry: ReturnType<typeof scopeRegistry>,
+  snapshot: Snapshot<N>,
+  encode: (value: N) => string,
+): void {
+  const quantities = (values: Readonly<Record<string, N>>) =>
+    Object.freeze(
+      Object.fromEntries(Object.entries(values).map(([id, value]) => [id, encode(value)])),
+    );
+  const claim = (value: {
+    readonly sequence: bigint;
+    readonly quantities: Readonly<Record<string, N>>;
+  }) => ({
+    sequence: value.sequence.toString(),
+    quantities: quantities(value.quantities),
+  });
+  for (const [id, state] of Object.entries(snapshot.tasks)) {
+    const active = state.active
+      ? {
+          ...state.active,
+          sequence: state.active.sequence.toString(),
+          escrow: quantities(state.active.escrow),
+          outputs: quantities(state.active.outputs),
+        }
+      : null;
+    requiredScope(scopes, registry.taskScopes[id], id).tasks[id] = {
+      nextSequence: state.nextSequence.toString(),
+      queue: state.queue.map((entry) => ({
+        sequence: entry.sequence.toString(),
+        escrow: quantities(entry.escrow),
+        outputs: quantities(entry.outputs),
+      })),
+      active,
+      completed: state.completed.map(claim),
+      refunds: state.refunds.map(claim),
+    };
+  }
+  for (const [id, state] of Object.entries(snapshot.calendars)) {
+    requiredScope(scopes, registry.calendarScopes[id], id).calendars[id] = {
+      ...state,
+      cycle: state.cycle.toString(),
+      boundaries: state.boundaries.map((boundary) => ({
+        ...boundary,
+        sequence: boundary.sequence.toString(),
+        cycle: boundary.cycle.toString(),
+      })),
+    };
+  }
+  for (const [id, state] of Object.entries(snapshot.markets)) {
+    requiredScope(scopes, registry.marketScopes[id], id).markets[id] = {
+      bought: encode(state.bought),
+      sold: encode(state.sold),
+    };
+  }
 }
 
 function requiredScope(

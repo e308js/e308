@@ -6,6 +6,7 @@ import type {
   ResolvedEntitlement,
   SaveEnvelope,
 } from "./types.js";
+import { validateTimedShape } from "./validate-timed.js";
 
 const fidelities = new Set(["canonical", "validated-bulk", "approximate", "custom-reward"]);
 const stopReasons = new Set(["choice", "cancelled", "error", "budget-exceeded"]);
@@ -45,6 +46,9 @@ const scopeFields = [
   "achievements",
   "activeChallenges",
   "challengeCompletions",
+  "tasks",
+  "calendars",
+  "markets",
 ] as const;
 
 export function validateEnvelope(envelope: SaveEnvelope): void {
@@ -88,6 +92,7 @@ function validateEnvelopeShape(envelope: SaveEnvelope): void {
   );
   for (const scope of Object.values(envelope.state.scopes)) {
     exact(scope, scopeFields, "scope state");
+    validateTimedShape(scope);
     for (const automation of Object.values(scope.automation))
       exact(automation, ["enabled", "nextRunMs"], "automation state");
   }

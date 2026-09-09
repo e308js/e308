@@ -1,7 +1,7 @@
 import type { Resource } from "../model/handles.js";
 import type { NumericAdapter } from "../numbers/types.js";
 import type { Transaction } from "../state/types.js";
-import { capacityLimits, combineEntries, maximum } from "./entries.js";
+import { capacityLimits, combineEntries, maximum, resolveCapacity } from "./entries.js";
 import { evaluateRate } from "./rates.js";
 import type { FlowDefinition, ReadContext } from "./types.js";
 
@@ -46,8 +46,9 @@ export function runFlows<N>(
 
   for (const [resource, change] of netChanges) {
     let next = numbers.add(readStart.get(resource), change);
-    if (resource.capacity !== undefined && numbers.cmp(next, resource.capacity) > 0) {
-      next = resource.capacity;
+    const capacity = resolveCapacity(resource, (entry) => readStart.get(entry), numbers);
+    if (capacity !== undefined && numbers.cmp(next, capacity) > 0) {
+      next = capacity;
     }
     transaction.set(resource, next);
   }

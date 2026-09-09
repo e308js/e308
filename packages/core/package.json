@@ -20,6 +20,18 @@
     "./storage": {
       "types": "./dist/storage/index.d.ts",
       "import": "./dist/storage/index.js"
+    },
+    "./tasks": {
+      "types": "./dist/tasks/index.d.ts",
+      "import": "./dist/tasks/index.js"
+    },
+    "./calendar": {
+      "types": "./dist/calendar/index.d.ts",
+      "import": "./dist/calendar/index.js"
+    },
+    "./markets": {
+      "types": "./dist/markets/index.d.ts",
+      "import": "./dist/markets/index.js"
     }
   },
   "files": [

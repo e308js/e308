@@ -39,6 +39,12 @@ node --input-type=module -e '
   if (!game.dispatch(upgradeCommand(upgrade)).ok || !game.getSnapshot().progression.upgrades.first) process.exit(1);
 '
 node --input-type=module -e '
+  import { currentPhase } from "@e308/core/calendar";
+  import { quoteMarket } from "@e308/core/markets";
+  import { queueTaskCommand } from "@e308/core/tasks";
+  if (![currentPhase, quoteMarket, queueTaskCommand].every(value => typeof value === "function")) process.exit(1);
+'
+node --input-type=module -e '
   import { createGame, createGameKit, nativeNumbers } from "@e308/core";
   import { beginCatchup, processCatchupChunk } from "@e308/core/offline";
   import { createSaveCodec } from "@e308/core/persistence";

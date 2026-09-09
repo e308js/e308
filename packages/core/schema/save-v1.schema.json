@@ -138,6 +138,98 @@
         "nextRunMs": { "$ref": "#/$defs/duration" }
       }
     },
+    "taskClaim": {
+      "type": "object",
+      "required": ["sequence", "quantities"],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "quantities": { "$ref": "#/$defs/quantityMap" }
+      }
+    },
+    "queuedTask": {
+      "type": "object",
+      "required": ["sequence", "escrow", "outputs"],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "escrow": { "$ref": "#/$defs/quantityMap" },
+        "outputs": { "$ref": "#/$defs/quantityMap" }
+      }
+    },
+    "fixedTask": {
+      "type": "object",
+      "required": ["sequence", "mode", "remainingMs", "escrow", "outputs"],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "mode": { "const": "fixed-duration" },
+        "remainingMs": { "$ref": "#/$defs/duration" },
+        "escrow": { "$ref": "#/$defs/quantityMap" },
+        "outputs": { "$ref": "#/$defs/quantityMap" }
+      }
+    },
+    "currentRateTask": {
+      "type": "object",
+      "required": ["sequence", "mode", "remainingWork", "escrow", "outputs"],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "mode": { "const": "current-rate" },
+        "remainingWork": { "type": "number", "minimum": 0 },
+        "escrow": { "$ref": "#/$defs/quantityMap" },
+        "outputs": { "$ref": "#/$defs/quantityMap" }
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": ["nextSequence", "queue", "active", "completed", "refunds"],
+      "additionalProperties": false,
+      "properties": {
+        "nextSequence": { "$ref": "#/$defs/decimalInteger" },
+        "queue": { "type": "array", "items": { "$ref": "#/$defs/queuedTask" } },
+        "active": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/fixedTask" },
+            { "$ref": "#/$defs/currentRateTask" }
+          ]
+        },
+        "completed": { "type": "array", "items": { "$ref": "#/$defs/taskClaim" } },
+        "refunds": { "type": "array", "items": { "$ref": "#/$defs/taskClaim" } }
+      }
+    },
+    "calendarBoundary": {
+      "type": "object",
+      "required": ["sequence", "phaseId", "cycle", "atGameMs"],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "phaseId": { "$ref": "#/$defs/nonempty" },
+        "cycle": { "$ref": "#/$defs/decimalInteger" },
+        "atGameMs": { "$ref": "#/$defs/duration" }
+      }
+    },
+    "calendar": {
+      "type": "object",
+      "required": ["phaseIndex", "elapsedMs", "cycle", "boundaries"],
+      "additionalProperties": false,
+      "properties": {
+        "phaseIndex": { "type": "integer", "minimum": 0 },
+        "elapsedMs": { "$ref": "#/$defs/duration" },
+        "cycle": { "$ref": "#/$defs/decimalInteger" },
+        "boundaries": { "type": "array", "items": { "$ref": "#/$defs/calendarBoundary" } }
+      }
+    },
+    "market": {
+      "type": "object",
+      "required": ["bought", "sold"],
+      "additionalProperties": false,
+      "properties": {
+        "bought": { "type": "string" },
+        "sold": { "type": "string" }
+      }
+    },
     "scope": {
       "type": "object",
       "required": [
@@ -168,7 +260,10 @@
         "milestones": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "achievements": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "activeChallenges": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-        "challengeCompletions": { "$ref": "#/$defs/quantityMap" }
+        "challengeCompletions": { "$ref": "#/$defs/quantityMap" },
+        "tasks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/task" } },
+        "calendars": { "type": "object", "additionalProperties": { "$ref": "#/$defs/calendar" } },
+        "markets": { "type": "object", "additionalProperties": { "$ref": "#/$defs/market" } }
       }
     },
     "entitlement": {

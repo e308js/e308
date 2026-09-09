@@ -4,7 +4,8 @@ The framework-independent deterministic simulation package for e308. It provides
 `break_eternity.js` quantities, scoped definitions, immutable transactional snapshots, fixed-step
 time, module dependency ordering, named deterministic random streams, production flows, recipes,
 allocations, buyables, scalable price curves, modifier breakdowns, prestige resets, upgrades,
-milestones, achievements, challenges, scope activation, and scheduled automation.
+milestones, achievements, challenges, scope activation, scheduled automation, paid task queues,
+deterministic calendars, dynamic resource capacity, and atomic markets.
 
 ```ts
 import { createGame, createGameKit, eternityNumbers } from "@e308/core";
@@ -59,7 +60,32 @@ stepped rules, or automation, and built-in scoped actions return a structured `s
 failure. Automation runs at fixed game-time boundaries in priority/ID order and dispatches the same
 validated commands used by a player. Reset manifests clear every definition owned by a named scope,
 with explicit typed retention for resources, buyables, allocations, upgrades, triggers, challenges,
-and automation schedules.
+automation schedules, tasks, calendars, and market volume.
+
+## Timed economies
+
+Tasks reserve their inputs when queued and keep the exact escrow and output quantities in state.
+Fixed-duration tasks consume game time; current-rate tasks read the current transaction at each
+canonical step. Completion can wait for output capacity or discard overflow, while cancellation
+creates an explicit refund claim which can be retried safely.
+
+```ts
+const shipment = kit.task("shipment", {
+  scope: run,
+  inputs: [[clips, kit.q("100")]],
+  outputs: [[reputation, kit.q("1")]],
+  work: { kind: "fixed-duration", durationMs: 5_000 },
+  delivery: "block",
+  cancellation: { refund: "full" },
+  queueLimit: 3,
+});
+```
+
+Calendars advance at fixed-step boundaries and persist an ordered boundary ledger. Markets return
+revision-bound quotes and recheck their economics inside the transaction before changing stock or
+payment. Resource `capacityFor` callbacks support storage derived from other resources. These APIs
+are available from the root package and the `@e308/core/tasks`, `@e308/core/calendar`, and
+`@e308/core/markets` subpaths.
 
 `geometricCurve` performs cumulative pricing and max-buy arithmetic in the selected numeric backend.
 `segmentedCurve` joins backend-compatible curves at explicit count milestones. Buyable counts remain

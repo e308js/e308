@@ -1,11 +1,15 @@
+import type { CalendarState } from "../calendar/types.js";
+import { resolveCapacity } from "../economy/entries.js";
+import type { MarketState } from "../markets/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import type { Resource } from "../model/handles.js";
 import { ownerOf } from "../model/handles.js";
 import { NumericFault } from "../numbers/types.js";
 import { progressionContext } from "../progression/context.js";
-import type { ResetManifest } from "../progression/resets.js";
 import type { RandomStreams } from "../random/xoshiro.js";
+import type { TaskState } from "../tasks/types.js";
 import type { MutableProgression } from "./progression-state.js";
+import { applyReset, ResetTargetError } from "./reset.js";
 import type {
   CommandFailure,
   ProgressionEvent,
@@ -23,15 +27,13 @@ export function makeTransaction<N>(
   definition: GameDefinition<N>,
   progression: MutableProgression<N>,
   random: RandomStreams,
+  tasks: Record<string, TaskState<N>>,
+  calendars: Record<string, CalendarState>,
+  markets: Record<string, MarketState<N>>,
   gameTimeMs: number,
   numbers: NonNullable<GameDefinition<N>["numbers"]>,
 ): Transaction<N> {
   const clock = { value: gameTimeMs };
-  const assertResource = (resource: Resource<N>): void => {
-    if (ownerOf(resource) !== owner || !(resource.id in working)) {
-      throw new InvalidTarget(resource.id);
-    }
-  };
   const transaction = {} as Transaction<N>;
   Object.assign(transaction, {
     numbers,
@@ -43,29 +45,7 @@ export function makeTransaction<N>(
         .filter((activation) => activation.scope.id === scope.id)
         .every((activation) => activation.active(progressionContext(transaction)));
     },
-    get: (resource) => {
-      assertResource(resource);
-      return working[resource.id] as N;
-    },
-    set: (resource, value) => {
-      assertResource(resource);
-      if (!numbers.isFinite(value)) throw new NumericFault(`Invalid value for ${resource.id}`);
-      if (resource.capacity !== undefined && numbers.cmp(value, resource.capacity) > 0) {
-        if (resource.overflow === "block") {
-          throw new OperationRejected({
-            code: "capacity-blocked",
-            resourceId: resource.id,
-            attempted: value,
-            capacity: resource.capacity,
-          });
-        }
-        value = resource.capacity;
-      }
-      working[resource.id] = value;
-    },
-    add(resource, amount) {
-      this.set(resource, numbers.add(this.get(resource), amount));
-    },
+    ...resourceMethods(owner, working, numbers),
     getPurchase: (id) => purchaseCounts[id] ?? numbers.fromNumber(0),
     setPurchase: (id, value) => {
       if (!numbers.isFinite(value)) throw new NumericFault(`Invalid purchase count for ${id}`);
@@ -94,15 +74,95 @@ export function makeTransaction<N>(
         scopeGenerations,
         definition,
         progression,
+        tasks,
+        calendars,
+        markets,
         clock.value,
       ),
     ...progressionMethods(progression, numbers, () => clock.value),
+    ...timedMethods(owner, tasks, calendars, markets),
     reject: (error) => {
       throw new OperationRejected(error);
     },
   } satisfies Transaction<N>);
   transactionClocks.set(transaction, clock);
   return transaction;
+}
+
+function resourceMethods<N>(
+  owner: object,
+  working: Record<string, N>,
+  numbers: NonNullable<GameDefinition<N>["numbers"]>,
+): Pick<Transaction<N>, "get" | "set" | "add"> {
+  const assertResource = (resource: Resource<N>): void => {
+    if (ownerOf(resource) !== owner || !(resource.id in working))
+      throw new InvalidTarget(resource.id);
+  };
+  const get = (resource: Resource<N>): N => {
+    assertResource(resource);
+    return working[resource.id] as N;
+  };
+  const set = (resource: Resource<N>, initialValue: N): void => {
+    assertResource(resource);
+    if (!numbers.isFinite(initialValue)) throw new NumericFault(`Invalid value for ${resource.id}`);
+    const capacity = resolveCapacity(resource, get, numbers);
+    let value = initialValue;
+    if (capacity !== undefined && numbers.cmp(value, capacity) > 0) {
+      if (resource.overflow === "block")
+        throw new OperationRejected({
+          code: "capacity-blocked",
+          resourceId: resource.id,
+          attempted: value,
+          capacity,
+        });
+      value = capacity;
+    }
+    working[resource.id] = value;
+  };
+  return { get, set, add: (resource, amount) => set(resource, numbers.add(get(resource), amount)) };
+}
+
+function timedMethods<N>(
+  owner: object,
+  tasks: Record<string, TaskState<N>>,
+  calendars: Record<string, CalendarState>,
+  markets: Record<string, MarketState<N>>,
+): Pick<
+  Transaction<N>,
+  | "getTaskState"
+  | "setTaskState"
+  | "getCalendarState"
+  | "setCalendarState"
+  | "getMarketState"
+  | "setMarketState"
+> {
+  return {
+    getTaskState: (id) => requiredState(tasks, id, "task"),
+    setTaskState: (id, state) => {
+      requiredState(tasks, id, "task");
+      tasks[id] = state;
+    },
+    getCalendarState: (calendar) => {
+      if (ownerOf(calendar) !== owner) throw new InvalidTarget(calendar.id);
+      return requiredState(calendars, calendar.id, "calendar");
+    },
+    setCalendarState: (calendar, state) => {
+      if (ownerOf(calendar) !== owner) throw new InvalidTarget(calendar.id);
+      requiredState(calendars, calendar.id, "calendar");
+      calendars[calendar.id] = state;
+    },
+    getMarketState: (id) => requiredState(markets, id, "market"),
+    setMarketState: (id, state) => {
+      requiredState(markets, id, "market");
+      markets[id] = state;
+    },
+  };
+}
+
+function requiredState<T>(states: Record<string, T>, id: string, kind: string): T {
+  const state = states[id];
+  if (!state) throw new InvalidTarget(`${kind}:${id}`);
+  return state;
 }
 
 const transactionClocks = new WeakMap<object, { value: number }>();
@@ -187,85 +247,6 @@ function progressFlags<N>(
   return progression.achievements;
 }
 
-function applyReset<N>(
-  manifest: ResetManifest<N>,
-  owner: object,
-  resources: Record<string, N>,
-  purchases: Record<string, N>,
-  allocations: Record<string, Record<string, N>>,
-  generations: Record<string, bigint>,
-  definition: GameDefinition<N>,
-  progression: MutableProgression<N>,
-  gameTimeMs: number,
-): void {
-  const cleared = new Set(manifest.clear.map((scope) => scope.id));
-  for (const scope of manifest.clear) {
-    if (ownerOf(scope) !== owner) throw new InvalidTarget(scope.id);
-    generations[scope.id] = (generations[scope.id] ?? 0n) + 1n;
-  }
-  const retainedResources = validateRetention(manifest.retain?.resources ?? [], cleared, owner);
-  const retainedBuyables = validateRetention(manifest.retain?.buyables ?? [], cleared, owner);
-  const retainedAllocations = validateRetention(manifest.retain?.allocations ?? [], cleared, owner);
-  for (const resource of definition.resources ?? []) {
-    if (cleared.has(resource.scope.id) && !retainedResources.has(resource))
-      resources[resource.id] = resource.initial;
-  }
-  for (const buyable of definition.buyables ?? []) {
-    if (cleared.has(buyable.scope.id) && !retainedBuyables.has(buyable))
-      purchases[buyable.id] = buyable.initialCount;
-  }
-  for (const allocation of definition.allocations ?? []) {
-    if (cleared.has(allocation.scope.id) && !retainedAllocations.has(allocation))
-      allocations[allocation.id] = { ...allocation.initial };
-  }
-  resetProgression(manifest, cleared, definition, progression, gameTimeMs, owner);
-}
-
-function resetProgression<N>(
-  manifest: ResetManifest<N>,
-  cleared: ReadonlySet<string>,
-  definition: GameDefinition<N>,
-  progression: MutableProgression<N>,
-  gameTimeMs: number,
-  owner: object,
-): void {
-  const upgrades = validateRetention(manifest.retain?.upgrades ?? [], cleared, owner);
-  const triggers = validateRetention(manifest.retain?.triggers ?? [], cleared, owner);
-  const challenges = validateRetention(manifest.retain?.challenges ?? [], cleared, owner);
-  const automation = validateRetention(manifest.retain?.automation ?? [], cleared, owner);
-  for (const item of definition.upgrades ?? [])
-    if (cleared.has(item.scope.id) && !upgrades.has(item)) delete progression.upgrades[item.id];
-  for (const item of definition.triggers ?? []) {
-    if (cleared.has(item.scope.id) && !triggers.has(item))
-      delete progression[`${item.kind}s`][item.id];
-  }
-  for (const item of definition.challenges ?? []) {
-    if (!cleared.has(item.scope.id) || challenges.has(item)) continue;
-    progression.activeChallenges.delete(item.id);
-    delete progression.challengeCompletions[item.id];
-  }
-  for (const item of definition.automation ?? []) {
-    if (!cleared.has(item.scope.id) || automation.has(item)) continue;
-    progression.automation[item.id] = {
-      enabled: item.initiallyEnabled,
-      nextRunMs: gameTimeMs + item.cadenceMs,
-    };
-  }
-}
-
-function validateRetention<T extends { readonly scope: { readonly id: string } }>(
-  values: readonly T[],
-  cleared: ReadonlySet<string>,
-  owner: object,
-): ReadonlySet<T> {
-  for (const value of values) {
-    if (ownerOf(value) !== owner) throw new InvalidTarget(value.scope.id);
-    if (!cleared.has(value.scope.id))
-      throw new TypeError(`Cannot retain ${value.scope.id} because its scope is not cleared`);
-  }
-  return new Set(values);
-}
-
 class InvalidTarget extends Error {
   constructor(readonly id: string) {
     super(`Invalid target: ${id}`);
@@ -281,6 +262,7 @@ class OperationRejected<N> extends Error {
 export function failureFrom<N>(error: unknown): CommandFailure<N> {
   if (error instanceof OperationRejected) return error.failure as CommandFailure<N>;
   if (error instanceof InvalidTarget) return { code: "invalid-target", id: error.id };
+  if (error instanceof ResetTargetError) return { code: "invalid-target", id: error.id };
   if (error instanceof NumericFault) return { code: "numeric-fault", message: error.message };
   return {
     code: "transaction-failed",

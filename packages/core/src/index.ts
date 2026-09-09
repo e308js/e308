@@ -1,5 +1,6 @@
 export type { AutomationDefinition } from "./automation/scheduler.js";
 export { automationCommand } from "./automation/scheduler.js";
+export * from "./calendar/index.js";
 export type { AllocationDefinition } from "./economy/allocations.js";
 export { allocationCommand } from "./economy/allocations.js";
 export type { BuyableDefinition, BuyRequest } from "./economy/buyables.js";
@@ -13,6 +14,7 @@ export { evaluateRate } from "./economy/rates.js";
 export type { RecipeDefinition, RecipeRequest } from "./economy/recipes.js";
 export { recipeCommand } from "./economy/recipes.js";
 export type { FlowDefinition, Rate, ReadContext } from "./economy/types.js";
+export * from "./markets/index.js";
 export type { GameDefinition, GameId } from "./model/definition.js";
 export { defineGame } from "./model/definition.js";
 export type { Resource, Scope } from "./model/handles.js";
@@ -64,3 +66,4 @@ export type {
   Transaction,
 } from "./state/types.js";
 export * from "./storage/index.js";
+export * from "./tasks/index.js";

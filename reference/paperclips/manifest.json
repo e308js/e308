@@ -1,0 +1,17 @@
+{
+  "reference": "Universal Paperclips",
+  "entry": "https://www.decisionproblem.com/paperclips/index2.html",
+  "captured": "2026-09-08",
+  "license": "No source license identified; independently authored mapping/oracles only",
+  "sourceSha256": {
+    "globals.js?v3": "968abd83c7090f24b6817842b4453b6d24de0e03e06d7ccb5ec4d15bee520919",
+    "combat.js?v3": "c7226d012193c32a00bed53d7cb0119d4d3f91cb556b8e8d1b98dd3375be811a",
+    "main.js?v3": "ee599076de868869e533490505189ddcb72dcc8748909ceeebe11e789f1b3a0a",
+    "projects.js?v3": "05034c51809bc0632e8963e671c8e68c68604ca3643da291e0c6fabc86152774"
+  },
+  "mapping": {
+    "PC01": "Wire becomes unsold inventory; a separate demand-limited market action creates cash.",
+    "PC02": "Matter feeds wire extrusion; power allocation limits industrial throughput.",
+    "PC03": "A once-only project retires the retail scope and activates industry controls."
+  }
+}

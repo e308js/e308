@@ -1,7 +1,10 @@
+import type { CalendarDefinition, CalendarState } from "../calendar/types.js";
+import type { MarketState } from "../markets/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import type { Resource, Scope } from "../model/handles.js";
 import type { ResetManifest } from "../progression/resets.js";
 import type { RandomStreamsSnapshot, Xoshiro128 } from "../random/xoshiro.js";
+import type { TaskState } from "../tasks/types.js";
 
 export type Result<T, E> =
   | { readonly ok: true; readonly value: T }
@@ -27,6 +30,7 @@ export type CommandFailure<N = never> =
   | { readonly code: "invalid-count"; readonly requested: N | number }
   | { readonly code: "locked"; readonly prerequisiteIds: readonly string[] }
   | { readonly code: "disabled"; readonly actionId: string; readonly reasonKey: string }
+  | { readonly code: "budget-exceeded"; readonly budgetId: string }
   | {
       readonly code: "allocation-exceeded";
       readonly allocationId: string;
@@ -45,6 +49,9 @@ export interface Snapshot<N> {
   readonly scopeGenerations: Readonly<Record<string, bigint>>;
   readonly progression: ProgressionSnapshot<N>;
   readonly random: RandomStreamsSnapshot;
+  readonly tasks: Readonly<Record<string, TaskState<N>>>;
+  readonly calendars: Readonly<Record<string, CalendarState>>;
+  readonly markets: Readonly<Record<string, MarketState<N>>>;
 }
 
 export interface AutomationState {
@@ -98,6 +105,12 @@ export interface Transaction<N> {
   getAutomation(id: string): AutomationState | undefined;
   setAutomation(id: string, state: AutomationState): void;
   setWon(value: boolean): void;
+  getTaskState(id: string): TaskState<N>;
+  setTaskState(id: string, state: TaskState<N>): void;
+  getCalendarState(calendar: CalendarDefinition): CalendarState;
+  setCalendarState(calendar: CalendarDefinition, state: CalendarState): void;
+  getMarketState(id: string): MarketState<N>;
+  setMarketState(id: string, state: MarketState<N>): void;
   reject(error: CommandFailure<N>): never;
 }
 

@@ -2,6 +2,8 @@ import type { GameDefinition } from "../model/definition.js";
 import type { RandomStreamsSnapshot } from "../random/xoshiro.js";
 import { restoreSnapshot } from "../state/restore.js";
 import type { Snapshot } from "../state/types.js";
+import { deserializeTimedState } from "./deserialize-timed.js";
+import { parseUnsignedInteger } from "./parse.js";
 import { scopeRegistry } from "./registry.js";
 import type { LoadedCheckpoint, SaveEnvelope } from "./types.js";
 import { validateEnvelope } from "./validate-envelope.js";
@@ -28,7 +30,7 @@ export function deserializeCheckpoint<N>(
   const automation: Record<string, { enabled: boolean; nextRunMs: number }> = {};
   for (const [scopeId, scope] of Object.entries(envelope.state.scopes)) {
     if (!scope || typeof scope !== "object") throw new TypeError(`Invalid save scope: ${scopeId}`);
-    scopeGenerations[scopeId] = parseInteger(scope.generation, `scope ${scopeId}`);
+    scopeGenerations[scopeId] = parseUnsignedInteger(scope.generation, `scope ${scopeId}`);
     decodeQuantities(scope.resources, resources, numbers.codec.parse);
     decodeQuantities(scope.purchaseCounts, purchaseCounts, numbers.codec.parse);
     for (const [id, values] of Object.entries(scope.allocations)) {
@@ -49,8 +51,9 @@ export function deserializeCheckpoint<N>(
   }
   const productionTotals: Record<string, N> = {};
   decodeQuantities(envelope.state.productionTotals, productionTotals, numbers.codec.parse);
+  const timed = deserializeTimedState(envelope.state.scopes, numbers.codec.parse);
   const snapshot = restoreSnapshot(definition, {
-    revision: parseInteger(envelope.revision, "revision"),
+    revision: parseUnsignedInteger(envelope.revision, "revision"),
     gameTimeMs: envelope.clock.gameTimeMs,
     remainderMs: envelope.clock.remainderMs,
     resources,
@@ -70,6 +73,7 @@ export function deserializeCheckpoint<N>(
       events: decodeProgressionEvents(envelope),
     },
     random: decodeRandom(envelope),
+    ...timed,
   } satisfies Snapshot<N>);
   return {
     snapshot,
@@ -88,7 +92,7 @@ function decodeProgressionEvents(envelope: SaveEnvelope): Snapshot<never>["progr
   return envelope.state.progressionEvents.map((event) => {
     if (Object.keys(event).some((key) => !["sequence", "kind", "id", "atGameMs"].includes(key)))
       throw new TypeError("Invalid progression event ledger");
-    const sequence = parseInteger(event.sequence, "progression event sequence");
+    const sequence = parseUnsignedInteger(event.sequence, "progression event sequence");
     if (
       sequence <= previous ||
       !["upgrade", "milestone", "achievement", "challenge-reward", "win"].includes(event.kind) ||
@@ -138,7 +142,7 @@ function decodeRandom(envelope: SaveEnvelope): RandomStreamsSnapshot {
     streams: envelope.rng.streams.map((stream) => ({
       ...stream,
       path: strings(stream.path, "random stream path"),
-      draws: parseInteger(stream.draws, "random draw count"),
+      draws: parseUnsignedInteger(stream.draws, "random draw count"),
     })),
   };
 }
@@ -169,11 +173,6 @@ function strings(value: unknown, label: string, unique = false): readonly string
     throw new TypeError(`Invalid ${label}`);
   if (unique && new Set(value).size !== value.length) throw new TypeError(`Duplicate ${label}`);
   return value as string[];
-}
-
-function parseInteger(value: string, label: string): bigint {
-  if (!/^(?:0|[1-9][0-9]*)$/.test(value)) throw new TypeError(`Invalid ${label}`);
-  return BigInt(value);
 }
 
 function safeDuration(value: number): boolean {

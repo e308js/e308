@@ -10,6 +10,7 @@ export interface Resource<N> {
   readonly scope: Scope;
   readonly initial: N;
   readonly capacity?: N;
+  readonly capacityFor?: (get: (resource: Resource<N>) => N) => N;
   readonly overflow: "block" | "clamp" | "discard";
   readonly [ownerSymbol]: object;
 }

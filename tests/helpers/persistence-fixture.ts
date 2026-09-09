@@ -59,6 +59,31 @@ export function persistenceFixture() {
     rate: kit.rates.constant(2),
     produces: [[points, 1]],
   });
+  const task = kit.task("job", {
+    scope: run,
+    inputs: [],
+    outputs: [[points, 1]],
+    work: { kind: "fixed-duration", durationMs: 500 },
+    delivery: "block",
+    cancellation: { refund: "none" },
+    queueLimit: 2,
+  });
+  const calendar = kit.calendar("year", {
+    scope: run,
+    phases: [
+      { id: "light", durationMs: 200 },
+      { id: "dark", durationMs: 200 },
+    ],
+  });
+  const market = kit.market("exchange", {
+    scope: run,
+    inventory: points,
+    currency: gems,
+    price: { kind: "fixed", buy: 1, sell: 1 },
+    feeRate: 0,
+    feeRounding: "none",
+    maximumQuantity: 10,
+  });
   const definition = kit.defineGame({
     id: "persistence-test",
     simulationVersion: 1,
@@ -72,6 +97,9 @@ export function persistenceFixture() {
     triggers: [milestone],
     challenges: [challenge],
     automation: [automation],
+    tasks: [task],
+    calendars: [calendar],
+    markets: [market],
   });
   const game = createGame(definition);
   const configuration = {
@@ -100,6 +128,9 @@ export function persistenceFixture() {
     milestone,
     challenge,
     automation,
+    task,
+    calendar,
+    market,
     definition,
     game,
     configuration,
@@ -108,13 +139,32 @@ export function persistenceFixture() {
 }
 
 export function populateFixture(fixture: ReturnType<typeof persistenceFixture>): void {
-  const { game, upgrade, challenge, automation, machine, workers } = fixture;
+  const { game, upgrade, challenge, automation, machine, workers, task, market } = fixture;
   game.dispatch(upgradeCommand(upgrade));
   game.dispatch(enterChallengeCommand(challenge, [challenge]));
   game.dispatch(completeChallengeCommand(challenge));
   game.dispatch(automationCommand(automation, true));
   game.dispatch(buyCommand(machine, { mode: "exact", count: 1 }));
   game.dispatch(allocationCommand(workers, "factory", 1));
+  game.dispatch({
+    id: "timed-state",
+    execute: (transaction) => {
+      transaction.setTaskState(task.id, {
+        nextSequence: 1n,
+        queue: [],
+        active: {
+          sequence: 1n,
+          mode: "fixed-duration",
+          remainingMs: 350,
+          escrow: {},
+          outputs: { points: 1 },
+        },
+        completed: [],
+        refunds: [],
+      });
+      transaction.setMarketState(market.id, { bought: 2, sold: 1 });
+    },
+  });
   game.dispatch({
     id: "draw",
     execute: (transaction) => void transaction.random(["events"]).nextUint32(),

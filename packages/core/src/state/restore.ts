@@ -1,7 +1,16 @@
+import { resolveCapacity } from "../economy/entries.js";
 import { definitionScopes, type GameDefinition } from "../model/definition.js";
 import { RandomStreams } from "../random/xoshiro.js";
 import { cloneProgression, freezeProgression } from "./progression-state.js";
+import {
+  cloneCalendars,
+  cloneTasks,
+  freezeCalendars,
+  freezeMarkets,
+  freezeTasks,
+} from "./timed-state.js";
 import type { Snapshot } from "./types.js";
+import { validateTimedState } from "./validate-timed.js";
 
 export function restoreSnapshot<N>(
   definition: GameDefinition<N>,
@@ -36,6 +45,10 @@ export function restoreSnapshot<N>(
   );
   validateQuantities(definition, source);
   validateProgression(definition, source);
+  exactKeys(source.tasks, ownedIds(definition.tasks), "task");
+  exactKeys(source.calendars, ownedIds(definition.calendars), "calendar");
+  exactKeys(source.markets, ownedIds(definition.markets), "market");
+  validateTimedState(definition, source);
   const random = new RandomStreams(source.random.rootSeed, source.random.streams).snapshot();
   if (random.rootSeed !== (definition.rootSeed ?? "00"))
     throw new TypeError("Snapshot random seed does not match the game definition");
@@ -50,6 +63,11 @@ export function restoreSnapshot<N>(
     scopeGenerations: Object.freeze({ ...source.scopeGenerations }),
     progression: freezeProgression(cloneProgression(source.progression)),
     random,
+    tasks: freezeTasks(cloneTasks(source.tasks)),
+    calendars: freezeCalendars(cloneCalendars(source.calendars)),
+    markets: freezeMarkets(
+      Object.fromEntries(Object.entries(source.markets).map(([id, state]) => [id, { ...state }])),
+    ),
   });
 }
 
@@ -59,7 +77,8 @@ function validateQuantities<N>(definition: GameDefinition<N>, source: Snapshot<N
   for (const resource of definition.resources ?? []) {
     const value = source.resources[resource.id] as N;
     if (!numbers.isFinite(value)) throw new TypeError(`Invalid saved resource: ${resource.id}`);
-    if (resource.capacity !== undefined && numbers.cmp(value, resource.capacity) > 0)
+    const capacity = resolveCapacity(resource, (entry) => source.resources[entry.id] as N, numbers);
+    if (capacity !== undefined && numbers.cmp(value, capacity) > 0)
       throw new TypeError(`Saved resource exceeds capacity: ${resource.id}`);
     if (!numbers.isFinite(source.productionTotals[resource.id] as N))
       throw new TypeError(`Invalid production total: ${resource.id}`);

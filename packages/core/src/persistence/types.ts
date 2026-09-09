@@ -76,6 +76,53 @@ export interface SerializedScopeState {
   readonly achievements: readonly string[];
   readonly activeChallenges: readonly string[];
   readonly challengeCompletions: Readonly<Record<string, string>>;
+  readonly tasks?: Readonly<Record<string, SerializedTaskState>>;
+  readonly calendars?: Readonly<Record<string, SerializedCalendarState>>;
+  readonly markets?: Readonly<Record<string, { readonly bought: string; readonly sold: string }>>;
+}
+
+export interface SerializedTaskClaim {
+  readonly sequence: string;
+  readonly quantities: Readonly<Record<string, string>>;
+}
+
+export interface SerializedTaskState {
+  readonly nextSequence: string;
+  readonly queue: readonly {
+    readonly sequence: string;
+    readonly escrow: Readonly<Record<string, string>>;
+    readonly outputs: Readonly<Record<string, string>>;
+  }[];
+  readonly active:
+    | null
+    | {
+        readonly sequence: string;
+        readonly mode: "fixed-duration";
+        readonly remainingMs: number;
+        readonly escrow: Readonly<Record<string, string>>;
+        readonly outputs: Readonly<Record<string, string>>;
+      }
+    | {
+        readonly sequence: string;
+        readonly mode: "current-rate";
+        readonly remainingWork: number;
+        readonly escrow: Readonly<Record<string, string>>;
+        readonly outputs: Readonly<Record<string, string>>;
+      };
+  readonly completed: readonly SerializedTaskClaim[];
+  readonly refunds: readonly SerializedTaskClaim[];
+}
+
+export interface SerializedCalendarState {
+  readonly phaseIndex: number;
+  readonly elapsedMs: number;
+  readonly cycle: string;
+  readonly boundaries: readonly {
+    readonly sequence: string;
+    readonly phaseId: string;
+    readonly cycle: string;
+    readonly atGameMs: number;
+  }[];
 }
 
 export interface SaveEnvelope {

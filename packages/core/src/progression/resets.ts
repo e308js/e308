@@ -2,12 +2,17 @@ import type { AutomationDefinition } from "../automation/scheduler.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import type { ReadContext } from "../economy/types.js";
+import type { MarketDefinition } from "../markets/types.js";
 import type { Resource, Scope } from "../model/handles.js";
 import type { Command } from "../state/types.js";
+import type { TaskDefinition } from "../tasks/types.js";
 import type { ChallengeDefinition } from "./challenges.js";
 import type { TriggerDefinition, UpgradeDefinition } from "./features.js";
 
 export interface ResetRetention<N> {
+  readonly tasks?: readonly TaskDefinition<N>[];
+  readonly calendars?: readonly import("../calendar/types.js").CalendarDefinition[];
+  readonly markets?: readonly MarketDefinition<N>[];
   readonly resources?: readonly Resource<N>[];
   readonly buyables?: readonly BuyableDefinition<N>[];
   readonly allocations?: readonly AllocationDefinition<N>[];

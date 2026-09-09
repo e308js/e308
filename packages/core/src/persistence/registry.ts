@@ -10,6 +10,9 @@ export interface ScopeRegistry {
   readonly triggerScopes: Readonly<Record<string, string>>;
   readonly challengeScopes: Readonly<Record<string, string>>;
   readonly automationScopes: Readonly<Record<string, string>>;
+  readonly taskScopes: Readonly<Record<string, string>>;
+  readonly calendarScopes: Readonly<Record<string, string>>;
+  readonly marketScopes: Readonly<Record<string, string>>;
 }
 
 export function scopeRegistry<N>(definition: GameDefinition<N>): ScopeRegistry {
@@ -33,6 +36,9 @@ export function scopeRegistry<N>(definition: GameDefinition<N>): ScopeRegistry {
     readonly triggers: readonly { readonly id: string; readonly scope: Scope }[];
     readonly challenges: readonly { readonly id: string; readonly scope: Scope }[];
     readonly automation: readonly { readonly id: string; readonly scope: Scope }[];
+    readonly tasks: readonly { readonly id: string; readonly scope: Scope }[];
+    readonly calendars: readonly { readonly id: string; readonly scope: Scope }[];
+    readonly markets: readonly { readonly id: string; readonly scope: Scope }[];
   };
   const resourceScopes = collect(complete.resources as readonly { id: string; scope: Scope }[]);
   const buyableScopes = collect(complete.buyables);
@@ -41,6 +47,9 @@ export function scopeRegistry<N>(definition: GameDefinition<N>): ScopeRegistry {
   const triggerScopes = collect(complete.triggers);
   const challengeScopes = collect(complete.challenges);
   const automationScopes = collect(complete.automation);
+  const taskScopes = collect(complete.tasks);
+  const calendarScopes = collect(complete.calendars);
+  const marketScopes = collect(complete.markets);
   for (const scope of definitionScopes(definition)) scopes.add(scope.id);
   return {
     scopes: Object.freeze([...scopes].sort()),
@@ -51,5 +60,8 @@ export function scopeRegistry<N>(definition: GameDefinition<N>): ScopeRegistry {
     triggerScopes,
     challengeScopes,
     automationScopes,
+    taskScopes,
+    calendarScopes,
+    marketScopes,
   };
 }
