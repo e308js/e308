@@ -15,15 +15,27 @@ const gaps = [
   ["30 days", 30 * 24 * 60 * 60_000],
 ] as const;
 const workloads: WorkloadRecord[] = [];
+const requested = process.argv.slice(2).filter((argument) => argument !== "--");
+const requestedGame = requested[0];
+const requestedCheckpoint = requested[1];
+if (requestedGame && !["wireworks", "cascade", "hearth"].includes(requestedGame))
+  throw new TypeError(`Unknown performance scenario: ${requestedGame}`);
+if (requestedCheckpoint && !["beginning", "middle", "ending"].includes(requestedCheckpoint))
+  throw new TypeError(`Unknown performance checkpoint: ${requestedCheckpoint}`);
+if (requestedCheckpoint && !requestedGame)
+  throw new TypeError("A checkpoint requires a performance scenario");
 const checkpointFile = JSON.parse(
   await readFile(
     new URL("../../../artifacts/finished-games/checkpoints.json", import.meta.url),
     "utf8",
   ),
 ) as CheckpointFile;
-profileScenario("wireworks", wireworksDefinition, decoded(wireworksSaveCodec, "wireworks"));
-profileScenario("cascade", cascadeDefinition, decoded(cascadeSaveCodec, "cascade"));
-profileScenario("hearth", hearthDefinition, decoded(hearthSaveCodec, "hearth"));
+if (!requestedGame || requestedGame === "wireworks")
+  profileScenario("wireworks", wireworksDefinition, decoded(wireworksSaveCodec, "wireworks"));
+if (!requestedGame || requestedGame === "cascade")
+  profileScenario("cascade", cascadeDefinition, decoded(cascadeSaveCodec, "cascade"));
+if (!requestedGame || requestedGame === "hearth")
+  profileScenario("hearth", hearthDefinition, decoded(hearthSaveCodec, "hearth"));
 
 function profileScenario<N>(
   id: string,
@@ -31,6 +43,7 @@ function profileScenario<N>(
   saves: Checkpoints<N>,
 ): void {
   for (const [checkpoint, initial] of Object.entries(saves) as Entries<Checkpoints<N>>) {
+    if (requestedCheckpoint && checkpoint !== requestedCheckpoint) continue;
     for (const [duration, durationMs] of gaps) {
       const releaseTarget = duration === "8 hours";
       const coldRuns = releaseTarget ? 10 : 1;
@@ -92,11 +105,14 @@ const machine: MachineRecord = {
   commit: process.env.GITHUB_SHA ?? "local-worktree",
 };
 const output = new URL("../../../artifacts/performance/", import.meta.url);
+const suffix = requestedGame
+  ? `-${requestedGame}${requestedCheckpoint ? `-${requestedCheckpoint}` : ""}`
+  : "";
 await mkdir(output, { recursive: true });
 await Promise.all([
   writeFile(
-    new URL("workloads.json", output),
+    new URL(`workloads${suffix}.json`, output),
     `${JSON.stringify({ schema: "e308-workloads", schemaVersion: 1, machine, workloads }, null, 2)}\n`,
   ),
-  writeFile(new URL("workloads.md", output), workloadMarkdown(machine, workloads)),
+  writeFile(new URL(`workloads${suffix}.md`, output), workloadMarkdown(machine, workloads)),
 ]);

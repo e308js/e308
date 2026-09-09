@@ -85,10 +85,15 @@ jobs:
             artifacts/finished-games/
 
   performance:
-    name: Performance workloads
+    name: Performance (${{ matrix.game }}/${{ matrix.checkpoint }})
     needs: pacing
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        game: [wireworks, cascade, hearth]
+        checkpoint: [beginning, middle, ending]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -97,7 +102,28 @@ jobs:
           name: pacing-${{ github.sha }}
           path: artifacts/
       - run: pnpm build
-      - run: pnpm report:performance
+      - run: pnpm report:performance -- ${{ matrix.game }} ${{ matrix.checkpoint }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: performance-${{ matrix.game }}-${{ matrix.checkpoint }}-${{ github.sha }}
+          path: artifacts/performance/workloads-${{ matrix.game }}-${{ matrix.checkpoint }}.*
+
+  performance_report:
+    name: Performance report
+    needs: performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: performance-*-${{ github.sha }}
+          path: artifacts/performance/
+          merge-multiple: true
+      - run: pnpm --filter @e308/pacing-example build
+      - run: pnpm report:performance:merge
       - run: pnpm verify:performance
       - uses: actions/upload-artifact@v7
         if: always()
@@ -108,7 +134,7 @@ jobs:
   quality:
     name: quality
     if: always()
-    needs: [static, coverage, browser, pacing, performance]
+    needs: [static, coverage, browser, pacing, performance_report]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -139,7 +165,7 @@ jobs:
           COVERAGE_RESULT: ${{ needs.coverage.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
           PACING_RESULT: ${{ needs.pacing.result }}
-          PERFORMANCE_RESULT: ${{ needs.performance.result }}
+          PERFORMANCE_RESULT: ${{ needs.performance_report.result }}
         run: |
           test "$STATIC_RESULT" = success
           test "$COVERAGE_RESULT" = success

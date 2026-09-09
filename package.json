@@ -12,6 +12,7 @@
     "lint": "biome ci --error-on-warnings .",
     "quality": "pnpm lint && pnpm typecheck && pnpm check:structure && pnpm build && pnpm build:release && pnpm build:site && pnpm report:pacing && pnpm report:finished-games && pnpm report:performance && pnpm verify:performance && pnpm test:coverage && pnpm test:packages && pnpm test:browser && pnpm verify:release",
     "report:performance": "node examples/pacing/dist/performance.js",
+    "report:performance:merge": "node examples/pacing/dist/merge-performance.js",
     "report:finished-games": "node examples/pacing/dist/finished-games.js",
     "report:pacing": "node examples/pacing/dist/generate.js",
     "verify:performance": "node tools/performance/verify.mjs",
