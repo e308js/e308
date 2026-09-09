@@ -3,7 +3,7 @@ import type { Snapshot } from "../../../packages/core/src/index.js";
 export type PaperclipsPhase = "business" | "industry" | "space" | "complete";
 
 export type PaperclipsIntent =
-  | { readonly type: "make-clip" }
+  | { readonly type: "make-clip"; readonly count?: number }
   | { readonly type: "buy-wire" }
   | { readonly type: "set-price"; readonly price: number }
   | { readonly type: "buy"; readonly id: PaperclipsBuyableId }

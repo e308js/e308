@@ -8,8 +8,8 @@
     "projects.js": "05034c51809bc0632e8963e671c8e68c68604ca3643da291e0c6fabc86152774"
   },
   "random": {
-    "kind": "constant",
-    "value": 0.5
+    "kind": "scripted",
+    "fallback": 0.5
   },
   "scenarios": {
     "initial": {
@@ -140,6 +140,44 @@
         "wireSupply": 173250,
         "standardOps": 10250
       }
-    ]
+    ],
+    "timedRetail": {
+      "draws": [[0.5, 0.5], [0.5, 0], [0, 0.5]],
+      "checkpoints": [
+        {
+          "clips": 21.000000000000014,
+          "unsoldClips": 21.000000000000014,
+          "funds": 0,
+          "wire": 99.00000000000006,
+          "demand": 3.2,
+          "wireBasePrice": 20,
+          "wireCost": 20,
+          "wirePriceCounter": 0,
+          "wirePriceTimer": 249
+        },
+        {
+          "clips": 22.00000000000003,
+          "unsoldClips": 20.00000000000003,
+          "funds": 0.5,
+          "wire": 98.00000000000011,
+          "demand": 3.2,
+          "wireBasePrice": 20,
+          "wireCost": 20,
+          "wirePriceCounter": 0,
+          "wirePriceTimer": 250
+        },
+        {
+          "clips": 23.000000000000043,
+          "unsoldClips": 21.000000000000043,
+          "funds": 0.5,
+          "wire": 97.00000000000017,
+          "demand": 3.2,
+          "wireBasePrice": 19.98,
+          "wireCost": 26,
+          "wirePriceCounter": 1,
+          "wirePriceTimer": 0
+        }
+      ]
+    }
   }
 }

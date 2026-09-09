@@ -17,8 +17,17 @@ export const paperclipsResources = {
   wire: paperclipsKit.resource("wire", { scope: business, initial: 1_000 }),
   wireSupply: paperclipsKit.resource("wire-supply", { scope: permanent, initial: 1_000 }),
   wireCost: paperclipsKit.resource("wire-cost", { scope: permanent, initial: 20 }),
+  wireBasePrice: paperclipsKit.resource("wire-base-price", { scope: permanent, initial: 20 }),
+  wirePriceCounter: paperclipsKit.resource("wire-price-counter", { scope: permanent, initial: 0 }),
+  wirePriceTimer: paperclipsKit.resource("wire-price-timer", { scope: permanent, initial: 0 }),
   price: paperclipsKit.resource("clip-price", { scope: business, initial: 0.25 }),
   demand: paperclipsKit.resource("demand", { scope: business, initial: 5 }),
+  demandBoost: paperclipsKit.resource("demand-boost", { scope: permanent, initial: 1 }),
+  marketingEffectiveness: paperclipsKit.resource("marketing-effectiveness", {
+    scope: permanent,
+    initial: 1,
+  }),
+  universePrestige: paperclipsKit.resource("universe-prestige", { scope: permanent, initial: 0 }),
   marketingLevel: paperclipsKit.resource("marketing-level", { scope: business, initial: 1 }),
   trust: paperclipsKit.resource("trust", { scope: permanent, initial: 2 }),
   operations: paperclipsKit.resource("operations", { scope: permanent, initial: 0 }),
@@ -141,7 +150,7 @@ const spaceUpdate = paperclipsKit.steppedRule("space-update", {
 
 export const paperclipsDefinition = paperclipsKit.defineGame({
   id: "paperclips-full-reference",
-  simulationVersion: 1,
+  simulationVersion: 2,
   stepMs: 1_000,
   rootSeed: "7061706572636c697073",
   resources: Object.values(paperclipsResources),

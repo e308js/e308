@@ -4,6 +4,8 @@ import type {
   Resource,
   Transaction,
 } from "../../../packages/core/src/index.js";
+import { advanceRetailTick } from "./retail.js";
+import { purchaseWire } from "./wire-purchase.js";
 
 type BusinessResources = Readonly<Record<string, Resource<number>>>;
 type BusinessBuyables = Readonly<Record<string, BuyableDefinition<number>>>;
@@ -16,58 +18,108 @@ export function updateBusiness(
   compute: AllocationDefinition<number>,
 ): void {
   if (!transaction.hasProgress("milestone", "industry-phase")) {
-    maintainWire(transaction, resources);
-    produceClips(transaction, seconds, resources, buyables);
-    sellInventory(transaction, seconds, resources);
+    runRetailSchedule(transaction, seconds, resources, buyables);
   }
   runCompute(transaction, seconds, resources, compute);
   runInvestments(transaction, seconds, resources);
   awardTrust(transaction, resources);
 }
 
-function maintainWire(transaction: Transaction<number>, resources: BusinessResources): void {
-  if (!transaction.hasProgress("upgrade", "wire-buyer")) return;
-  const wire = required(resources, "wire");
-  const supply = required(resources, "wireSupply");
-  const funds = required(resources, "funds");
-  const cost = required(resources, "wireCost");
-  if (transaction.get(wire) >= transaction.get(supply) / 2) return;
-  if (transaction.get(funds) < transaction.get(cost)) return;
-  transaction.add(funds, -transaction.get(cost));
-  transaction.add(wire, transaction.get(supply));
-}
-
-function produceClips(
+function runRetailSchedule(
   transaction: Transaction<number>,
   seconds: number,
   resources: BusinessResources,
   buyables: BusinessBuyables,
 ): void {
+  const ticks = Math.round(seconds / 0.1);
+  for (let index = 0; index < ticks; index += 1) {
+    runMainTicks(transaction, 0.1, resources, buyables);
+    runRetailTick(transaction, resources);
+  }
+}
+
+function runMainTicks(
+  transaction: Transaction<number>,
+  seconds: number,
+  resources: BusinessResources,
+  buyables: BusinessBuyables,
+): void {
+  const ticks = Math.round(seconds / 0.01);
+  for (let index = 0; index < ticks; index += 1) {
+    maintainWire(transaction, resources);
+    produceClips(transaction, resources, buyables);
+    updateDemand(transaction, resources);
+  }
+}
+
+function maintainWire(transaction: Transaction<number>, resources: BusinessResources): void {
+  if (!transaction.hasProgress("upgrade", "wire-buyer")) return;
+  if (transaction.get(required(resources, "wire")) > 1) return;
+  purchaseWire(transaction, wireResources(resources));
+}
+
+function produceClips(
+  transaction: Transaction<number>,
+  resources: BusinessResources,
+  buyables: BusinessBuyables,
+): void {
   const auto = transaction.getPurchase(requiredBuyable(buyables, "autoClipper").id);
   const mega = transaction.getPurchase(requiredBuyable(buyables, "megaClipper").id);
-  const boost = clipperBoost(transaction);
-  const possible = (auto + mega * 500) * boost * seconds;
-  const produced = Math.min(transaction.get(required(resources, "wire")), possible);
+  produceAmount(transaction, resources, clipperBoost(transaction) * (auto / 100));
+  produceAmount(transaction, resources, mega * 5);
+}
+
+function produceAmount(
+  transaction: Transaction<number>,
+  resources: BusinessResources,
+  possible: number,
+): void {
+  const wire = required(resources, "wire");
+  if (transaction.get(wire) < 1) return;
+  const produced = Math.min(transaction.get(wire), possible);
   if (produced <= 0) return;
-  transaction.add(required(resources, "wire"), -produced);
+  transaction.add(wire, -produced);
   transaction.add(required(resources, "clips"), produced);
   transaction.add(required(resources, "unsold"), produced);
   transaction.addProduction(required(resources, "clips").id, produced);
 }
 
-function sellInventory(
-  transaction: Transaction<number>,
-  seconds: number,
-  resources: BusinessResources,
-): void {
-  const price = transaction.get(required(resources, "price"));
-  const marketing = transaction.get(required(resources, "marketingLevel"));
-  const baseDemand = transaction.get(required(resources, "demand"));
-  const demanded = Math.max(0, baseDemand * marketing ** 1.1 * (0.25 / price) ** 1.15 * seconds);
-  const sold = Math.min(transaction.get(required(resources, "unsold")), demanded);
-  if (sold <= 0) return;
-  transaction.add(required(resources, "unsold"), -sold);
-  transaction.add(required(resources, "funds"), sold * price);
+function updateDemand(transaction: Transaction<number>, resources: BusinessResources): void {
+  const marketing = 1.1 ** (transaction.get(required(resources, "marketingLevel")) - 1);
+  const base =
+    (0.8 / transaction.get(required(resources, "price"))) *
+    marketing *
+    transaction.get(required(resources, "marketingEffectiveness")) *
+    transaction.get(required(resources, "demandBoost"));
+  const prestige = transaction.get(required(resources, "universePrestige"));
+  transaction.set(required(resources, "demand"), base + (base / 10) * prestige);
+}
+
+function runRetailTick(transaction: Transaction<number>, resources: BusinessResources): void {
+  const random = transaction.random(["retail"]);
+  const state = advanceRetailTick(readRetailState(transaction, resources), {
+    wire: random.uniform(),
+    sale: random.uniform(),
+  });
+  transaction.set(required(resources, "funds"), state.funds);
+  transaction.set(required(resources, "unsold"), state.unsoldClips);
+  transaction.set(required(resources, "wireBasePrice"), state.wireBasePrice);
+  transaction.set(required(resources, "wireCost"), state.wireCost);
+  transaction.set(required(resources, "wirePriceCounter"), state.wirePriceCounter);
+  transaction.set(required(resources, "wirePriceTimer"), state.wirePriceTimer);
+}
+
+function readRetailState(transaction: Transaction<number>, resources: BusinessResources) {
+  return {
+    demand: transaction.get(required(resources, "demand")),
+    funds: transaction.get(required(resources, "funds")),
+    margin: transaction.get(required(resources, "price")),
+    unsoldClips: transaction.get(required(resources, "unsold")),
+    wireBasePrice: transaction.get(required(resources, "wireBasePrice")),
+    wireCost: transaction.get(required(resources, "wireCost")),
+    wirePriceCounter: transaction.get(required(resources, "wirePriceCounter")),
+    wirePriceTimer: transaction.get(required(resources, "wirePriceTimer")),
+  };
 }
 
 function runCompute(
@@ -146,4 +198,15 @@ function requiredBuyable(buyables: BusinessBuyables, id: string): BuyableDefinit
   const buyable = buyables[id];
   if (!buyable) throw new TypeError(`Missing Paperclips buyable: ${id}`);
   return buyable;
+}
+
+function wireResources(resources: BusinessResources) {
+  return {
+    funds: required(resources, "funds"),
+    wire: required(resources, "wire"),
+    wireBasePrice: required(resources, "wireBasePrice"),
+    wireCost: required(resources, "wireCost"),
+    wirePriceTimer: required(resources, "wirePriceTimer"),
+    wireSupply: required(resources, "wireSupply"),
+  };
 }

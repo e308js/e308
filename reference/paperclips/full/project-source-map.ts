@@ -7,6 +7,8 @@ export const paperclipsProjectSourceMap = Object.freeze({
   project7: "improved-wire-extrusion",
   project8: "optimized-wire-extrusion",
   project9: "microlattice-shapecasting",
+  project10: "spectral-froth-annealment",
+  project10b: "quantum-foam-annealment",
   project11: "new-slogan",
   project12: "catchy-jingle",
   project20: "strategic-modeling",

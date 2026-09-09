@@ -12,10 +12,18 @@ describe("Universal Paperclips full-campaign reference", () => {
     const game = createPaperclipsReference();
     expect(game.dispatch({ type: "make-clip" })).toMatchObject({ ok: true });
     expect(game.getSnapshot().resources).toMatchObject({ clips: 1, "unsold-clips": 1, wire: 999 });
-    expect(game.advance(1_000)).toMatchObject({ ok: true });
+    for (let second = 0; second < 100 && game.getSnapshot().resources.funds === 0; second += 1) {
+      expect(game.advance(1_000)).toMatchObject({ ok: true });
+    }
     expect(game.getSnapshot().resources.funds).toBeCloseTo(0.25);
     for (let index = 0; index < 40; index += 1) game.dispatch({ type: "make-clip" });
-    game.advance(10_000);
+    for (
+      let second = 0;
+      second < 100 && (game.getSnapshot().resources.funds ?? 0) < 5;
+      second += 1
+    ) {
+      game.advance(1_000);
+    }
     expect(game.dispatch({ type: "buy", id: "auto-clipper" })).toMatchObject({ ok: true });
     const before = game.getSnapshot().resources.clips ?? 0;
     game.advance(5_000);
@@ -27,7 +35,7 @@ describe("Universal Paperclips full-campaign reference", () => {
   });
 
   it("keeps the pinned business project chain represented as executable data", () => {
-    expect(businessProjects).toHaveLength(16);
+    expect(businessProjects).toHaveLength(18);
     expect(businessProjects.map((project) => project.id)).toEqual(
       expect.arrayContaining([
         "strategic-modeling",

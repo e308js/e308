@@ -20,12 +20,13 @@ import {
   spaceProjects,
 } from "./projects.js";
 import type { PaperclipsBuyableId, PaperclipsIntent, PaperclipsStrategy } from "./types.js";
+import { purchaseWire } from "./wire-purchase.js";
 
 export function paperclipsCommand(
   snapshot: Snapshot<number>,
   intent: PaperclipsIntent,
 ): Command<number> {
-  if (intent.type === "make-clip") return makeClip();
+  if (intent.type === "make-clip") return makeClip(intent.count ?? 1);
   if (intent.type === "buy-wire") return buyWire();
   if (intent.type === "set-price") return setPrice(intent.price);
   if (intent.type === "buy") return buyMachine(intent.id);
@@ -38,16 +39,21 @@ export function paperclipsCommand(
   return withdraw();
 }
 
-function makeClip(): Command<number> {
+function makeClip(count: number): Command<number> {
   return {
     id: "make-clip",
     execute(transaction) {
       requirePhase(transaction, "business");
-      spend(transaction, paperclipsResources.wire, 1);
-      transaction.add(paperclipsResources.clips, 1);
-      transaction.add(paperclipsResources.unsold, 1);
-      transaction.add(paperclipsResources.manualClips, 1);
-      transaction.addProduction(paperclipsResources.clips.id, 1);
+      if (!Number.isSafeInteger(count) || count < 1 || count > 1_000) {
+        transaction.reject({ code: "invalid-count", requested: count });
+      }
+      const produced = Math.min(count, Math.floor(transaction.get(paperclipsResources.wire)));
+      if (produced < 1) spend(transaction, paperclipsResources.wire, 1);
+      transaction.add(paperclipsResources.wire, -produced);
+      transaction.add(paperclipsResources.clips, produced);
+      transaction.add(paperclipsResources.unsold, produced);
+      transaction.add(paperclipsResources.manualClips, produced);
+      transaction.addProduction(paperclipsResources.clips.id, produced);
     },
   };
 }
@@ -57,16 +63,15 @@ function buyWire(): Command<number> {
     id: "buy-wire",
     execute(transaction) {
       requirePhase(transaction, "business");
-      const cost = transaction.get(paperclipsResources.wireCost);
-      spend(transaction, paperclipsResources.funds, cost);
-      transaction.add(paperclipsResources.wire, transaction.get(paperclipsResources.wireSupply));
-      transaction.set(
-        paperclipsResources.wireCost,
-        Math.min(
-          40,
-          Math.max(15, cost * (0.85 + transaction.random(["wire-market"]).uniform() * 0.2)),
-        ),
-      );
+      const purchased = purchaseWire(transaction, paperclipsResources);
+      if (!purchased) {
+        transaction.reject({
+          code: "insufficient",
+          resourceId: paperclipsResources.funds.id,
+          required: transaction.get(paperclipsResources.wireCost),
+          available: transaction.get(paperclipsResources.funds),
+        });
+      }
     },
   };
 }
@@ -127,6 +132,7 @@ function applyProject(transaction: Transaction<number>, project: PaperclipsProje
   }
   const missing = project.prerequisites.filter((id) => !transaction.hasProgress("upgrade", id));
   if (missing.length > 0) transaction.reject({ code: "locked", prerequisiteIds: missing });
+  requireProjectUnlock(transaction, project.id);
   spendProjectCosts(transaction, project);
   transaction.setProgress("upgrade", project.id);
   if (project.effect === "wire" && project.id === "beg-for-more-wire") {
@@ -134,7 +140,8 @@ function applyProject(transaction: Transaction<number>, project: PaperclipsProje
   }
   applyWireProject(transaction, project.id);
   if (project.effect === "demand") {
-    transaction.set(paperclipsResources.demand, transaction.get(paperclipsResources.demand) * 1.5);
+    const increase = project.id === "catchy-jingle" ? 1 : 0.5;
+    transaction.add(paperclipsResources.marketingEffectiveness, increase);
   }
   if (project.effect === "investment") transaction.set(paperclipsResources.investmentLevel, 1);
   applyTransition(transaction, project);
@@ -145,6 +152,8 @@ function applyWireProject(transaction: Transaction<number>, id: string): void {
     "improved-wire-extrusion": 1.5,
     "optimized-wire-extrusion": 1.75,
     "microlattice-shapecasting": 2,
+    "spectral-froth-annealment": 3,
+    "quantum-foam-annealment": 11,
   };
   const multiplier = multipliers[id];
   if (multiplier) {
@@ -153,6 +162,18 @@ function applyWireProject(transaction: Transaction<number>, id: string): void {
       transaction.get(paperclipsResources.wireSupply) * multiplier,
     );
   }
+}
+
+function requireProjectUnlock(transaction: Transaction<number>, id: string): void {
+  const requirements: Readonly<
+    Record<string, readonly [typeof paperclipsResources.wireCost, number]>
+  > = {
+    "quantum-foam-annealment": [paperclipsResources.wireCost, 125],
+    "spectral-froth-annealment": [paperclipsResources.wireSupply, 5_000],
+  };
+  const requirement = requirements[id];
+  if (!requirement || transaction.get(requirement[0]) >= requirement[1]) return;
+  transaction.reject({ code: "disabled", actionId: id, reasonKey: "source-trigger" });
 }
 
 function spendProjectCosts(transaction: Transaction<number>, project: PaperclipsProject): void {

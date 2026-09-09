@@ -51,6 +51,15 @@ export const businessProjects: readonly PaperclipsProject[] = [
     prerequisites: ["optimized-wire-extrusion"],
     effect: "wire",
   }),
+  project("spectral-froth-annealment", "Spectral Froth Annealment", {
+    operations: 12_000,
+    prerequisites: ["microlattice-shapecasting"],
+    effect: "wire",
+  }),
+  project("quantum-foam-annealment", "Quantum Foam Annealment", {
+    operations: 15_000,
+    effect: "wire",
+  }),
   project("new-slogan", "New Slogan", {
     operations: 2_500,
     creativity: 25,

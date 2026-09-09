@@ -49,6 +49,7 @@ const scenarios = {
   machineCosts: machineCostTrace(runtime),
   autoClipperProjects: autoClipperProjectTrace(runtime),
   wireProjects: wireProjectTrace(runtime),
+  timedRetail: timedRetailTrace(runtime),
 };
 
 await writeFile(
@@ -58,7 +59,7 @@ await writeFile(
       schema: "e308-paperclips-golden-trace",
       schemaVersion: 1,
       sources: expectedHashes,
-      random: { kind: "constant", value: 0.5 },
+      random: { kind: "scripted", fallback: 0.5 },
       scenarios,
     },
     null,
@@ -74,6 +75,57 @@ function retailTrace(runtime) {
   runtime.run("raisePrice(); raisePrice(); lowerPrice()");
   const afterPrice = runtime.read(["margin"]);
   return { afterManual, afterSale, afterPrice };
+}
+
+function timedRetailTrace(runtime) {
+  runtime.run(
+    "clips=20; unusedClips=20; unsoldClips=20; wire=100; funds=0; margin=.25; " +
+      "clipmakerLevel=10; clipperBoost=1; megaClipperLevel=0; megaClipperBoost=1; " +
+      "wireBasePrice=20; wireCost=20; " +
+      "wirePriceCounter=0; wirePriceTimer=248; marketingLvl=1; demandBoost=1; prestigeU=0",
+  );
+  const checkpoints = [];
+  for (const draws of [
+    [0.5, 0.5],
+    [0.5, 0],
+    [0, 0.5],
+  ]) {
+    for (let index = 0; index < 10; index += 1) {
+      runtime.run(
+        "clipClick(clipperBoost*(clipmakerLevel/100)); " +
+          "clipClick(megaClipperBoost*(megaClipperLevel*5)); " +
+          "marketing=Math.pow(1.1,(marketingLvl-1)); " +
+          "demand=((.8/margin)*marketing*marketingEffectiveness)*demandBoost; " +
+          "demand=demand+((demand/10)*prestigeU)",
+      );
+    }
+    runtime.setRandomSequence(draws);
+    runtime.run(
+      "adjustWirePrice(); " +
+        "if (Math.random() < (demand/100)) sellClips(Math.floor(.7*Math.pow(demand,1.15)))",
+    );
+    checkpoints.push(
+      runtime.read([
+        "clips",
+        "unsoldClips",
+        "funds",
+        "wire",
+        "demand",
+        "wireBasePrice",
+        "wireCost",
+        "wirePriceCounter",
+        "wirePriceTimer",
+      ]),
+    );
+  }
+  return {
+    draws: [
+      [0.5, 0.5],
+      [0.5, 0],
+      [0, 0.5],
+    ],
+    checkpoints,
+  };
 }
 
 function machineCostTrace(runtime) {
@@ -126,6 +178,7 @@ function createRuntime() {
   const elements = new Map();
   const intervals = [];
   const storage = new Map();
+  let randomSequence = [];
   const element = (id = "") => {
     const existing = elements.get(id);
     if (existing) return existing;
@@ -191,7 +244,7 @@ function createRuntime() {
       return 1;
     },
   };
-  context.Math.random = () => 0.5;
+  context.Math.random = () => randomSequence.shift() ?? 0.5;
   context.window = context;
   context.globalThis = context;
   vm.createContext(context);
@@ -199,6 +252,9 @@ function createRuntime() {
     evaluate: (source, filename) => vm.runInContext(source, context, { filename }),
     read: (names) => Object.fromEntries(names.map((name) => [name, context[name]])),
     run: (source) => vm.runInContext(source, context),
+    setRandomSequence: (values) => {
+      randomSequence = [...values];
+    },
   };
 }
 

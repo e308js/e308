@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import type { Transaction } from "@e308/core";
 import { describe, expect, it } from "vitest";
 import {
+  advanceRetailTick,
   autoClipperCurve,
   createPaperclipsReference,
   megaClipperCurve,
@@ -17,6 +18,10 @@ interface GoldenTrace {
     readonly retail: {
       readonly afterManual: Readonly<Record<string, number>>;
       readonly afterPrice: Readonly<Record<string, number>>;
+    };
+    readonly timedRetail: {
+      readonly draws: readonly (readonly [number, number])[];
+      readonly checkpoints: readonly Readonly<Record<string, number>>[];
     };
     readonly machineCosts: {
       readonly autoClippers: readonly Readonly<Record<string, number>>[];
@@ -138,8 +143,8 @@ describe("Universal Paperclips pinned-source golden trace", () => {
       }
     });
     boostGame.advance(1_000);
-    expect(boostGame.getSnapshot().resources.clips).toBe(
-      golden.scenarios.autoClipperProjects[2]?.clipperBoost,
+    expect(boostGame.getSnapshot().resources.clips).toBeCloseTo(
+      golden.scenarios.autoClipperProjects[2]?.clipperBoost as number,
     );
 
     const wireGame = createPaperclipsReference();
@@ -148,12 +153,59 @@ describe("Universal Paperclips pinned-source golden trace", () => {
       "improved-wire-extrusion",
       "optimized-wire-extrusion",
       "microlattice-shapecasting",
+      "spectral-froth-annealment",
+      "quantum-foam-annealment",
     ].entries()) {
+      if (id === "quantum-foam-annealment") {
+        seed(wireGame, (transaction) => transaction.set(paperclipsResources.wireCost, 125));
+      }
       expect(wireGame.dispatch({ type: "project", id })).toMatchObject({ ok: true });
       expect(wireGame.getSnapshot().resources[paperclipsResources.wireSupply.id]).toBe(
         golden.scenarios.wireProjects[index]?.wireSupply,
       );
     }
+  });
+
+  it("matches the source's 100 ms sale and wire-price schedule", () => {
+    let state = {
+      demand: 3.2,
+      funds: 0,
+      margin: 0.25,
+      unsoldClips: 20,
+      wireBasePrice: 20,
+      wireCost: 20,
+      wirePriceCounter: 0,
+      wirePriceTimer: 248,
+    };
+    for (const [index, [wire, sale]] of golden.scenarios.timedRetail.draws.entries()) {
+      state = { ...state, unsoldClips: state.unsoldClips + 1 };
+      state = advanceRetailTick(state, { wire, sale });
+      const expected = golden.scenarios.timedRetail.checkpoints[index];
+      expect(state.unsoldClips).toBeCloseTo(expected?.unsoldClips as number);
+      expect(state.funds).toBe(expected?.funds);
+      expect(state.wireBasePrice).toBe(expected?.wireBasePrice);
+      expect(state.wireCost).toBe(expected?.wireCost);
+      expect(state.wirePriceCounter).toBe(expected?.wirePriceCounter);
+      expect(state.wirePriceTimer).toBe(expected?.wirePriceTimer);
+    }
+  });
+
+  it("uses the source scheduler and wire-purchase mutations through the game API", () => {
+    const game = createPaperclipsReference();
+    expect(game.advance(1_000)).toMatchObject({ ok: true });
+    expect(game.getSnapshot()).toMatchObject({
+      gameTimeMs: 1_000,
+      resources: { demand: 3.2, "wire-price-timer": 10 },
+    });
+    const purchaseGame = createPaperclipsReference();
+    seed(purchaseGame, (transaction) => transaction.set(paperclipsResources.funds, 20));
+    expect(purchaseGame.dispatch({ type: "buy-wire" })).toMatchObject({ ok: true });
+    expect(purchaseGame.getSnapshot().resources).toMatchObject({
+      funds: 0,
+      wire: 2_000,
+      "wire-base-price": 20.05,
+      "wire-price-timer": 0,
+    });
   });
 });
 

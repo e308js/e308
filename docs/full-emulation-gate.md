@@ -44,8 +44,8 @@ The baseline is the four v3 scripts pinned in `reference/paperclips/manifest.jso
   reversion, and reinitialization behavior;
 - serialization of all canonical economy, project, random, phase, combat, and ending state.
 
-The checked source inventory contains 96 projects. The current campaign harness maps 36 of them and
-uses approximate pacing in several mapped effects. The remaining 60 projects, exact effects, and
+The checked source inventory contains 96 projects. The current campaign harness maps 38 of them and
+uses approximate pacing in several mapped effects. The remaining 58 projects, exact effects, and
 golden source traces are open work. A campaign-ending bot report alone does not pass this gate.
 
 ## Antimatter Dimensions
@@ -78,7 +78,7 @@ later progression eras, a fresh-save completion trace, and end-to-end golden com
 | --- | --- | --- |
 | Paperclips source scripts pinned | Four exact SHA-256 hashes | PASS |
 | Paperclips project inventory | 96 unique source variables and DOM IDs | PASS |
-| Paperclips campaign skeleton | 36 source-mapped projects; three phases; one ending trace | PARTIAL |
+| Paperclips campaign skeleton | 38 source-mapped projects; three phases; one ending trace | PARTIAL |
 | Paperclips exact golden traces | Initial state, retail actions, machine curves, and early production projects | PARTIAL |
 | Antimatter minimum mechanics | AD01–AD06 | PASS |
 | Antimatter full source inventory | Complete reachable-content ledger | OPEN |

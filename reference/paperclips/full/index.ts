@@ -8,8 +8,10 @@ export * from "./model.js";
 export * from "./project-source-map.js";
 export * from "./projects.js";
 export * from "./purchase-curves.js";
+export * from "./retail.js";
 export * from "./scenario.js";
 export * from "./types.js";
+export * from "./wire-purchase.js";
 
 export class PaperclipsReferenceGame {
   constructor(readonly game: Game<number> = createGame(paperclipsDefinition)) {}

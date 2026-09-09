@@ -204,7 +204,8 @@ function probeDesignQuotes(
 function makeQuote(snapshot: Snapshot<number>): LegalActionQuote<PaperclipsIntent> {
   const constraints: ConstraintEvidence[] = [];
   requireAmount(snapshot, "wire", 1, constraints);
-  return quote(snapshot, "make-clip", { type: "make-clip" }, constraints, 200);
+  const count = Math.min(100, Math.floor(snapshot.resources.wire ?? 0));
+  return quote(snapshot, "make-clip", { type: "make-clip", count }, constraints, 200);
 }
 
 function projectConstraints(
@@ -223,6 +224,10 @@ function projectConstraints(
   if (project.yomi) requireAmount(snapshot, "yomi", project.yomi, constraints);
   if (project.clips) requireAmount(snapshot, "clips", project.clips, constraints);
   if (project.trust) requireFreeTrust(snapshot, project.trust, constraints);
+  if (project.id === "spectral-froth-annealment")
+    requireAmount(snapshot, paperclipsResources.wireSupply.id, 5_000, constraints);
+  if (project.id === "quantum-foam-annealment")
+    requireAmount(snapshot, paperclipsResources.wireCost.id, 125, constraints);
   return constraints;
 }
 
