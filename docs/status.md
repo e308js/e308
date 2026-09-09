@@ -13,7 +13,8 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S05 | ACCEPTED | `e1bf2d89353c46f4dd18834d5d931680a5378e3f` | quality + reference | [run 34295772673](https://github.com/e308js/e308/actions/runs/34295772673), [details](s05-evidence.md) |
 | S06 | ACCEPTED | `ab93cbd64ad7cd6c4283bc0dc576781d734e259d` | quality + browser | [run 34299737625](https://github.com/e308js/e308/actions/runs/34299737625), [details](s06-evidence.md) |
 | S07 | ACCEPTED | `a71a4b96980e83dcd0e9b747c75a3a5d77ad6620` | quality + browser/worker | [run 34303068893](https://github.com/e308js/e308/actions/runs/34303068893), [details](s07-evidence.md) |
-| S08–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
+| S08 | ACCEPTED | `5bc041d9c898a79a1caa3c9d09879cb9ef69241d` | quality + pacing | [run 34305644935](https://github.com/e308js/e308/actions/runs/34305644935), [details](s08-evidence.md) |
+| S09–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
@@ -54,5 +55,11 @@ validated import/export/reset, cross-tab ownership and takeover, secondary revis
 a versioned worker protocol with stale-response fencing and chunk-boundary cancellation. Its
 automated lifecycle, two-page, worker, and three-kernel save cases passed exact-head CI on September
 9, 2026. A named physical-device sleep/wake run remains openly assigned to release closure.
+
+S08 added observation-only bot policies, revision-bound quote execution, active/idle/absent schedules,
+bounded replayable pacing reports, reached-only aggregate statistics, parameter sweeps, and paired
+baseline comparisons. Scripted, ranked, and goal policies reached authored goals across Wireworks,
+Cascade, and Hearth; exact-head CI also generated a real Hearth recipe-cost regression report on
+September 8, 2026.
 
 No npm package or public GitHub release has been published.
