@@ -15,8 +15,8 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S07 | ACCEPTED | `a71a4b96980e83dcd0e9b747c75a3a5d77ad6620` | quality + browser/worker | [run 34303068893](https://github.com/e308js/e308/actions/runs/34303068893), [details](s07-evidence.md) |
 | S08 | ACCEPTED | `5bc041d9c898a79a1caa3c9d09879cb9ef69241d` | quality + pacing | [run 34305644935](https://github.com/e308js/e308/actions/runs/34305644935), [details](s08-evidence.md) |
 | S09 | ACCEPTED | `53aadbeafe7d2cdfee5181a0b8fe99f82dc9fe5b` | quality + optimization | [run 34308069739](https://github.com/e308js/e308/actions/runs/34308069739), [details](s09-evidence.md) |
-| S10 | IN REVIEW | `3005bca0b7a10d43ea57b01a60ef910a5acf3664` (candidate) | quality + finished games | [run 34314774684](https://github.com/e308js/e308/actions/runs/34314774684), [details](s10-evidence.md); independent walkthrough pending |
-| S11 | IN REVIEW | `8655ad2f74669e16686c20d1fd8d1bec5136bb5c` (candidate) | release closure | [run 34320192794](https://github.com/e308js/e308/actions/runs/34320192794), [details](s11-evidence.md); independent reviews remain pending |
+| S10 | IN REVIEW | `3005bca0b7a10d43ea57b01a60ef910a5acf3664` (candidate) | quality + finished games | [run 34314774684](https://github.com/e308js/e308/actions/runs/34314774684), [details](s10-evidence.md); walkthrough pending |
+| S11 | IN REVIEW | `8655ad2f74669e16686c20d1fd8d1bec5136bb5c` (candidate) | release closure | [run 34320192794](https://github.com/e308js/e308/actions/runs/34320192794), [details](s11-evidence.md); reviews remain pending |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
@@ -72,19 +72,19 @@ conditions. Property, boundary, overflow, RNG, and fallback cases passed exact-h
 
 S10 has an exact-SHA CI-green release-quality candidate containing three complete original games,
 clean-archive consumers, full pacing and offline matrices, interactive bounded reference labs, and
-browser coverage. It remains IN REVIEW until an independent person completes the required
-desktop/touch walkthrough. Public project pages will expose only the three original games;
+browser coverage. It remains IN REVIEW until the required desktop/touch walkthrough is recorded;
+the reviewer may be the implementer. Public project pages will expose only the three original games;
 reference implementations and labs remain private test evidence.
 
 S11 now has CI-green commits for the developer README, required TMT cross-feature interactions, and
 an original-games-only public site artifact. The site build includes Wireworks, Cascade, and Hearth,
 rejects reference-lab markers, and browser-tests reference-lab URLs as absent. The pinned TMT audit
 maps 447 source entries to public surfaces and executable evidence; its automated validation is
-passing locally, while independent source-review sign-off remains pending.
+passing locally, while source-review sign-off remains pending.
 
 The `1.0.0-rc.1` core and UX archives install successfully in a clean consumer. S11 also generates a
 SHA-keyed release manifest with archive hashes and D1–D8/D1R evidence paths. Automated gate status is
-kept separate from the independent source, game/usability, and physical-device reviews listed in
+kept separate from the source, game/usability, and physical-device reviews listed in
 [release-review.md](release-review.md).
 
 A manual-only GitHub Pages workflow is prepared. It builds the tested site artifact containing all

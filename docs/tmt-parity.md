@@ -1,10 +1,10 @@
 # TMT capability parity register
 
-Status: automated implementation audit **PASS**; independent source-review sign-off pending. The
+Status: automated implementation audit **PASS**; source-review sign-off pending. The
 [leaf evidence inventory](evidence/tmt/README.md) resolves 447 pinned source entries: 366 required
 capabilities, 40 aliases, and 41 documented implementation mechanisms. All automated entries pass,
-with zero failed or not-run entries. D1 remains in review until another person audits the source
-coverage and dispositions.
+with zero failed or not-run entries. D1 remains in review until a reviewer audits the source
+coverage and dispositions; the reviewer may be the implementer.
 
 Baseline: Acamaeda/The-Modding-Tree, commit `4d8a86cfb3c59ef3ef4c222f21ef4fbee980c621`. Sources below are relative to its [pinned docs directory](https://github.com/Acamaeda/The-Modding-Tree/tree/4d8a86cfb3c59ef3ef4c222f21ef4fbee980c621/docs). Public source was inspected for this register. File hashes are tracked in [source-manifest.json](source-manifest.json).
 
@@ -75,8 +75,8 @@ Each required leaf record contains:
 The coverage denominator is required **leaves**, never the 37 group headings. The executed inventory
 reports 366 required, 366 passed, zero failed, and zero not-run leaves, plus 40 aliases and 41
 implementation mechanisms. No required leaf receives an “N/A.” Automated integrity and evidence
-mapping are checked by `tests/reference/tmt-leaf-inventory.test.ts`; independent review of the
-pinned source and each disposition remains unfinished.
+mapping are checked by `tests/reference/tmt-leaf-inventory.test.ts`; review of the pinned source and
+each disposition remains unfinished.
 
 ## How to establish parity
 

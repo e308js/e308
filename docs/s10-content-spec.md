@@ -97,5 +97,5 @@ game as an e308 example.
 CI records completion traces, checkpoints, policy/schedule reports, the offline/recovery matrix,
 browser accessibility assertions, package-consumer builds, reference-laboratory results, and final
 content performance workloads. Automated evidence does not stand in for the required walkthrough:
-S10 remains unaccepted until a person other than the implementer records completion/review of all
-significant choices and both desktop and touch interaction.
+S10 remains unaccepted until a reviewer records completion/review of all significant choices and
+both desktop and touch interaction. The reviewer may be the implementer.

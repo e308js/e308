@@ -236,3 +236,7 @@ The [public API reference](docs/api-reference.md) lists package subpaths and con
 and numeric backend transitions.
 
 e308 is ESM-only. Core imports do not access the DOM, timers, storage, or ambient randomness.
+
+## License
+
+e308 is available under the [MIT License](LICENSE).

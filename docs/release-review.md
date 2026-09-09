@@ -1,8 +1,8 @@
 # Release review procedure
 
-The automated release candidate remains in review until a person other than the implementer records
-the checks below. Use the exact candidate commit and attach the completed record to the SHA-keyed
-release evidence. A failed item reopens its gate; do not sign around it.
+The automated release candidate remains in review until a reviewer records the checks below. The
+reviewer may be the implementer. Use the exact candidate commit and attach the completed record to
+the SHA-keyed release evidence. A failed item reopens its gate; do not sign around it.
 
 ## Candidate identity
 

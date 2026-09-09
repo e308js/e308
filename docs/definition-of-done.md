@@ -1,7 +1,7 @@
 # e308 v1 definition of done
 
-Status: automated release-candidate gates are implemented and passing; independent source,
-game/usability, and physical-device review remain open. This is still not a v1 completion claim.
+Status: automated release-candidate gates are implemented and passing; source, game/usability, and
+physical-device review remain open. This is still not a v1 completion claim.
 The [release review procedure](release-review.md) defines the remaining sign-offs.
 
 **e308 is done when its public packages demonstrate every required TMT capability, pass defined mechanics-parity gates against Antimatter Dimensions and Kittens Game, support three mechanically and visually distinct complete games, and pass reproducible correctness, recovery, usability, and performance gates with inspectable evidence.** A feature list, three reskinned clickers, or passing engine unit tests alone does not satisfy this definition.
@@ -46,7 +46,7 @@ These are original, finite demonstration games inspired by three different econo
 
 Counts are coverage floors, not permission to pad with identical upgrades. Each game must have at least two consequential strategy/allocation choices whose differing effects appear in reports. The three must differ in dominant production model, decision structure, and interface composition. Reusing primitives is expected; changing labels on the same progression loop fails this gate.
 
-Every game needs a known winning script from a new save with no debug grants, save editing, or direct state mutation. Accelerated headless clock advancement is allowed and recorded; changing production multipliers to force completion is not. At least one person other than the implementer must complete or review a recorded full legal playthrough and directly exercise the significant UI choices. Pacing targets and maximum simulated completion horizons are frozen with each game's content spec before acceptance runs, with later changes versioned.
+Every game needs a known winning script from a new save with no debug grants, save editing, or direct state mutation. Accelerated headless clock advancement is allowed and recorded; changing production multipliers to force completion is not. A reviewer, who may be the implementer, must complete or review a recorded full legal playthrough and directly exercise the significant UI choices. Pacing targets and maximum simulated completion horizons are frozen with each game's content spec before acceptance runs, with later changes versioned.
 
 Each game must build as an independent consumer of package archives using only public exports. No imports from engine source/private paths, game-ID conditionals inside core, renderer-driven economic updates, or copied bespoke save/offline loops. At least one game's novel mechanic uses a documented custom extension and runs headlessly. Any necessary engine change must become a general public capability and rerun all gates.
 

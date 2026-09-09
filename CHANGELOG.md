@@ -10,6 +10,7 @@
 - Added three complete original example games: Wireworks, Cascade, and Hearth.
 - Added bounded TMT, Antimatter Dimensions, Kittens Game, and Universal Paperclips evidence suites,
   clean archive consumers, per-file coverage gates, and browser integration tests.
+- Licensed the public packages under the MIT License.
 
 This is the first release candidate. There is no earlier stable package API to migrate from. Save
 and content authors should follow [docs/migration-guide.md](docs/migration-guide.md) for future

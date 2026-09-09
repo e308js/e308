@@ -1,6 +1,6 @@
 # Reference-game parity gates
 
-Status: automated bounded-parity suite **PASS**; independent source-review sign-off pending. The
+Status: automated bounded-parity suite **PASS**; source-review sign-off pending. The
 [reference evidence manifest](evidence/reference-games.json) maps all 15 required cases—AD01–AD06,
 KG01–KG06, and PC01–PC03—to pinned source manifests, executable comparisons, declared numerical
 policies, and interactive evidence. All 15 cases pass with zero failed or not-run cases.

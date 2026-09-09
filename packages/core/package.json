@@ -2,6 +2,7 @@
   "name": "@e308/core",
   "version": "1.0.0-rc.1",
   "description": "Deterministic, headless incremental-game engine",
+  "license": "MIT",
   "keywords": [
     "incremental-game",
     "idle-game",
@@ -76,7 +77,8 @@
     "dist",
     "!dist/*.tsbuildinfo",
     "schema",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json"

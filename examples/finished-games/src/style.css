@@ -55,6 +55,46 @@ button:disabled {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+.library-intro {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 2rem auto 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid #ffffff24;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #142431, #111521 55%, #1d1629);
+}
+.library-intro h1 {
+  max-width: 20ch;
+  margin: 0.25rem 0 0.75rem;
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  line-height: 1.05;
+}
+.library-intro > p:not(.eyebrow) {
+  max-width: 70ch;
+  color: #c7d3da;
+  line-height: 1.6;
+}
+.eyebrow {
+  margin: 0;
+  color: #69e6d3;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.package-list {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.package-list code,
+.package-list span {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #ffffff30;
+  border-radius: 999px;
+  background: #07101899;
+}
 .save-tools {
   display: grid;
   grid-template-columns: 1fr repeat(4, auto);

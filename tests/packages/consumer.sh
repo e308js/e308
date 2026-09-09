@@ -107,8 +107,13 @@ node --input-type=module -e '
   if (pkg.version !== "1.0.0-rc.1" || pkg.dependencies?.["@e308/core"] !== "1.0.0-rc.1") process.exit(1);
   const core = JSON.parse(await readFile("node_modules/@e308/core/package.json", "utf8"));
   if (core.version !== "1.0.0-rc.1") process.exit(1);
+  if (core.license !== "MIT" || pkg.license !== "MIT") process.exit(1);
   if (core.engines?.node !== ">=24.14.1" || core.repository?.directory !== "packages/core") process.exit(1);
   if (pkg.engines?.node !== ">=24.14.1" || pkg.repository?.directory !== "packages/ux") process.exit(1);
+  for (const name of ["core", "ux"]) {
+    const license = await readFile(`node_modules/@e308/${name}/LICENSE`, "utf8");
+    if (!license.startsWith("MIT License") || !license.includes("e308 contributors")) process.exit(1);
+  }
   const schema = JSON.parse(await readFile("node_modules/@e308/core/schema/save-v1.schema.json", "utf8"));
   if (schema.title !== "e308 save envelope v1") process.exit(1);
 '

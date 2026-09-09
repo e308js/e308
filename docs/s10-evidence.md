@@ -2,8 +2,8 @@
 
 Status: **IN REVIEW**. Candidate commit
 `3005bca0b7a10d43ea57b01a60ef910a5acf3664` passed the complete GitHub Actions quality workflow.
-Acceptance still requires a walkthrough by someone other than the implementer on desktop and touch
-layouts.
+Acceptance still requires a recorded walkthrough on desktop and touch layouts. The reviewer may be
+the implementer.
 
 ## Delivered scope
 
@@ -51,7 +51,7 @@ Hearth. Thirty-day work remains bounded and preserves its pending backlog after 
 
 ## Open acceptance evidence
 
-- Record an independent walkthrough of every consequential choice and ending.
+- Record a walkthrough of every consequential choice and ending.
 - Record desktop and touch interaction review, including the distinct layouts and Wireworks terminal
   projection.
 

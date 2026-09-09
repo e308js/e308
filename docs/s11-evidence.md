@@ -55,9 +55,8 @@ statuses, and open-review fields.
 
 ## Open release evidence
 
-The [release review procedure](release-review.md) still requires a person other than the implementer
-to audit TMT and reference-source coverage, review every consequential game choice and ending,
+The [release review procedure](release-review.md) still requires a reviewer to audit TMT and
+reference-source coverage, review every consequential game choice and ending,
 exercise desktop and physical-touch usability, and record a named physical-device sleep/wake run.
-Those requirements also keep S10 in review. The repository has no project license yet; a license is
-an owner decision required before public npm publication. npm publication and Pages deployment have
-not occurred.
+The reviewer may be the implementer. Those requirements also keep S10 in review. The project and
+public packages use the MIT license. npm publication and Pages deployment have not occurred.

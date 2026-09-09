@@ -2,6 +2,7 @@
   "name": "@e308/ux",
   "version": "1.0.0-rc.1",
   "description": "Framework-independent UX contracts for e308 games",
+  "license": "MIT",
   "keywords": [
     "incremental-game",
     "idle-game",
@@ -51,7 +52,8 @@
   "files": [
     "dist",
     "!dist/*.tsbuildinfo",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json"
