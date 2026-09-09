@@ -12,7 +12,8 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S04 | ACCEPTED | `4c2a9e7b39660236fba1c5768b5151b73bec6434` | quality + reference | [run 34291320021](https://github.com/e308js/e308/actions/runs/34291320021), [details](s04-evidence.md) |
 | S05 | ACCEPTED | `e1bf2d89353c46f4dd18834d5d931680a5378e3f` | quality + reference | [run 34295772673](https://github.com/e308js/e308/actions/runs/34295772673), [details](s05-evidence.md) |
 | S06 | ACCEPTED | `ab93cbd64ad7cd6c4283bc0dc576781d734e259d` | quality + browser | [run 34299737625](https://github.com/e308js/e308/actions/runs/34299737625), [details](s06-evidence.md) |
-| S07–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
+| S07 | ACCEPTED | `a71a4b96980e83dcd0e9b747c75a3a5d77ad6620` | quality + browser/worker | [run 34303068893](https://github.com/e308js/e308/actions/runs/34303068893), [details](s07-evidence.md) |
+| S08–S11 | PLANNED | — | — | See [slice specifications](implementation-slices.md) |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
@@ -47,5 +48,11 @@ S06 added generic view sources, localization and numeric formatting, resolved ac
 save views, replaceable semantic DOM controls, visual effects, and an optional theme. Its TMT
 interaction gallery renders one kernel through two compositions; Vitest and Playwright browser
 evidence passed exact-head CI on September 9, 2026.
+
+S07 added explicit browser clock reconciliation, IndexedDB transactions, serialized autosaves,
+validated import/export/reset, cross-tab ownership and takeover, secondary revision propagation, and
+a versioned worker protocol with stale-response fencing and chunk-boundary cancellation. Its
+automated lifecycle, two-page, worker, and three-kernel save cases passed exact-head CI on September
+9, 2026. A named physical-device sleep/wake run remains openly assigned to release closure.
 
 No npm package or public GitHub release has been published.
