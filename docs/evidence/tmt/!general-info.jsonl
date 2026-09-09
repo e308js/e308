@@ -1,0 +1,30 @@
+{"id":"T36.-general-info.19.no-label","line":19,"key":"No label","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.20.sometimes-required","line":20,"key":"sometimes required","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.21.optional","line":21,"key":"optional","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.22.assigned-automagically","line":22,"key":"assigned automagically","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.23.deprecated","line":23,"key":"deprecated","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.31.getting-started","line":31,"key":"[Getting Started](tutorials/getting-started.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.32.making-a-mod","line":32,"key":"[Making a Mod](tutorials/making-a-mod.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.33.main-mod-info","line":33,"key":"[Main mod info](main-mod-info.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.34.basic-layer-breakdown","line":34,"key":"[Basic layer breakdown](basic-layer-breakdown.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.35.layer-features","line":35,"key":"[Layer features](layer-features.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.36.custom-tab-layouts","line":36,"key":"[Custom Tab Layouts](custom-tab-layouts.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.37.custom-game-layouts","line":37,"key":"[Custom Game Layouts](trees-and-tree-customization.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.39.updating-tmt","line":39,"key":"[Updating TMT](tutorials/updating-tmt.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.40.other-things","line":40,"key":"[Other Things](other.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.44.upgrades","line":44,"key":"[Upgrades](upgrades.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.45.milestones","line":45,"key":"[Milestones](milestones.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.46.buyables","line":46,"key":"[Buyables](buyables.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.47.clickables","line":47,"key":"[Clickables](clickables.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.48.achievements","line":48,"key":"[Achievements](achievements.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.52.challenges","line":52,"key":"[Challenges](challenges.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.53.bars","line":53,"key":"[Bars](bars.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.54.subtabs-and-microtabs","line":54,"key":"[Subtabs and Microtabs](subtabs-and-microtabs.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.56.grids","line":56,"key":"[Grids](grids.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.57.infoboxes","line":57,"key":"[Infoboxes](infoboxes.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.58.trees","line":58,"key":"[Trees](trees-and-tree-customization.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T36.-general-info.59.particle-system","line":59,"key":"[Particle system](particles.md)","group":"T36","disposition":"alias","status":"PASS"}
+{"id":"T03.-general-info.13.dynamic-function-valued-definitions","line":13,"key":"dynamic function-valued definitions","group":"T03","disposition":"required","status":"PASS"}
+{"id":"T02.-general-info.1.break-eternity-quantities-and-arithmetic","line":1,"key":"break-eternity quantities and arithmetic","group":"T02","disposition":"required","status":"PASS"}
+{"id":"T02.-general-info.1.large-number-comparisons","line":1,"key":"large-number comparisons","group":"T02","disposition":"required","status":"PASS"}
+{"id":"T23.-general-info.1.safe-rich-display-text","line":1,"key":"safe rich display text","group":"T23","disposition":"required","status":"PASS"}

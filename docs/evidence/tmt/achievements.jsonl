@@ -1,0 +1,15 @@
+{"id":"T14.achievements.9.hasachievement","line":9,"key":"hasAchievement(layer, id)","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.10.achievementeffect","line":10,"key":"achievementEffect(layer, id)","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.28.name","line":28,"key":"name","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.30.done","line":30,"key":"done()","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.32.tooltip","line":32,"key":"tooltip","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.34.effect","line":34,"key":"effect()","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.36.unlocked","line":36,"key":"unlocked()","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.38.oncomplete-optional-this-function-will-be-called-when-the-achiev","line":38,"key":"onComplete() - optional. this function will be called when the achievement is completed.","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.40.image","line":40,"key":"image","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.42.style","line":42,"key":"style","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.44.textstyle","line":44,"key":"textStyle","group":"T14","disposition":"required","status":"PASS"}
+{"id":"T14.achievements.46.layer","line":46,"key":"layer","group":"T14","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T14.achievements.48.id","line":48,"key":"id","group":"T14","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T14.achievements.50.goaltooltip","line":50,"key":"goalTooltip","group":"T14","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T14.achievements.52.donetooltip","line":52,"key":"doneTooltip","group":"T14","disposition":"implementation-mechanism","status":"PASS"}

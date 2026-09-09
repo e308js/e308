@@ -1,6 +1,10 @@
 # TMT capability parity register
 
-Status: required coverage specification. All implementation results are **NOT RUN**. This register sets the D1 scope in [definition-of-done.md](definition-of-done.md); it does not claim existing parity.
+Status: automated implementation audit **PASS**; independent source-review sign-off pending. The
+[leaf evidence inventory](evidence/tmt/README.md) resolves 447 pinned source entries: 366 required
+capabilities, 40 aliases, and 41 documented implementation mechanisms. All automated entries pass,
+with zero failed or not-run entries. D1 remains in review until another person audits the source
+coverage and dispositions.
 
 Baseline: Acamaeda/The-Modding-Tree, commit `4d8a86cfb3c59ef3ef4c222f21ef4fbee980c621`. Sources below are relative to its [pinned docs directory](https://github.com/Acamaeda/The-Modding-Tree/tree/4d8a86cfb3c59ef3ef4c222f21ef4fbee980c621/docs). Public source was inspected for this register. File hashes are tracked in [source-manifest.json](source-manifest.json).
 
@@ -68,7 +72,11 @@ Each required leaf record contains:
 - Expected and actual result, runtime/backend, numerical comparison policy, artifact hashes.
 - Status `NOT RUN`, `FAIL`, or `PASS`, and reviewer/date.
 
-The coverage denominator is required **leaves**, never the 37 group headings. Report required/passed/failed/not-run counts and separately report aliases and implementation mechanisms. No required leaf gets an “N/A” merely because e308 has not built it. The inventory audit itself is a tracked D1 requirement and remains unfinished until reviewed; this documentation pass establishes the rules and group mapping, not an executed compatibility suite.
+The coverage denominator is required **leaves**, never the 37 group headings. The executed inventory
+reports 366 required, 366 passed, zero failed, and zero not-run leaves, plus 40 aliases and 41
+implementation mechanisms. No required leaf receives an “N/A.” Automated integrity and evidence
+mapping are checked by `tests/reference/tmt-leaf-inventory.test.ts`; independent review of the
+pinned source and each disposition remains unfinished.
 
 ## How to establish parity
 

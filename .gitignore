@@ -1,4 +1,5 @@
 node_modules/
+site-dist/
 dist/
 coverage/
 *.tsbuildinfo

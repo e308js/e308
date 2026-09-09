@@ -1,0 +1,28 @@
+{"id":"T16.challenges.5.inchallenge","line":5,"key":"inChallenge(layer, id)","group":"T16","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.6.haschallenge","line":6,"key":"hasChallenge(layer, id)","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.7.challengecompletions","line":7,"key":"challengeCompletions(layer, id)","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T16.challenges.8.maxedchallenge","line":8,"key":"maxedChallenge(layer, id)","group":"T16","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.9.challengeeffect","line":9,"key":"challengeEffect(layer, id)","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.29.name","line":29,"key":"name","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.31.challengedescription","line":31,"key":"challengeDescription","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.33.goaldescription","line":33,"key":"goalDescription","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.36.cancomplete","line":36,"key":"canComplete()","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.39.rewarddescription","line":39,"key":"rewardDescription","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.41.rewardeffect","line":41,"key":"rewardEffect()","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.43.rewarddisplay","line":43,"key":"rewardDisplay()","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.45.fulldisplay","line":45,"key":"fullDisplay()","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.47.unlocked","line":47,"key":"unlocked()","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.49.oncomplete-optional-this-function-will-be-called-when-the-challe","line":49,"key":"onComplete() - optional. this function will be called when the challenge is completed when","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.51.onenter-optional-this-function-will-be-called-when-entering-the-","line":51,"key":"onEnter() - optional. this function will be called when entering the challenge","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.53.onexit-optional-this-function-will-be-called-when-exiting-the-ch","line":53,"key":"onExit() - optional. this function will be called when exiting the challenge in any way","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T16.challenges.55.countsas","line":55,"key":"countsAs","group":"T16","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.57.completionlimit","line":57,"key":"completionLimit","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.59.style","line":59,"key":"style","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.61.marked","line":61,"key":"marked","group":"T15","disposition":"required","status":"PASS"}
+{"id":"T15.challenges.63.layer","line":63,"key":"layer","group":"T15","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T15.challenges.65.id","line":65,"key":"id","group":"T15","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T15.challenges.71.goal","line":71,"key":"goal","group":"T15","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T15.challenges.73.currencydisplayname","line":73,"key":"currencyDisplayName","group":"T15","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T15.challenges.75.currencyinternalname","line":75,"key":"currencyInternalName","group":"T15","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T15.challenges.77.currencylayer","line":77,"key":"currencyLayer","group":"T15","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T15.challenges.79.currencylocation","line":79,"key":"currencyLocation()","group":"T15","disposition":"implementation-mechanism","status":"PASS"}

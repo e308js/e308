@@ -1,0 +1,24 @@
+{"id":"T01.main-mod-info.8.modinfo-is-where-most-of-the-basic-configuration-for-the-mod-is-","line":8,"key":"modInfo is where most of the basic configuration for the mod is. It contains","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.9.name","line":9,"key":"name","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.10.id","line":10,"key":"id","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.11.author","line":11,"key":"author","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.12.pointsname","line":12,"key":"pointsName","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.13.modfiles","line":13,"key":"modFiles","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.15.discordname","line":15,"key":"discordName","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.15.discordlink","line":15,"key":"discordLink","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T33.main-mod-info.19.offlinelimit","line":19,"key":"offlineLimit","group":"T33","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.23.initialstartpoints","line":23,"key":"initialStartPoints","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.25.version-is-used-to-describe-the-current-version-of-your-mod-it-c","line":25,"key":"VERSION is used to describe the current version of your mod. It contains","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.26.num","line":26,"key":"num","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.27.name","line":27,"key":"name","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.29.changelog-is-the-html-displayed-in-the-changelog-tab-if-this-get","line":29,"key":"changelog is the HTML displayed in the changelog tab. If this gets particularly long, it m","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.31.donotcallthesefunctionseverytick-is-very-important-if-you-are-ad","line":31,"key":"doNotCallTheseFunctionsEveryTick is very important, if you are adding non-standard functio","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T32.main-mod-info.38.getstartpoints","line":38,"key":"getStartPoints()","group":"T32","disposition":"required","status":"PASS"}
+{"id":"T32.main-mod-info.40.cangenpoints","line":40,"key":"canGenPoints()","group":"T32","disposition":"required","status":"PASS"}
+{"id":"T32.main-mod-info.42.getpointgen","line":42,"key":"getPointGen()","group":"T32","disposition":"required","status":"PASS"}
+{"id":"T01.main-mod-info.44.addedplayerdata","line":44,"key":"addedPlayerData()","group":"T01","disposition":"required","status":"PASS"}
+{"id":"T27.main-mod-info.53.displaythings","line":53,"key":"displayThings","group":"T27","disposition":"required","status":"PASS"}
+{"id":"T35.main-mod-info.55.isendgame","line":55,"key":"isEndgame()","group":"T35","disposition":"required","status":"PASS"}
+{"id":"T27.main-mod-info.59.backgroundstyle","line":59,"key":"backgroundStyle","group":"T27","disposition":"required","status":"PASS"}
+{"id":"T33.main-mod-info.61.maxticklength","line":61,"key":"maxTickLength()","group":"T33","disposition":"required","status":"PASS"}
+{"id":"T34.main-mod-info.63.fixoldsave","line":63,"key":"fixOldSave()","group":"T34","disposition":"required","status":"PASS"}

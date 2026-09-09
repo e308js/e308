@@ -1,0 +1,196 @@
+{
+  "schema": "e308-tmt-leaf-index",
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "Acamaeda/The-Modding-Tree",
+    "commit": "4d8a86cfb3c59ef3ef4c222f21ef4fbee980c621"
+  },
+  "generatedAt": "2026-09-09",
+  "counts": {
+    "total": 447,
+    "required": 366,
+    "aliases": 40,
+    "implementationMechanisms": 41,
+    "passed": 447,
+    "failed": 0,
+    "notRun": 0
+  },
+  "inheritedEvidence": {
+    "runtime": "Node 24.14.1; Chromium for browser evidence",
+    "reviewer": "codex implementation audit; independent source audit pending",
+    "reviewDate": "2026-09-09",
+    "expectedRequired": "Declared capability is usable through public e308 APIs or a shipped recipe",
+    "expectedReconciled": "Entry is mapped without expanding the compatibility claim",
+    "groupEvidence": "groups.jsonl"
+  },
+  "documents": [
+    {
+      "source": "docs/!general-info.md",
+      "sha256": "e1ac6ed27d64b288627b8a2a676838f277b3ed1d0491e8859ae826ca1e171922",
+      "file": "!general-info.jsonl",
+      "entries": 30
+    },
+    {
+      "source": "docs/achievements.md",
+      "sha256": "f23ad2c87356b6dae783960bc1885322959fcc7c5a302af5e3854ef0b8d4a36b",
+      "file": "achievements.jsonl",
+      "entries": 15
+    },
+    {
+      "source": "docs/bars.md",
+      "sha256": "7a274ebd896ad46100f301cfea5a265d51cb5bcbe3ea7b6015c22a672a9520da",
+      "file": "bars.jsonl",
+      "entries": 13
+    },
+    {
+      "source": "docs/basic-layer-breakdown.md",
+      "sha256": "f6136690b898a296097380fd285b2fd8debfd9bb1b133c6f9d0b1a036ce295a0",
+      "file": "basic-layer-breakdown.jsonl",
+      "entries": 14
+    },
+    {
+      "source": "docs/buyables.md",
+      "sha256": "d2590ee44de880e857c14ecc46d6b1c64a9ff596b4c29ef3f44f42fde2b08400",
+      "file": "buyables.jsonl",
+      "entries": 27
+    },
+    {
+      "source": "docs/challenges.md",
+      "sha256": "f9da6929a2b9d78e3412e6a36209ff4e50c3ba98cec9bce15de5508fd55e4aeb",
+      "file": "challenges.jsonl",
+      "entries": 28
+    },
+    {
+      "source": "docs/clickables.md",
+      "sha256": "0924d49f52c0a587821d9727f67727eec3f3525d9b510428ef34635863d60be2",
+      "file": "clickables.jsonl",
+      "entries": 19
+    },
+    {
+      "source": "docs/custom-tab-layouts.md",
+      "sha256": "1d47cc69d71db9bdf0ae3b9723bc5513a57c8b1c3873f125a8bb67cf460a19fb",
+      "file": "custom-tab-layouts.jsonl",
+      "entries": 41
+    },
+    {
+      "source": "docs/grids.md",
+      "sha256": "5cd1699e8449a5cbf7ecbbbeadbf872140224f0062e0f054aa9f696c555a2369",
+      "file": "grids.jsonl",
+      "entries": 22
+    },
+    {
+      "source": "docs/infoboxes.md",
+      "sha256": "8dc6c9cb1909cc0d240ac274dbfc2a7f02a42831577bdbe65f7e236702d55286",
+      "file": "infoboxes.jsonl",
+      "entries": 8
+    },
+    {
+      "source": "docs/layer-features.md",
+      "sha256": "ea49c626e5ce00184c22ee6ccf8e1b086fad8bb5a2206e9a31c7810a9a86287d",
+      "file": "layer-features.jsonl",
+      "entries": 80
+    },
+    {
+      "source": "docs/main-mod-info.md",
+      "sha256": "0c58d9228bcfba06a27d047b46784b8b9903116c542b9808511afb9fc8068a39",
+      "file": "main-mod-info.jsonl",
+      "entries": 24
+    },
+    {
+      "source": "docs/milestones.md",
+      "sha256": "560632c8313ae4148396fe353ee0b45f33d5075a9e02ce326d5f917a97fd0138",
+      "file": "milestones.jsonl",
+      "entries": 10
+    },
+    {
+      "source": "docs/other.md",
+      "sha256": "4786ad6abe9ffa6b1eadb82305027526bad296d122097875994d87feea49985f",
+      "file": "other.jsonl",
+      "entries": 2
+    },
+    {
+      "source": "docs/particles.md",
+      "sha256": "519ec2620e8519da52496eb95f615d707f274a985e4a9644a648e9683c705c00",
+      "file": "particles.jsonl",
+      "entries": 38
+    },
+    {
+      "source": "docs/subtabs-and-microtabs.md",
+      "sha256": "f5ac2dac33c87876ebe42b29924fcb5550c25c994dac8077e63cd9cdad0845dd",
+      "file": "subtabs-and-microtabs.jsonl",
+      "entries": 8
+    },
+    {
+      "source": "docs/trees-and-tree-customization.md",
+      "sha256": "6678edee455eae2fc4632c7ba4053ccfe32d70d1be5719f604f8fd0369dde0d2",
+      "file": "trees-and-tree-customization.jsonl",
+      "entries": 15
+    },
+    {
+      "source": "docs/upgrades.md",
+      "sha256": "e97c401b056f500cfdd46382dc5b3c3b69898c527a08f395829475a5606e4bd1",
+      "file": "upgrades.jsonl",
+      "entries": 22
+    },
+    {
+      "source": "docs/tutorials/getting-started.md",
+      "sha256": "2d9146402ed42e3bd5d779c08ccd2b723a8ed084b8801063043e9b3d23be352e",
+      "file": "tutorials__getting-started.jsonl",
+      "entries": 8
+    },
+    {
+      "source": "docs/tutorials/making-a-mod.md",
+      "sha256": "e0b579d920c559837c7808ad8d24c10f24db1903d9b429f7631e6101c03aaa7d",
+      "file": "tutorials__making-a-mod.jsonl",
+      "entries": 5
+    },
+    {
+      "source": "docs/tutorials/updating-tmt.md",
+      "sha256": "93bfe0607808460dfeb0bfdb3a30ace1ba86d2eb6de0be33d62d8b6dc7243a5a",
+      "file": "tutorials__updating-tmt.jsonl",
+      "entries": 1
+    },
+    {
+      "source": "js/components.js",
+      "sha256": "da5e1a59a94f2b453c4b70944d3632c6ff521359464c1eb57fdabf3b991968d4",
+      "file": "js__components.jsonl",
+      "entries": 1
+    },
+    {
+      "source": "js/game.js",
+      "sha256": "4c7ff89cea911953a580a49c0d5e23ff17a7e44b80559b70ac2742556055c891",
+      "file": "js__game.jsonl",
+      "entries": 5
+    },
+    {
+      "source": "js/mod.js",
+      "sha256": "c8245066f9b4ce6569af9bb017c7ad91aa27dd3d676741b5c32673a402d59fe8",
+      "file": "js__mod.jsonl",
+      "entries": 2
+    },
+    {
+      "source": "js/technical/temp.js",
+      "sha256": "d9ec80082bd61fde57c7c6e678aaa025f7fab311092539a937153335a0a829ec",
+      "file": "js__technical__temp.jsonl",
+      "entries": 1
+    },
+    {
+      "source": "js/utils.js",
+      "sha256": "debfafe05010f8c4c7311857225a7f637d1c76c7571d4e07adbb6e66226ca04a",
+      "file": "js__utils.jsonl",
+      "entries": 1
+    },
+    {
+      "source": "js/utils/options.js",
+      "sha256": "5bc095ceb184bcc8d5bb4c79afb925d27b1b7fc633da8dd52ad1af6a1deb5514",
+      "file": "js__utils__options.jsonl",
+      "entries": 3
+    },
+    {
+      "source": "js/utils/save.js",
+      "sha256": "b03fe17c121ac1f5bbd97dc5690bfb7afd8281d5059c8a0d5cbb5390f161693c",
+      "file": "js__utils__save.jsonl",
+      "entries": 4
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{"id":"T18.grids.6.gridable-ids-use-base-100-instead-of-base-10-so-you-can-have-mor","line":6,"key":"Gridable ids use base 100 instead of base 10, so you can have more than 10 tiles in a row.","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.9.individual-gridables-are-not-defined-individually-all-properties","line":9,"key":"Individual gridables are not defined individually. All properties go directly into the \"gr","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.10.if-you-need-two-unrelated-grids-in-a-layer","line":10,"key":"If you need two unrelated grids in a layer","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.10.you-ll-need-to-use-a-layer-proxy-component","line":10,"key":"you'll need to use a layer proxy component.","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.14.getgriddata","line":14,"key":"getGridData(layer, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.15.setgriddata","line":15,"key":"setGridData(layer, id, state)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.16.grideffect","line":16,"key":"gridEffect(layer, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.46.rows","line":46,"key":"rows","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.46.cols","line":46,"key":"cols","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.48.maxrows","line":48,"key":"maxRows","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.48.maxcols","line":48,"key":"maxCols","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.50.getstartdata","line":50,"key":"getStartData(id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.52.getunlocked","line":52,"key":"getUnlocked(id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.54.gettitle","line":54,"key":"getTitle(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.56.getdisplay","line":56,"key":"getDisplay(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.58.getstyle","line":58,"key":"getStyle(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.60.getcanclick","line":60,"key":"getCanClick(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.62.onclick","line":62,"key":"onClick(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.64.onhold","line":64,"key":"onHold(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.66.geteffect","line":66,"key":"getEffect(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.68.gettooltip","line":68,"key":"getTooltip(data, id)","group":"T18","disposition":"required","status":"PASS"}
+{"id":"T18.grids.70.layer","line":70,"key":"layer","group":"T18","disposition":"implementation-mechanism","status":"PASS"}

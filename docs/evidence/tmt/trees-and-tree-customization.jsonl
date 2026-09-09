@@ -1,0 +1,15 @@
+{"id":"T22.trees-and-tree-customization.9.starttab","line":9,"key":"startTab","group":"T22","disposition":"required","status":"PASS"}
+{"id":"T22.trees-and-tree-customization.10.startnavtab","line":10,"key":"startNavTab","group":"T22","disposition":"required","status":"PASS"}
+{"id":"T22.trees-and-tree-customization.12.showtree","line":12,"key":"showTree","group":"T22","disposition":"required","status":"PASS"}
+{"id":"T22.trees-and-tree-customization.13.treelayout","line":13,"key":"treeLayout","group":"T22","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.35.color","line":35,"key":"color","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.37.symbol","line":37,"key":"symbol","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.39.canclick","line":39,"key":"canClick()","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.41.onclick","line":41,"key":"onClick()","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.43.layershown","line":43,"key":"layerShown()","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.45.branches","line":45,"key":"branches","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.47.nodestyle","line":47,"key":"nodeStyle","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.49.tooltip","line":49,"key":"tooltip()","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.49.tooltiplocked","line":49,"key":"tooltipLocked()","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.51.row","line":51,"key":"row","group":"T20","disposition":"required","status":"PASS"}
+{"id":"T20.trees-and-tree-customization.53.position","line":53,"key":"position","group":"T20","disposition":"required","status":"PASS"}

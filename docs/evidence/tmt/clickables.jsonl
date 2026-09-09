@@ -1,0 +1,19 @@
+{"id":"T17.clickables.11.getclickablestate","line":11,"key":"getClickableState(layer, id)","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.12.setclickablestate","line":12,"key":"setClickableState(layer, id, state)","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.13.clickableeffect","line":13,"key":"clickableEffect(layer, id)","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.29.title","line":29,"key":"title","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.31.effect","line":31,"key":"effect()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.33.display","line":33,"key":"display()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.35.unlocked","line":35,"key":"unlocked()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.37.canclick","line":37,"key":"canClick()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.39.onclick","line":39,"key":"onClick()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.41.onhold","line":41,"key":"onHold()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.43.style","line":43,"key":"style","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.45.marked","line":45,"key":"marked","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.47.tooltip","line":47,"key":"tooltip","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.49.layer","line":49,"key":"layer","group":"T17","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T17.clickables.51.id","line":51,"key":"id","group":"T17","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T17.clickables.55.masterbuttonpress","line":55,"key":"masterButtonPress()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.57.masterbuttontext","line":57,"key":"masterButtonText","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T17.clickables.59.showmasterbutton","line":59,"key":"showMasterButton()","group":"T17","disposition":"required","status":"PASS"}
+{"id":"T19.clickables.63.branches","line":63,"key":"branches","group":"T19","disposition":"required","status":"PASS"}

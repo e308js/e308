@@ -1,0 +1,8 @@
+{"id":"T26.infoboxes.22.title","line":22,"key":"title","group":"T26","disposition":"required","status":"PASS"}
+{"id":"T26.infoboxes.24.body","line":24,"key":"body","group":"T26","disposition":"required","status":"PASS"}
+{"id":"T26.infoboxes.26.style","line":26,"key":"style","group":"T26","disposition":"required","status":"PASS"}
+{"id":"T26.infoboxes.26.titlestyle","line":26,"key":"titleStyle","group":"T26","disposition":"required","status":"PASS"}
+{"id":"T26.infoboxes.26.bodystyle","line":26,"key":"bodyStyle","group":"T26","disposition":"required","status":"PASS"}
+{"id":"T26.infoboxes.28.unlocked","line":28,"key":"unlocked()","group":"T26","disposition":"required","status":"PASS"}
+{"id":"T26.infoboxes.30.layer","line":30,"key":"layer","group":"T26","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T26.infoboxes.32.id","line":32,"key":"id","group":"T26","disposition":"implementation-mechanism","status":"PASS"}

@@ -1,0 +1,13 @@
+{"id":"T25.bars.22.direction","line":22,"key":"direction","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.24.width","line":24,"key":"width","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.24.height","line":24,"key":"height","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.26.progress","line":26,"key":"progress()","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.29.display","line":29,"key":"display()","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.31.unlocked","line":31,"key":"unlocked()","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.33.basestyle","line":33,"key":"baseStyle","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.33.fillstyle","line":33,"key":"fillStyle","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.33.borderstyle","line":33,"key":"borderStyle","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.33.textstyle","line":33,"key":"textStyle","group":"T25","disposition":"required","status":"PASS"}
+{"id":"T25.bars.35.layer","line":35,"key":"layer","group":"T25","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T25.bars.37.id","line":37,"key":"id","group":"T25","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T25.bars.40.instant","line":40,"key":"instant","group":"T25","disposition":"required","status":"PASS"}

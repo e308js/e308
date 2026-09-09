@@ -1,0 +1,27 @@
+{"id":"T11.buyables.9.getbuyableamount","line":9,"key":"getBuyableAmount(layer, id)","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.10.addbuyables","line":10,"key":"addBuyables(layer, id, amount)","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.11.setbuyableamount","line":11,"key":"setBuyableAmount(layer, id, amount)","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.12.buyableeffect","line":12,"key":"buyableEffect(layer, id)","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.34.title","line":34,"key":"title","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.36.cost","line":36,"key":"cost()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.39.effect","line":39,"key":"effect()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.42.display","line":42,"key":"display()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.44.unlocked","line":44,"key":"unlocked()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.46.canafford","line":46,"key":"canAfford()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.48.buy","line":48,"key":"buy()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.50.buymax","line":50,"key":"buyMax()","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.52.style","line":52,"key":"style","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.54.purchaselimit","line":54,"key":"purchaseLimit","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.56.marked","line":56,"key":"marked","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.58.tooltip","line":58,"key":"tooltip","group":"T11","disposition":"required","status":"PASS"}
+{"id":"T11.buyables.60.layer","line":60,"key":"layer","group":"T11","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T11.buyables.62.id","line":62,"key":"id","group":"T11","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T12.buyables.68.sellone","line":68,"key":"sellOne","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.68.sellall","line":68,"key":"sellAll()","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.70.cansellone","line":70,"key":"canSellOne","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.70.cansellall","line":70,"key":"canSellAll()","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.76.respec","line":76,"key":"respec()","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.78.respectext","line":78,"key":"respecText","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.80.showrespec","line":80,"key":"showRespec()","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T12.buyables.82.respecmessage","line":82,"key":"respecMessage","group":"T12","disposition":"required","status":"PASS"}
+{"id":"T19.buyables.86.branches","line":86,"key":"branches","group":"T19","disposition":"required","status":"PASS"}

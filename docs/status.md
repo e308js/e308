@@ -16,7 +16,7 @@ head passes the required GitHub Actions workflow; local results alone remain in 
 | S08 | ACCEPTED | `5bc041d9c898a79a1caa3c9d09879cb9ef69241d` | quality + pacing | [run 34305644935](https://github.com/e308js/e308/actions/runs/34305644935), [details](s08-evidence.md) |
 | S09 | ACCEPTED | `53aadbeafe7d2cdfee5181a0b8fe99f82dc9fe5b` | quality + optimization | [run 34308069739](https://github.com/e308js/e308/actions/runs/34308069739), [details](s09-evidence.md) |
 | S10 | IN REVIEW | `3005bca0b7a10d43ea57b01a60ef910a5acf3664` (candidate) | quality + finished games | [run 34314774684](https://github.com/e308js/e308/actions/runs/34314774684), [details](s10-evidence.md); independent walkthrough pending |
-| S11 | PLANNED | — | release closure | See [slice specification](implementation-slices.md) |
+| S11 | IN PROGRESS | — | release closure | Public site, developer README, cross-feature fixtures, and automated TMT leaf audit are CI-green or under final validation; independent reviews remain pending |
 
 S00 established the private `e308js/e308` repository, pnpm workspace, two ESM packages, pinned
 toolchain, strict TypeScript, Biome with warnings as errors, per-file 80% thresholds for all four
@@ -75,5 +75,11 @@ clean-archive consumers, full pacing and offline matrices, interactive bounded r
 browser coverage. It remains IN REVIEW until an independent person completes the required
 desktop/touch walkthrough. Public project pages will expose only the three original games;
 reference implementations and labs remain private test evidence.
+
+S11 now has CI-green commits for the developer README, required TMT cross-feature interactions, and
+an original-games-only public site artifact. The site build includes Wireworks, Cascade, and Hearth,
+rejects reference-lab markers, and browser-tests reference-lab URLs as absent. The pinned TMT audit
+maps 447 source entries to public surfaces and executable evidence; its automated validation is
+passing locally, while independent source-review sign-off remains pending.
 
 No npm package or public GitHub release has been published.

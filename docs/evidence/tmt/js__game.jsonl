@@ -1,0 +1,5 @@
+{"id":"T04.js-game-js.25.normal-and-static-prestige-runtime-formulas","line":25,"key":"normal and static prestige runtime formulas","group":"T04","disposition":"required","status":"PASS"}
+{"id":"T32.js-game-js.1.fixed-game-loop-ordering","line":1,"key":"fixed game-loop ordering","group":"T32","disposition":"required","status":"PASS"}
+{"id":"T33.js-game-js.411.offline-tick-consumption","line":411,"key":"offline tick consumption","group":"T33","disposition":"required","status":"PASS"}
+{"id":"T33.js-game-js.340.maxticklength-seconds-runtime-behavior","line":340,"key":"maxTickLength seconds runtime behavior","group":"T33","disposition":"required","status":"PASS"}
+{"id":"T35.js-game-js.1.endgame-loop-stop-and-continue-state","line":1,"key":"endgame loop stop and continue state","group":"T35","disposition":"required","status":"PASS"}

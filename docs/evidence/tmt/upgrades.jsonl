@@ -1,0 +1,22 @@
+{"id":"T10.upgrades.5.hasupgrade","line":5,"key":"hasUpgrade(layer, id)","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.6.upgradeeffect","line":6,"key":"upgradeEffect(layer, id)","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.7.buyupgrade","line":7,"key":"buyUpgrade(layer, id)","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.28.title","line":28,"key":"title","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.30.description","line":30,"key":"description","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.32.effect","line":32,"key":"effect()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.34.effectdisplay","line":34,"key":"effectDisplay()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.36.fulldisplay","line":36,"key":"fullDisplay()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.38.cost","line":38,"key":"cost","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.40.unlocked","line":40,"key":"unlocked()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.42.onpurchase","line":42,"key":"onPurchase()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.44.style","line":44,"key":"style","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.46.tooltip","line":46,"key":"tooltip","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.48.layer","line":48,"key":"layer","group":"T10","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T10.upgrades.50.id","line":50,"key":"id","group":"T10","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T10.upgrades.54.currencydisplayname","line":54,"key":"currencyDisplayName","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.56.currencyinternalname","line":56,"key":"currencyInternalName","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.58.currencylayer","line":58,"key":"currencyLayer","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.60.currencylocation","line":60,"key":"currencyLocation","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.64.canafford","line":64,"key":"canAfford()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T10.upgrades.66.pay","line":66,"key":"pay()","group":"T10","disposition":"required","status":"PASS"}
+{"id":"T19.upgrades.70.branches","line":70,"key":"branches","group":"T19","disposition":"required","status":"PASS"}

@@ -1,0 +1,14 @@
+{"id":"T01.basic-layer-breakdown.7.startdata","line":7,"key":"startData","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.8.unlocked","line":8,"key":"unlocked","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.9.points","line":9,"key":"points","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.12.color","line":12,"key":"color","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.9.resource","line":9,"key":"resource","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.14.row","line":14,"key":"row","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.16.baseresource","line":16,"key":"baseResource","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.19.requires","line":19,"key":"requires","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.22.type","line":22,"key":"type","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.23.exponent","line":23,"key":"exponent","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.25.gainmult","line":25,"key":"gainMult","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.28.gainexp","line":28,"key":"gainExp","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.32.layershown","line":32,"key":"layerShown","group":"T01","disposition":"alias","status":"PASS"}
+{"id":"T01.basic-layer-breakdown.34.upgrades","line":34,"key":"upgrades","group":"T01","disposition":"alias","status":"PASS"}

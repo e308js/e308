@@ -1,0 +1,10 @@
+{"id":"T13.milestones.20.requirementdescription","line":20,"key":"requirementDescription","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.22.effectdescription","line":22,"key":"effectDescription","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.24.done","line":24,"key":"done()","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.26.oncomplete-optional-this-function-will-be-called-when-the-milest","line":26,"key":"onComplete() - optional. this function will be called when the milestone is completed.","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.28.toggles","line":28,"key":"toggles","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.32.style","line":32,"key":"style","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.34.unlocked","line":34,"key":"unlocked()","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.36.tooltip","line":36,"key":"tooltip","group":"T13","disposition":"required","status":"PASS"}
+{"id":"T13.milestones.38.layer","line":38,"key":"layer","group":"T13","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T13.milestones.40.id","line":40,"key":"id","group":"T13","disposition":"implementation-mechanism","status":"PASS"}

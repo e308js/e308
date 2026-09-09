@@ -1,0 +1,38 @@
+{"id":"T30.particles.25.time","line":25,"key":"time","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.26.fadeouttime","line":26,"key":"fadeOutTime","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.27.fadeintime","line":27,"key":"fadeInTime","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.29.image","line":29,"key":"image","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.30.text","line":30,"key":"text","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.31.style","line":31,"key":"style","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.32.width","line":32,"key":"width","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.32.height","line":32,"key":"height","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.33.color","line":33,"key":"color","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.35.angle","line":35,"key":"angle","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.36.dir","line":36,"key":"dir","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.37.spread","line":37,"key":"spread","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.39.rotation","line":39,"key":"rotation","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.40.speed","line":40,"key":"speed","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.41.gravity","line":41,"key":"gravity","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.43.x","line":43,"key":"x","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.43.y","line":43,"key":"y","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.44.offset","line":44,"key":"offset","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.45.xvel","line":45,"key":"xVel","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.45.yvel","line":45,"key":"yVel","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.47.layer","line":47,"key":"layer","group":"T30","disposition":"required","status":"PASS"}
+{"id":"T30.particles.48.you-can-add-other-features-to-particles","line":48,"key":"You can add other features to particles","group":"T30","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T30.particles.48.but-you-must-impliment-their-effects-yourself","line":48,"key":"but you must impliment their effects yourself.","group":"T30","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T31.particles.52.update","line":52,"key":"update()","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.53.onclick","line":53,"key":"onClick()","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.53.onmouseover","line":53,"key":"onMouseOver()","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.53.onmouseleave","line":53,"key":"onMouseLeave()","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.58.setdir","line":58,"key":"setDir(particle, dir)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.58.setspeed","line":58,"key":"setSpeed(particle, speed)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.59.clearparticles","line":59,"key":"clearParticles(check)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.60.you-can-use-vue-delete-to-make-a-particle-delete-itself","line":60,"key":"You can use Vue.delete(particles, this.id) to make a particle delete itself.","group":"T31","disposition":"implementation-mechanism","status":"PASS"}
+{"id":"T31.particles.61.mousex-and-mousey-are-variables-that-track-the-mouse-position","line":61,"key":"mouseX and mouseY are variables that track the mouse position.","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.62.sin","line":62,"key":"sin(x)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.62.cos","line":62,"key":"cos(x)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.62.tan","line":62,"key":"tan(x)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.63.asin","line":63,"key":"asin(x)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.63.acos","line":63,"key":"acos(x)","group":"T31","disposition":"required","status":"PASS"}
+{"id":"T31.particles.63.atan","line":63,"key":"atan(x)","group":"T31","disposition":"required","status":"PASS"}

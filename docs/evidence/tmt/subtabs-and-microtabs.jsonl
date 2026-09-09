@@ -1,0 +1,8 @@
+{"id":"T21.subtabs-and-microtabs.45.content","line":45,"key":"content","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.47.style","line":47,"key":"style","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.49.buttonstyle","line":49,"key":"buttonStyle","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.51.unlocked","line":51,"key":"unlocked()","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.53.shouldnotify","line":53,"key":"shouldNotify()","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.53.prestigenotify","line":53,"key":"prestigeNotify()","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.55.glowcolor","line":55,"key":"glowColor","group":"T21","disposition":"required","status":"PASS"}
+{"id":"T21.subtabs-and-microtabs.58.embedlayer","line":58,"key":"embedLayer","group":"T21","disposition":"required","status":"PASS"}
