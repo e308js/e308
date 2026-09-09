@@ -1,6 +1,6 @@
 {
   "name": "@e308/ux",
-  "version": "0.0.0",
+  "version": "1.0.0-rc.1",
   "description": "Framework-independent UX contracts for e308 games",
   "type": "module",
   "sideEffects": false,

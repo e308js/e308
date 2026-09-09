@@ -21,8 +21,8 @@ npm pack "$workspace_root/packages/core/node_modules/semver" \
 cd "$consumer_dir"
 printf '%s\n' '{"name":"e308-clean-consumer","private":true,"type":"module"}' > package.json
 npm install --save-exact --ignore-scripts --no-audit --offline --cache "$consumer_dir/.npm-cache" \
-  "$consumer_dir/e308-core-0.0.0.tgz" \
-  "$consumer_dir/e308-ux-0.0.0.tgz" \
+  "$consumer_dir/e308-core-1.0.0-rc.1.tgz" \
+  "$consumer_dir/e308-ux-1.0.0-rc.1.tgz" \
   "$consumer_dir/e308-game-wireworks-1.0.0.tgz" \
   "$consumer_dir/e308-game-cascade-1.0.0.tgz" \
   "$consumer_dir/e308-game-hearth-1.0.0.tgz" \
@@ -104,7 +104,9 @@ node --input-type=module -e '
 node --input-type=module -e '
   import { readFile } from "node:fs/promises";
   const pkg = JSON.parse(await readFile("node_modules/@e308/ux/package.json", "utf8"));
-  if (pkg.dependencies?.["@e308/core"] !== "0.0.0") process.exit(1);
+  if (pkg.version !== "1.0.0-rc.1" || pkg.dependencies?.["@e308/core"] !== "1.0.0-rc.1") process.exit(1);
+  const core = JSON.parse(await readFile("node_modules/@e308/core/package.json", "utf8"));
+  if (core.version !== "1.0.0-rc.1") process.exit(1);
   const schema = JSON.parse(await readFile("node_modules/@e308/core/schema/save-v1.schema.json", "utf8"));
   if (schema.title !== "e308 save envelope v1") process.exit(1);
 '

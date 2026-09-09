@@ -1,6 +1,6 @@
 {
   "name": "@e308/core",
-  "version": "0.0.0",
+  "version": "1.0.0-rc.1",
   "description": "Deterministic, headless incremental-game engine",
   "type": "module",
   "sideEffects": false,
