@@ -3,6 +3,7 @@ import {
   createWireworks,
   importWireworks,
   wireworksProjects,
+  wireworksResources,
   wireworksScenario,
   wireworksTerminalView,
   wireworksView,
@@ -17,6 +18,35 @@ const limits = {
 } as const;
 
 describe("finished Wireworks", () => {
+  it("makes a clip and reports both manufacturing limits", () => {
+    const wireworks = createWireworks();
+    expect(wireworks.dispatch({ type: "make" })).toMatchObject({ ok: true });
+    expect(wireworks.getSnapshot().resources).toMatchObject({ wire: 9, clips: 1 });
+
+    wireworks.game.dispatch({
+      id: "empty-wire-fixture",
+      execute: (transaction) => transaction.set(wireworksResources.wire, 0),
+    });
+    expect(JSON.stringify(wireworksView(wireworks.getSnapshot()))).toContain("insufficient");
+    expect(wireworks.dispatch({ type: "make" })).toMatchObject({
+      ok: false,
+      error: { code: "insufficient" },
+    });
+
+    wireworks.game.dispatch({
+      id: "full-inventory-fixture",
+      execute(transaction) {
+        transaction.set(wireworksResources.wire, 1);
+        transaction.set(wireworksResources.clips, 500);
+      },
+    });
+    expect(JSON.stringify(wireworksView(wireworks.getSnapshot()))).toContain("capacity-blocked");
+    expect(wireworks.dispatch({ type: "make" })).toMatchObject({
+      ok: false,
+      error: { code: "capacity-blocked" },
+    });
+  });
+
   it("keeps manufacturing inventory separate from revision-bound sales", () => {
     const wireworks = createWireworks();
     const before = wireworks.getSnapshot();

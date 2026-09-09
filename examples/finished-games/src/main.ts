@@ -30,14 +30,12 @@ import {
   hearthView,
 } from "@e308/game-hearth";
 import {
-  type WireworksIntent,
   wireworksCommand,
   wireworksDefinition,
   wireworksSaveCodec,
   wireworksView,
 } from "@e308/game-wireworks";
 import {
-  type ControlOverride,
   createQuantityFormatter,
   createTextResolver,
   mountView,
@@ -122,7 +120,6 @@ async function wireworksSession(): Promise<Session> {
         source,
         project: wireworksView,
         resolver,
-        overrides: { action: wireworksActionOverride },
         onDispatchResult: showDispatchResult,
       }),
   };
@@ -204,23 +201,6 @@ async function hostFor<N>(
   });
   bindBrowserLifecycle(host);
   return host;
-}
-
-function wireworksActionOverride(
-  node: Parameters<ControlOverride<WireworksIntent, number>>[0],
-  context: Parameters<ControlOverride<WireworksIntent, number>>[1],
-): Node | undefined {
-  if (node.kind !== "action") return undefined;
-  const button = context.document.createElement("button");
-  button.className = node.action.id === "wait" ? "custom-wait" : "wireworks-command";
-  button.dataset.action = node.action.id;
-  button.textContent =
-    node.action.id === "wait"
-      ? "Run the line +10 seconds"
-      : context.resolver.text(node.action.label);
-  button.disabled = !node.action.enabled;
-  button.addEventListener("click", () => context.dispatch(node.action.intent));
-  return button;
 }
 
 function show(value: Session): void {

@@ -2,7 +2,7 @@ import { createGame, type Snapshot } from "@e308/core";
 import type { HarnessScenario, HarnessValue, LegalActionQuote } from "@e308/core/testing";
 import {
   hearthCalendar,
-  type hearthRecipes,
+  hearthRecipes,
   hearthResearch,
   type hearthResources,
   hearthTasks,
@@ -113,7 +113,11 @@ function openingAllocation(
   snapshot: Snapshot<number>,
   strategy: HearthStrategy,
 ): readonly LegalActionQuote<HearthActionIntent>[] {
-  if (strategy !== "research-first" || snapshot.gameTimeMs > 0) return [];
+  if (strategy === "stockpile") {
+    if ((snapshot.allocations.jobs?.scholar ?? 0) !== 1)
+      return [legal(snapshot, "opening-scholar", { type: "allocate", job: "scholar", amount: 1 })];
+    return [];
+  }
   if ((snapshot.allocations.jobs?.farmer ?? 0) !== 1)
     return [legal(snapshot, "opening-farmer", { type: "allocate", job: "farmer", amount: 1 })];
   if ((snapshot.allocations.jobs?.scholar ?? 0) !== 2)
@@ -169,8 +173,8 @@ function stockAllocation(
   const target: readonly ["farmer" | "woodcutter" | "miner" | "scholar", number][] = [
     ["farmer", 2],
     ["woodcutter", 1],
-    ["miner", 2],
-    ["scholar", 0],
+    ["miner", 1],
+    ["scholar", 1],
   ];
   const change = target.find(([job, amount]) => (snapshot.allocations.jobs?.[job] ?? 0) !== amount);
   return change
@@ -198,6 +202,13 @@ function craftAction(snapshot: Snapshot<number>): LegalActionQuote<HearthActionI
   ];
   const next = targets.find(([, resource, target]) => (snapshot.resources[resource] ?? 0) < target);
   if (!next) return undefined;
+  const definition = hearthRecipes[next[0]];
+  if (
+    definition.consumes.some(
+      ([resource, amount]) => (snapshot.resources[resource.id] ?? 0) < amount,
+    )
+  )
+    return undefined;
   const current = snapshot.resources[next[1]] ?? 0;
   return legal(snapshot, `craft-${next[0]}`, {
     type: "recipe",

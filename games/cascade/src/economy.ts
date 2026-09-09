@@ -16,7 +16,7 @@ export const cascadeScopes = {
 
 const q = cascadeKit.q;
 export const cascadeResources = {
-  currency: cascadeKit.resource("currency", { scope: cascadeScopes.run, initial: q(0) }),
+  currency: cascadeKit.resource("currency", { scope: cascadeScopes.run, initial: q(10) }),
   multiplier: cascadeKit.resource("multiplier", { scope: cascadeScopes.run, initial: q(1) }),
   infinity: cascadeKit.resource("infinity-points", {
     scope: cascadeScopes.infinity,
@@ -44,7 +44,7 @@ export const cascadeResources = {
 export const cascadeTiers = Array.from({ length: 8 }, (_, index) =>
   cascadeKit.resource(`tier-${index + 1}`, {
     scope: cascadeScopes.run,
-    initial: q(index === 7 ? 1 : 0),
+    initial: q(0),
   }),
 );
 
@@ -56,7 +56,7 @@ export const cascadeBuyables = cascadeTiers.map((_, index) =>
       base: q(`1e${index + 1}`),
       ratio: q(2),
     }),
-    initialCount: q(index === 7 ? 1 : 0),
+    initialCount: q(0),
     refundRate: q(0),
   }),
 );

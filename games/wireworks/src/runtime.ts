@@ -23,6 +23,7 @@ import {
 export type WireworksBand = keyof typeof wireworksMarkets;
 export type WireworksIntent =
   | { readonly type: "advance"; readonly milliseconds: number }
+  | { readonly type: "make" }
   | { readonly type: "sell"; readonly band: WireworksBand; readonly quantity: number }
   | { readonly type: "project"; readonly id: string }
   | {
@@ -77,10 +78,38 @@ export function wireworksCommand(
   snapshot: Snapshot<number>,
   intent: Exclude<WireworksIntent, { readonly type: "advance" }>,
 ): Command<number> {
+  if (intent.type === "make") return makeClipCommand();
   if (intent.type === "project") return projectCommand(intent.id);
   if (intent.type === "allocate")
     return allocationCommand(wireworksAllocation, intent.target, intent.amount);
   return saleCommand(snapshot, intent.band, intent.quantity);
+}
+
+function makeClipCommand(): Command<number> {
+  return {
+    id: "make-clip",
+    execute(transaction) {
+      const wire = transaction.get(wireworksResources.wire);
+      const clips = transaction.get(wireworksResources.clips);
+      if (wire < 1)
+        transaction.reject({
+          code: "insufficient",
+          resourceId: wireworksResources.wire.id,
+          required: 1,
+          available: wire,
+        });
+      if (clips >= 500)
+        transaction.reject({
+          code: "capacity-blocked",
+          resourceId: wireworksResources.clips.id,
+          attempted: clips + 1,
+          capacity: 500,
+        });
+      transaction.add(wireworksResources.wire, -1);
+      transaction.add(wireworksResources.clips, 1);
+      transaction.addProduction(wireworksResources.clips.id, 1);
+    },
+  };
 }
 
 function projectCommand(id: string): Command<number> {

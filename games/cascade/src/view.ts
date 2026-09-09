@@ -91,6 +91,8 @@ function dimensionTable(
     const cost = buyable.curve.unitCost(count);
     const currency = snapshot.resources.currency as EternityQuantity;
     const enabled = eternityNumbers.cmp(currency, cost) >= 0;
+    const remaining = 10 - (Number(encoded(count)) % 10);
+    const groupCost = buyable.curve.totalCost(count, q(remaining));
     return {
       kind: "row",
       id: `tier-row-${index + 1}`,
@@ -128,6 +130,28 @@ function dimensionTable(
           ...(eternityNumbers.cmp(count, q(10)) >= 0
             ? { mark: { label: "×2", tone: "positive" as const } }
             : {}),
+        },
+        {
+          kind: "action",
+          id: `buy-group-${index + 1}`,
+          action: {
+            id: `buy-group-${index + 1}`,
+            label: `Buy ${remaining} for ×2`,
+            enabled: eternityNumbers.cmp(currency, groupCost) >= 0,
+            intent: { type: "buy", tier: index + 1, count: remaining },
+            blockers:
+              eternityNumbers.cmp(currency, groupCost) >= 0
+                ? []
+                : [
+                    {
+                      kind: "insufficient",
+                      resourceId: "currency",
+                      required: groupCost,
+                      available: currency,
+                    },
+                  ],
+            costs: [{ resourceId: "currency", label: "Currency", value: groupCost }],
+          },
         },
       ],
     };

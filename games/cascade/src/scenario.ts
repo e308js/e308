@@ -77,15 +77,15 @@ function nextQuotes(
   strategy: CascadeStrategy,
 ): readonly LegalActionQuote<CascadeActionIntent>[] {
   if (!greater(snapshot, "infinity-points", 0)) return openingQuotes(snapshot, strategy);
-  if (!snapshot.progression.automation["buy-tier-one"]?.enabled)
-    return [
-      legal(snapshot, "enable-dimension-auto", {
-        type: "automation",
-        id: "dimension",
-        enabled: true,
-      }),
-    ];
-  if (!greater(snapshot, "condensed-cores", 0))
+  if (!greater(snapshot, "condensed-cores", 0)) {
+    if (!snapshot.progression.automation["buy-tier-one"]?.enabled)
+      return [
+        legal(snapshot, "enable-dimension-auto", {
+          type: "automation",
+          id: "dimension",
+          enabled: true,
+        }),
+      ];
     return [
       conditional(
         snapshot,
@@ -95,8 +95,18 @@ function nextQuotes(
         "five infinity points",
       ),
     ];
-  if (cascadeChallenges.some((challenge) => !isComplete(snapshot, challenge.id)))
+  }
+  if (cascadeChallenges.some((challenge) => !isComplete(snapshot, challenge.id))) {
+    if (snapshot.progression.automation["buy-tier-one"]?.enabled)
+      return [
+        legal(snapshot, "disable-dimension-auto", {
+          type: "automation",
+          id: "dimension",
+          enabled: false,
+        }),
+      ];
     return challengeQuotes(snapshot);
+  }
   if (!greater(snapshot, "eternity-points", 0))
     return [
       conditional(
@@ -118,41 +128,44 @@ function openingQuotes(
   snapshot: Snapshot<EternityQuantity>,
   strategy: CascadeStrategy,
 ): readonly LegalActionQuote<CascadeActionIntent>[] {
-  const threshold = strategy === "depth-first" ? q("1e19") : q("1e15");
-  if (eternityNumbers.cmp(snapshot.resources.currency as EternityQuantity, threshold) < 0)
-    return [];
+  const next = nextPurchase(snapshot, strategy);
+  if (next) return [next];
+  return [
+    conditional(
+      snapshot,
+      "collapse",
+      { type: "prestige", id: "collapse" },
+      true,
+      "all buy-ten milestones",
+    ),
+  ];
+}
+
+function nextPurchase(
+  snapshot: Snapshot<EternityQuantity>,
+  strategy: CascadeStrategy,
+): LegalActionQuote<CascadeActionIntent> | undefined {
   const pending = cascadeBuyables
-    .map((buyable, index) => ({ buyable, index, count: index === 7 ? 9 : 10 }))
+    .map((buyable, index) => ({ buyable, index }))
     .filter(
       ({ buyable }) =>
         eternityNumbers.cmp(snapshot.purchaseCounts[buyable.id] as EternityQuantity, q(10)) < 0,
     );
   const ordered = strategy === "depth-first" ? [...pending].reverse() : pending;
   const next = ordered.find(
-    ({ buyable, count }) =>
+    ({ buyable }) =>
       eternityNumbers.cmp(
         snapshot.resources.currency as EternityQuantity,
-        buyable.curve.totalCost(snapshot.purchaseCounts[buyable.id] as EternityQuantity, q(count)),
+        buyable.curve.unitCost(snapshot.purchaseCounts[buyable.id] as EternityQuantity),
       ) >= 0,
   );
-  if (next)
-    return [
-      legal(snapshot, `buy-tier-${next.index + 1}`, {
+  return next
+    ? legal(snapshot, `buy-tier-${next.index + 1}`, {
         type: "buy",
         tier: next.index + 1,
-        count: next.count,
-      }),
-    ];
-  const allBought = pending.length === 0;
-  return [
-    conditional(
-      snapshot,
-      "collapse",
-      { type: "prestige", id: "collapse" },
-      allBought,
-      "all buy-ten milestones",
-    ),
-  ];
+        count: 1,
+      })
+    : undefined;
 }
 
 function challengeQuotes(
@@ -189,6 +202,8 @@ function challengeQuotes(
         id: completable[0],
       }),
     ];
+  const purchase = nextPurchase(snapshot, "reset-first");
+  if (purchase) return [purchase];
   const completedActive = active.find((id) => isComplete(snapshot, id));
   if (completedActive)
     return [

@@ -30,6 +30,7 @@ export function hearthView(snapshot: Snapshot<number>): ViewDocument<HearthInten
           },
         ],
       },
+      workforceSummary(snapshot),
       calendarPanel(snapshot),
       { kind: "row", id: "settlement-resources", children: resourceNodes(snapshot) },
       {
@@ -84,16 +85,34 @@ function resourceNodes(snapshot: Snapshot<number>): ViewNode<HearthIntent, numbe
 
 function workforce(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] {
   const maximum = snapshot.resources.workers ?? 0;
+  const assigned = Object.values(snapshot.allocations.jobs ?? {}).reduce(
+    (total, value) => total + value,
+    0,
+  );
   return (["farmer", "woodcutter", "miner", "scholar"] as const).map((job) => ({
     kind: "range-input",
     id: `job-${job}`,
     label: job,
     value: snapshot.allocations.jobs?.[job] ?? 0,
     min: 0,
-    max: maximum,
+    max: maximum - assigned + (snapshot.allocations.jobs?.[job] ?? 0),
     step: 1,
     intent: (amount) => ({ type: "allocate", job, amount }),
   }));
+}
+
+function workforceSummary(snapshot: Snapshot<number>): ViewNode<HearthIntent, number> {
+  const workers = snapshot.resources.workers ?? 0;
+  const assigned = Object.values(snapshot.allocations.jobs ?? {}).reduce(
+    (total, value) => total + value,
+    0,
+  );
+  return {
+    kind: "notification",
+    id: "workforce-summary",
+    text: `${workers - assigned} of ${workers} workers available. Lower one job to move that worker to another job.`,
+    tone: "neutral",
+  };
 }
 
 function crafting(snapshot: Snapshot<number>): ViewNode<HearthIntent, number>[] {

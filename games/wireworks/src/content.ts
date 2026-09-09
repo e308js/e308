@@ -16,7 +16,7 @@ const autonomy = kit.scope("autonomy");
 export const wireworksResources = {
   cash: kit.resource("cash", { scope: economy, initial: 20 }),
   matter: kit.resource("matter", { scope: economy, initial: 240 }),
-  wire: kit.resource("wire", { scope: economy, initial: 0, capacity: 400 }),
+  wire: kit.resource("wire", { scope: economy, initial: 10, capacity: 400 }),
   clips: kit.resource("clips", { scope: economy, initial: 0, capacity: 500 }),
   power: kit.resource("power", { scope: economy, initial: 2 }),
   demand: kit.resource("demand", { scope: economy, initial: 30, capacity: 100 }),

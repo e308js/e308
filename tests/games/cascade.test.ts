@@ -32,6 +32,13 @@ const limits = {
 describe("finished Cascade", () => {
   it("matches an independent delayed eight-tier integer recurrence", () => {
     const game = createGame(cascadeDefinition);
+    game.dispatch({
+      id: "recurrence-fixture",
+      execute(transaction) {
+        transaction.set(cascadeResources.currency, cascadeKit.q(0));
+        transaction.set(cascadeTiers[7] as (typeof cascadeTiers)[number], cascadeKit.q(1));
+      },
+    });
     const tiers = Array<bigint>(8).fill(0n);
     tiers[7] = 1n;
     let currency = 0n;
@@ -54,9 +61,12 @@ describe("finished Cascade", () => {
 
   it("keeps purchased amounts distinct and grants every buy-ten milestone", () => {
     const cascade = createCascade();
-    cascade.dispatch({ type: "advance", milliseconds: 1_000_000 });
+    cascade.game.dispatch({
+      id: "purchase-fixture",
+      execute: (transaction) => transaction.set(cascadeResources.currency, cascadeKit.q("1e30")),
+    });
     for (let tier = 1; tier <= 8; tier += 1)
-      expect(cascade.dispatch({ type: "buy", tier, count: tier === 8 ? 9 : 10 }).ok).toBe(true);
+      expect(cascade.dispatch({ type: "buy", tier, count: 10 }).ok).toBe(true);
     const snapshot = cascade.getSnapshot();
     const topBuyable = cascadeBuyables[7];
     const topTier = cascadeTiers[7];
@@ -97,8 +107,13 @@ describe("finished Cascade", () => {
     expect(reset.outcome.kind).toBe("reached");
     expect(depth.outcome.kind).toBe("reached");
     if (reset.outcome.kind !== "reached" || depth.outcome.kind !== "reached") return;
-    expect(reset.outcome.atGameMs).toBeLessThan(depth.outcome.atGameMs);
     expect(depth.outcome.atGameMs).toBeLessThanOrEqual(72 * 60 * 60_000);
+    expect(reset.milestones["dimension-1-ten"]?.gameTimeMs).toBeLessThan(
+      depth.milestones["dimension-1-ten"]?.gameTimeMs ?? Number.POSITIVE_INFINITY,
+    );
+    expect(depth.milestones["dimension-8-ten"]?.gameTimeMs).toBeLessThan(
+      reset.milestones["dimension-8-ten"]?.gameTimeMs ?? Number.POSITIVE_INFINITY,
+    );
     expect(Object.keys(reset.milestones)).toEqual(
       expect.arrayContaining(["challenge:composite-trial", "ascended", "ending"]),
     );

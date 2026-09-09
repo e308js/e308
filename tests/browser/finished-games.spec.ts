@@ -17,7 +17,7 @@ test("plays and persists each distinct finished-game composition", async ({ page
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await expect(page.locator("#game")).toHaveClass(/wireworks/);
   const before = await gameTime(page);
-  await page.getByRole("button", { name: "Run the line +10 seconds" }).click();
+  await page.getByRole("button", { name: "Run production for 10 seconds" }).click();
   const afterWait = await gameTime(page);
   expect(afterWait).toBeGreaterThanOrEqual(before + 10_000);
 

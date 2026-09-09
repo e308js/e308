@@ -56,14 +56,14 @@ export const hearthJobs = hearthKit.allocation("jobs", {
   scope: hearthScope,
   budget: hearthResources.workers,
   targets: ["farmer", "woodcutter", "miner", "scholar"],
-  initial: { farmer: 2, woodcutter: 1, miner: 0, scholar: 1 },
+  initial: { farmer: 2, woodcutter: 1, miner: 0, scholar: 0 },
 });
 
 export const hearthCalendar = hearthKit.calendar("seasons", {
   scope: hearthScope,
   phases: ["spring", "summer", "autumn", "winter"].map((id) => ({
     id,
-    durationMs: 6 * 60_000,
+    durationMs: 45_000,
   })),
 });
 

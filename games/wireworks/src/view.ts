@@ -44,6 +44,7 @@ export function wireworksView(snapshot: Snapshot<number>): ViewDocument<Wirework
       },
       storyPanel(snapshot, era.title),
       { kind: "row", id: "stocks", children: stockNodes(snapshot) },
+      makeClipAction(snapshot),
       {
         kind: "tabs",
         id: "operations",
@@ -69,6 +70,35 @@ export function wireworksView(snapshot: Snapshot<number>): ViewDocument<Wirework
         : { kind: "separator", id: "before-ending" },
       { kind: "save", id: "save-status", status: "clean", message: "Local save available" },
     ],
+  };
+}
+
+function makeClipAction(snapshot: Snapshot<number>): ViewNode<WireworksIntent, number> {
+  const wire = snapshot.resources.wire ?? 0;
+  const clips = snapshot.resources.clips ?? 0;
+  const blockers: ActionBlocker<number>[] = [];
+  if (wire < 1)
+    blockers.push({ kind: "insufficient", resourceId: "wire", required: 1, available: wire });
+  if (clips >= 500)
+    blockers.push({
+      kind: "capacity-blocked",
+      resourceId: "clips",
+      attempted: clips + 1,
+      capacity: 500,
+    });
+  return {
+    kind: "action",
+    id: "make-clip",
+    action: {
+      id: "make",
+      label: "Make a clip",
+      enabled: blockers.length === 0,
+      intent: { type: "make" },
+      blockers,
+      costs: [{ resourceId: "wire", label: "Wire", value: 1 }],
+      rewards: [{ resourceId: "clips", label: "Clip", value: 1 }],
+      hold: { intent: { type: "make" }, repeatMs: 100 },
+    },
   };
 }
 

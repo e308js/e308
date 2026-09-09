@@ -19,9 +19,15 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   }
   await page.getByRole("link", { name: "Open Wireworks" }).click();
   await expect(page.locator("#game")).toHaveClass(/wireworks/);
-  await expect(page.getByRole("button", { name: "Run the line +10 seconds" })).toBeHidden();
+  await expect(page.locator("#host-status")).toContainText("wireworks");
+  await page.getByRole("button", { name: "New save" }).click();
+  await expect(page.locator("#host-status")).toHaveText("Started a new save");
+  await expect(page.getByRole("button", { name: "Make a clip" })).toBeEnabled();
+  await page.getByRole("button", { name: "Make a clip" }).click();
+  await expect(page.getByText("Clip inventory: 1", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run production for 10 seconds" })).toBeHidden();
   await page.getByText("Developer tools", { exact: true }).click();
-  await expect(page.getByRole("button", { name: "Run the line +10 seconds" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run production for 10 seconds" })).toBeVisible();
   await expect(page.locator("#ad-lab, #kittens-lab, .labs")).toHaveCount(0);
   const wireworksText = await page.locator("#game").innerText();
   await expect.poll(() => page.locator("#game").innerText()).not.toBe(wireworksText);
@@ -29,13 +35,21 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await page.goto("/site-dist/examples/hearth/");
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
+  await expect(page.getByText("1 of 4 workers available.", { exact: false })).toBeVisible();
   await page.getByLabel("miner").evaluate((input: HTMLInputElement) => {
     input.value = "1";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect(page.locator("#host-status")).toHaveText(
-    "All workers are assigned. Lower another job before raising this one.",
-  );
+  await expect(page.getByText("0 of 4 workers available.", { exact: false })).toBeVisible();
+  await expect(page.getByLabel("scholar")).toHaveAttribute("max", "0");
+
+  await page.goto("/site-dist/examples/cascade/");
+  await expect(page.locator("#host-status")).toContainText("cascade");
+  await page.getByRole("button", { name: "New save" }).click();
+  await expect(page.locator("#host-status")).toHaveText("Started a new save");
+  await expect(page.getByRole("button", { name: "Buy tier 1" })).toBeEnabled();
+  await page.getByRole("button", { name: "Buy tier 1" }).click();
+  await expect(page.getByText("Tier 1: 1", { exact: true })).toBeVisible();
 
   for (const path of [
     "reference-labs.html",
