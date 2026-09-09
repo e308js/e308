@@ -4,7 +4,8 @@
     "lib": ["ES2024", "DOM"],
     "outDir": "dist",
     "rootDir": "src",
-    "tsBuildInfoFile": "dist/core.tsbuildinfo"
+    "tsBuildInfoFile": "dist/browser-host.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../../packages/core" }]
 }

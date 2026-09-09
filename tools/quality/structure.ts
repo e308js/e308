@@ -91,7 +91,11 @@ function inspectTypeScript(
     }
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const specifier = node.moduleSpecifier.text;
-      if (path.startsWith("packages/core/src/") && !path.includes("/browser/")) {
+      if (
+        path.startsWith("packages/core/src/") &&
+        !path.includes("/browser/") &&
+        !path.includes("/worker/")
+      ) {
         if (/^(react|vue|svelte|solid-js|lit|@angular|node:)/.test(specifier)) {
           forbiddenImports.push(`${path}: ${specifier}`);
         }

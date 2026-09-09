@@ -131,7 +131,40 @@ if (returned.catchup) {
 The work budget above limits computation per checkpoint; it does not reduce credited time. The cap
 is resolved and saved before an absence. It is applied once even if catch-up needs many chunks or
 restarts. `MemorySaveStore` and `commitCatchupChunk` in `@e308/core/storage` demonstrate atomic
-compare-and-swap recovery. Browser storage ownership arrives in the browser host package.
+compare-and-swap recovery.
+
+## Browser host and workers
+
+`@e308/core/browser` connects a game to explicit lifecycle events, IndexedDB, autosave, and
+single-writer ownership across tabs. It uses monotonic time while the page is active and the saved
+wall-clock anchor after suspension or reload, so the same interval is never credited twice.
+
+```ts
+import {
+  browserClock,
+  browserScheduler,
+  IndexedDbSaveStore,
+  openBrowserHost,
+  WebLockOwnership,
+} from "@e308/core/browser";
+
+const host = await openBrowserHost({
+  definition,
+  codec,
+  store: new IndexedDbSaveStore({ databaseName: "my-game" }),
+  slot: "main",
+  initial: { snapshot: game.getSnapshot(), metadata: { wallAnchorMs: Date.now(), entitlement, catchup: null } },
+  clock: browserClock,
+  scheduler: browserScheduler,
+  ownership: new WebLockOwnership({ lockName: "my-game-writer" }),
+});
+```
+
+Secondary tabs remain readable and can request an explicit handoff. Every write is additionally
+fenced by the storage revision. `@e308/core/worker` supplies a versioned request/response protocol,
+structured-clone transfer codecs, stale-revision checks, idempotent request IDs, and chunk-boundary
+catch-up cancellation. Game code defines the serializable intent codec, while commands still run
+through the ordinary validated engine path.
 
 Games with intentionally different away-time rules can pass `{ kind: "custom-reward", apply }` as
 the final `processCatchupChunk` argument. The callback runs in one transaction and the report labels

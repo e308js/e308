@@ -40,9 +40,12 @@ node --input-type=module -e '
 '
 node --input-type=module -e '
   import { currentPhase } from "@e308/core/calendar";
+  import { IndexedDbSaveStore } from "@e308/core/browser";
   import { quoteMarket } from "@e308/core/markets";
   import { queueTaskCommand } from "@e308/core/tasks";
-  if (![currentPhase, quoteMarket, queueTaskCommand].every(value => typeof value === "function")) process.exit(1);
+  import { attachWorkerRuntime } from "@e308/core/worker";
+  if (![currentPhase, IndexedDbSaveStore, quoteMarket, queueTaskCommand, attachWorkerRuntime]
+    .every(value => typeof value === "function")) process.exit(1);
 '
 node --input-type=module -e '
   import { createGame, createGameKit, nativeNumbers } from "@e308/core";

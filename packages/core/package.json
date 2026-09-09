@@ -29,9 +29,17 @@
       "types": "./dist/calendar/index.d.ts",
       "import": "./dist/calendar/index.js"
     },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "import": "./dist/browser/index.js"
+    },
     "./markets": {
       "types": "./dist/markets/index.d.ts",
       "import": "./dist/markets/index.js"
+    },
+    "./worker": {
+      "types": "./dist/worker/index.d.ts",
+      "import": "./dist/worker/index.js"
     }
   },
   "files": [

@@ -1,0 +1,12 @@
+{
+  "name": "@e308/browser-host-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && esbuild dist/main.js --bundle --format=esm --outfile=dist/app.js && esbuild worker.js --bundle --format=esm --outfile=dist/worker.js"
+  },
+  "dependencies": {
+    "@e308/core": "workspace:*"
+  }
+}

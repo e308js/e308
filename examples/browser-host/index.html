@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>e308 browser host fixture</title>
+    <script type="importmap">
+      { "imports": {
+        "@e308/core": "/packages/core/dist/index.js",
+        "@e308/core/browser": "/packages/core/dist/browser/index.js",
+        "@e308/core/worker": "/packages/core/dist/worker/index.js"
+      } }
+    </script>
+  </head>
+  <body>
+    <p>Owner: <output id="owner">opening</output></p>
+    <p>Points: <output id="points">0</output></p>
+    <p>Storage revision: <output id="storage">none</output></p>
+    <button id="add" type="button">Add point</button>
+    <button id="save" type="button">Save</button>
+    <button id="take" type="button">Take ownership</button>
+    <button id="worker" type="button">Run worker</button>
+    <output id="worker-result">idle</output>
+    <script type="module" src="/examples/browser-host/dist/app.js"></script>
+  </body>
+</html>
