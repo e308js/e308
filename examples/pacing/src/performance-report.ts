@@ -10,6 +10,7 @@ export interface MachineRecord {
 
 export interface WorkloadRecord {
   readonly scenario: string;
+  readonly checkpoint: "beginning" | "middle" | "ending";
   readonly duration: string;
   readonly durationMs: number;
   readonly cold: import("@e308/core/optimize").ProfileReport;
@@ -27,13 +28,14 @@ export function workloadMarkdown(
     `Commit: ${machine.commit}`,
     "",
     "CI timings are diagnostics. Release performance claims require the named reference-machine procedure.",
+    "Cold measurements begin before an explicit fixture warm-up and create a fresh game per run; warm measurements immediately follow with the same fresh-game isolation.",
     "",
-    "| Scenario | Gap | Fidelity | Warm runs | Warm p50 ms | Warm p95 ms | Longest batch ms | Bulk steps | Canonical steps | Pending ms |",
-    "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    "| Scenario | Checkpoint | Gap | Fidelity | Cold runs | Cold p95 ms | Warm runs | Warm p50 ms | Warm p95 ms | Longest batch ms | Pending ms |",
+    "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
   ];
   for (const item of workloads) {
     lines.push(
-      `| ${item.scenario} | ${item.duration} | ${fidelity(item.warm)} | ${item.warm.repetitions} | ${rounded(item.warm.elapsed.medianMs)} | ${rounded(item.warm.elapsed.p95Ms)} | ${item.warm.longestBatchGameMs} | ${item.warm.bulkSteps} | ${item.warm.canonicalSteps} | ${item.warm.pendingMs} |`,
+      `| ${item.scenario} | ${item.checkpoint} | ${item.duration} | ${fidelity(item.warm)} | ${item.cold.repetitions} | ${rounded(item.cold.elapsed.p95Ms)} | ${item.warm.repetitions} | ${rounded(item.warm.elapsed.medianMs)} | ${rounded(item.warm.elapsed.p95Ms)} | ${item.warm.longestBatchGameMs} | ${item.warm.pendingMs} |`,
     );
   }
   return `${lines.join("\n")}\n`;
