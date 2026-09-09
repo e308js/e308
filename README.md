@@ -231,4 +231,8 @@ and lines, packed-package consumer tests, and browser tests. See the [implementa
 for exact accepted SHAs and CI runs, and the [definition of done](docs/definition-of-done.md) for the
 release evidence contract.
 
+The [public API reference](docs/api-reference.md) lists package subpaths and contracts. The
+[migration guide](docs/migration-guide.md) covers persistent IDs, save schemas, offline rule changes,
+and numeric backend transitions.
+
 e308 is ESM-only. Core imports do not access the DOM, timers, storage, or ambient randomness.
