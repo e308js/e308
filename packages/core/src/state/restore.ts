@@ -1,3 +1,4 @@
+import { restoreEventJournal, restoreRecords } from "../domain/state.js";
 import { resolveCapacity } from "../economy/entries.js";
 import { definitionScopes, type GameDefinition } from "../model/definition.js";
 import { RandomStreams } from "../random/xoshiro.js";
@@ -67,6 +68,12 @@ export function restoreSnapshot<N>(
     calendars: freezeCalendars(cloneCalendars(source.calendars)),
     markets: freezeMarkets(
       Object.fromEntries(Object.entries(source.markets).map(([id, state]) => [id, { ...state }])),
+    ),
+    records: Object.freeze(restoreRecords(definition, source.records)),
+    domainEventJournal: restoreEventJournal(
+      definition,
+      source.domainEventJournal,
+      source.gameTimeMs,
     ),
   });
 }

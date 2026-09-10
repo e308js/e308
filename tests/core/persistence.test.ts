@@ -39,6 +39,27 @@ describe("save codec", () => {
     expect(nextRestored).toBe(nextOriginal);
   });
 
+  it("keeps snapshots and saves from before domain state compatible", () => {
+    const fixture = persistenceFixture();
+    const codec = createSaveCodec(fixture.definition, fixture.configuration);
+    const snapshot = fixture.game.getSnapshot();
+    const { domainEventJournal: _events, records: _records, ...legacySnapshot } = snapshot;
+    const encoded = codec.encode(legacySnapshot, {
+      wallAnchorMs: 0,
+      entitlement: fixture.entitlement,
+      catchup: null,
+    });
+    const envelope = codec.inspect(encoded);
+    const { domainEventJournal: _journal, records: _savedRecords, ...legacyState } = envelope.state;
+    const loaded = codec.decode(resign({ ...envelope, state: legacyState }));
+    expect(loaded.snapshot.records).toEqual({});
+    expect(loaded.snapshot.domainEventJournal).toEqual({
+      nextSequence: 1n,
+      firstRetainedSequence: 1n,
+      events: [],
+    });
+  });
+
   it("rejects corrupt, oversized, future, mismatched, and unknown state", () => {
     const fixture = persistenceFixture();
     const codec = createSaveCodec(fixture.definition, fixture.configuration);

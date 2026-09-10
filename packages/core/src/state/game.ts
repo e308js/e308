@@ -1,6 +1,14 @@
 import { type AutomationDefinition, runAutomation } from "../automation/scheduler.js";
 import { runCalendars } from "../calendar/runtime.js";
 import type { CalendarDefinition } from "../calendar/types.js";
+import { commitEvents, emptyEventJournal, initialRecords, readEvents } from "../domain/state.js";
+import { DomainEventSubscriptions } from "../domain/subscriptions.js";
+import type {
+  DomainEvent,
+  EventJournal,
+  PendingDomainEvent,
+  RecordState,
+} from "../domain/types.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import { validateAllocations } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
@@ -17,9 +25,11 @@ import { planAdvance } from "../simulation/clock.js";
 import { runSteppedRules, type SteppedRuleDefinition } from "../simulation/rules.js";
 import { runTasks } from "../tasks/runtime.js";
 import type { TaskDefinition } from "../tasks/types.js";
+import { mutationDuringEventDelivery } from "./failures.js";
 import { cloneProgression, initialProgression } from "./progression-state.js";
 import { restoreSnapshot } from "./restore.js";
 import { makeSnapshot } from "./snapshot.js";
+import { SnapshotSubscriptions } from "./subscriptions.js";
 import {
   cloneCalendars,
   cloneTasks,
@@ -37,13 +47,7 @@ import type {
   Snapshot,
   Transaction,
 } from "./types.js";
-
-interface Subscriber<N> {
-  readonly select: (snapshot: Snapshot<N>) => unknown;
-  readonly notify: (value: unknown) => void;
-  readonly equal: (left: unknown, right: unknown) => boolean;
-  selected: unknown;
-}
+import { createTransactionWorkspace } from "./workspace.js";
 
 type CompleteDefinition<N> = GameDefinition<N> & {
   readonly numbers: NonNullable<GameDefinition<N>["numbers"]>;
@@ -58,6 +62,9 @@ type CompleteDefinition<N> = GameDefinition<N> & {
   readonly tasks: readonly TaskDefinition<N>[];
   readonly calendars: readonly CalendarDefinition[];
   readonly markets: readonly MarketDefinition<N>[];
+  readonly records: readonly import("../domain/types.js").RecordDefinition[];
+  readonly domainEvents: readonly import("../domain/types.js").DomainEventDefinition[];
+  readonly eventRetention: number;
 };
 
 export function createGame<N>(
@@ -72,7 +79,8 @@ export function createGame<N>(
 class GameRuntime<N> implements Game<N> {
   readonly #definition: CompleteDefinition<N>;
   readonly #owner: object;
-  readonly #subscribers = new Set<Subscriber<N>>();
+  readonly #subscriptions = new SnapshotSubscriptions<N>();
+  readonly #eventSubscriptions = new DomainEventSubscriptions();
   #snapshot: Snapshot<N>;
 
   constructor(definition: GameDefinition<N>, restored?: Snapshot<N>) {
@@ -103,6 +111,8 @@ class GameRuntime<N> implements Game<N> {
       tasks: initialTasks(this.#definition),
       calendars: initialCalendars(this.#definition),
       markets: initialMarkets(this.#definition),
+      records: initialRecords(this.#definition),
+      domainEventJournal: emptyEventJournal(),
     });
     this.#snapshot = restoreSnapshot(this.#definition, restored ?? initial);
   }
@@ -116,6 +126,7 @@ class GameRuntime<N> implements Game<N> {
   }
 
   dispatch(command: Command<N>): Result<CommandReceipt, CommandFailure<N>> {
+    if (this.#eventSubscriptions.publishing) return mutationDuringEventDelivery();
     if (
       command.expectedRevision !== undefined &&
       command.expectedRevision !== this.#snapshot.revision
@@ -145,6 +156,7 @@ class GameRuntime<N> implements Game<N> {
     elapsedMs: number,
     step?: (transaction: Transaction<N>, stepSeconds: number) => void,
   ): Result<Snapshot<N>, CommandFailure<N>> {
+    if (this.#eventSubscriptions.publishing) return mutationDuringEventDelivery();
     const plan = planAdvance(this.#snapshot, elapsedMs, this.#definition.stepMs);
     if (
       plan.gameTimeMs === this.#snapshot.gameTimeMs &&
@@ -187,6 +199,7 @@ class GameRuntime<N> implements Game<N> {
     elapsedMs: number,
     apply: (transaction: Transaction<N>, advancedGameMs: number) => void,
   ): Result<Snapshot<N>, CommandFailure<N>> {
+    if (this.#eventSubscriptions.publishing) return mutationDuringEventDelivery();
     const plan = planAdvance(this.#snapshot, elapsedMs, this.#definition.stepMs);
     const advancedGameMs = plan.gameTimeMs - this.#snapshot.gameTimeMs;
     if (advancedGameMs === 0) {
@@ -209,14 +222,15 @@ class GameRuntime<N> implements Game<N> {
     listener: (value: T) => void,
     equal: (left: T, right: T) => boolean = Object.is,
   ): () => void {
-    const subscriber: Subscriber<N> = {
-      select: selector,
-      notify: listener as (value: unknown) => void,
-      equal: equal as (left: unknown, right: unknown) => boolean,
-      selected: selector(this.#snapshot),
-    };
-    this.#subscribers.add(subscriber);
-    return () => this.#subscribers.delete(subscriber);
+    return this.#subscriptions.subscribe(this.#snapshot, selector, listener, equal);
+  }
+
+  readDomainEvents(afterSequence = 0n): import("../domain/types.js").EventReadResult {
+    return readEvents(requiredJournal(this.#snapshot), afterSequence);
+  }
+
+  subscribeDomainEvents(listener: (events: readonly DomainEvent[]) => void): () => void {
+    return this.#eventSubscriptions.subscribe(listener);
   }
 
   private transact(
@@ -224,27 +238,25 @@ class GameRuntime<N> implements Game<N> {
     gameTimeMs = this.#snapshot.gameTimeMs,
     remainderMs = this.#snapshot.remainderMs,
   ): Result<Snapshot<N>, CommandFailure<N>> {
-    const working = { ...this.#snapshot.resources };
-    const purchaseCounts = { ...this.#snapshot.purchaseCounts };
-    const allocations = Object.fromEntries(
-      Object.entries(this.#snapshot.allocations).map(([id, assignments]) => [
-        id,
-        { ...assignments },
-      ]),
-    );
-    const productionTotals = { ...this.#snapshot.productionTotals };
-    const scopeGenerations = { ...this.#snapshot.scopeGenerations };
-    const progression = cloneProgression(this.#snapshot.progression);
-    const random = new RandomStreams(this.#snapshot.random.rootSeed, this.#snapshot.random.streams);
-    const tasks = cloneTasks(this.#snapshot.tasks);
-    const calendars = cloneCalendars(this.#snapshot.calendars);
-    const markets = Object.fromEntries(
-      Object.entries(this.#snapshot.markets).map(([id, state]) => [id, { ...state }]),
-    );
+    const workspace = createTransactionWorkspace(this.#snapshot);
+    const {
+      resources,
+      purchaseCounts,
+      allocations,
+      productionTotals,
+      scopeGenerations,
+      progression,
+      random,
+      tasks,
+      calendars,
+      markets,
+      records,
+      pendingEvents,
+    } = workspace;
     try {
       const transaction = makeTransaction(
         this.#owner,
-        working,
+        resources,
         purchaseCounts,
         allocations,
         productionTotals,
@@ -255,6 +267,8 @@ class GameRuntime<N> implements Game<N> {
         tasks,
         calendars,
         markets,
+        records,
+        pendingEvents,
         this.#snapshot.gameTimeMs,
         this.#definition.numbers,
       );
@@ -266,7 +280,7 @@ class GameRuntime<N> implements Game<N> {
       return { ok: false, error: failureFrom(error) };
     }
     this.commit(
-      working,
+      resources,
       gameTimeMs,
       remainderMs,
       purchaseCounts,
@@ -278,6 +292,9 @@ class GameRuntime<N> implements Game<N> {
       tasks,
       calendars,
       markets,
+      records,
+      requiredJournal(this.#snapshot),
+      pendingEvents,
     );
     return { ok: true, value: this.#snapshot };
   }
@@ -295,7 +312,11 @@ class GameRuntime<N> implements Game<N> {
     tasks = cloneTasks(this.#snapshot.tasks),
     calendars = cloneCalendars(this.#snapshot.calendars),
     markets = { ...this.#snapshot.markets },
+    records: Readonly<Record<string, RecordState>> = this.#snapshot.records ?? {},
+    journal: EventJournal = requiredJournal(this.#snapshot),
+    pendingEvents: readonly PendingDomainEvent[] = [],
   ): void {
+    const events = commitEvents(journal, pendingEvents, this.#definition.eventRetention);
     this.#snapshot = makeSnapshot({
       revision: this.#snapshot.revision + 1n,
       gameTimeMs,
@@ -310,24 +331,18 @@ class GameRuntime<N> implements Game<N> {
       tasks,
       calendars,
       markets,
+      records,
+      domainEventJournal: events.journal,
     });
-    publish(this.#subscribers, this.#snapshot);
+    this.#subscriptions.publish(this.#snapshot);
+    if (events.committed.length > 0) this.#eventSubscriptions.publish(events.committed);
   }
+}
+
+function requiredJournal<N>(snapshot: Snapshot<N>): EventJournal {
+  return snapshot.domainEventJournal ?? emptyEventJournal();
 }
 
 function initialScopeGenerations<N>(definition: CompleteDefinition<N>): Record<string, bigint> {
   return Object.fromEntries(definitionScopes(definition).map((scope) => [scope.id, 0n]));
-}
-
-function publish<N>(subscribers: Set<Subscriber<N>>, snapshot: Snapshot<N>): void {
-  for (const subscriber of subscribers) {
-    const selected = subscriber.select(snapshot);
-    if (subscriber.equal(selected, subscriber.selected)) continue;
-    subscriber.selected = selected;
-    try {
-      subscriber.notify(selected);
-    } catch {
-      // Observer failures are isolated from committed simulation state.
-    }
-  }
 }

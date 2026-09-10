@@ -1,4 +1,6 @@
 import type { CalendarState } from "../calendar/types.js";
+import { cloneRecords } from "../domain/state.js";
+import type { EventJournal, RecordState } from "../domain/types.js";
 import type { MarketState } from "../markets/types.js";
 import type { TaskState } from "../tasks/types.js";
 import { freezeProgression, type MutableProgression } from "./progression-state.js";
@@ -21,6 +23,8 @@ export type SnapshotParts<N> = Pick<
   readonly tasks: Record<string, TaskState<N>>;
   readonly calendars: Record<string, CalendarState>;
   readonly markets: Record<string, MarketState<N>>;
+  readonly records: Readonly<Record<string, RecordState>>;
+  readonly domainEventJournal: EventJournal;
 };
 
 export function makeSnapshot<N>(parts: SnapshotParts<N>): Snapshot<N> {
@@ -38,5 +42,10 @@ export function makeSnapshot<N>(parts: SnapshotParts<N>): Snapshot<N> {
     tasks: freezeTasks(parts.tasks),
     calendars: freezeCalendars(parts.calendars),
     markets: freezeMarkets(parts.markets),
+    records: Object.freeze(cloneRecords(parts.records)),
+    domainEventJournal: Object.freeze({
+      ...parts.domainEventJournal,
+      events: Object.freeze([...parts.domainEventJournal.events]),
+    }),
   });
 }

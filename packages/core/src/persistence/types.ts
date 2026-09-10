@@ -1,3 +1,4 @@
+import type { EventAudience, JsonValue } from "../domain/types.js";
 import type { ContentModule } from "../model/modules.js";
 import type { RandomStreamSnapshot, RandomStreamsSnapshot } from "../random/xoshiro.js";
 import type { ProgressionEvent, Snapshot } from "../state/types.js";
@@ -152,6 +153,21 @@ export interface SaveEnvelope {
     readonly progressionEvents: readonly (Omit<ProgressionEvent, "sequence"> & {
       readonly sequence: string;
     })[];
+    readonly records?: Readonly<
+      Record<string, { readonly version: number; readonly value: JsonValue }>
+    >;
+    readonly domainEventJournal?: {
+      readonly nextSequence: string;
+      readonly firstRetainedSequence: string;
+      readonly events: readonly {
+        readonly sequence: string;
+        readonly atGameMs: number;
+        readonly type: string;
+        readonly version: number;
+        readonly payload: JsonValue;
+        readonly audience: EventAudience;
+      }[];
+    };
   };
   readonly clock: {
     readonly wallAnchorMs: number;

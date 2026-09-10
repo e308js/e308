@@ -73,6 +73,10 @@ export function deserializeCheckpoint<N>(
       events: decodeProgressionEvents(envelope),
     },
     random: decodeRandom(envelope),
+    ...(envelope.state.records ? { records: decodeDomainRecords(envelope) } : {}),
+    ...(envelope.state.domainEventJournal
+      ? { domainEventJournal: decodeDomainEventJournal(envelope) }
+      : {}),
     ...timed,
   } satisfies Snapshot<N>);
   return {
@@ -82,6 +86,33 @@ export function deserializeCheckpoint<N>(
     catchup: envelope.catchup,
     migrationLedger: Object.freeze([...envelope.migrationLedger]),
     lastDeliveredEvent: envelope.lastDeliveredEvent,
+  };
+}
+
+function decodeDomainRecords(envelope: SaveEnvelope): NonNullable<Snapshot<never>["records"]> {
+  return Object.fromEntries(
+    Object.entries(envelope.state.records ?? {}).map(([id, state]) => [
+      id,
+      { version: state.version, value: state.value },
+    ]),
+  );
+}
+
+function decodeDomainEventJournal(
+  envelope: SaveEnvelope,
+): NonNullable<Snapshot<never>["domainEventJournal"]> {
+  const journal = envelope.state.domainEventJournal;
+  if (!journal) throw new TypeError("Missing domain event journal");
+  return {
+    nextSequence: parseUnsignedInteger(journal.nextSequence, "domain event next sequence"),
+    firstRetainedSequence: parseUnsignedInteger(
+      journal.firstRetainedSequence,
+      "domain event first retained sequence",
+    ),
+    events: journal.events.map((event) => ({
+      ...event,
+      sequence: parseUnsignedInteger(event.sequence, "domain event sequence"),
+    })),
   };
 }
 

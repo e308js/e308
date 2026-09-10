@@ -1,6 +1,7 @@
 export type { AutomationDefinition } from "./automation/scheduler.js";
 export { automationCommand } from "./automation/scheduler.js";
 export * from "./calendar/index.js";
+export * from "./domain/types.js";
 export type { AllocationDefinition } from "./economy/allocations.js";
 export { allocationCommand } from "./economy/allocations.js";
 export type { BuyableDefinition, BuyRequest } from "./economy/buyables.js";

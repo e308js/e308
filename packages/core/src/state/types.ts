@@ -1,4 +1,14 @@
 import type { CalendarDefinition, CalendarState } from "../calendar/types.js";
+import type {
+  DomainEvent,
+  DomainEventDefinition,
+  EventAudience,
+  EventJournal,
+  EventReadResult,
+  JsonValue,
+  RecordDefinition,
+  RecordState,
+} from "../domain/types.js";
 import type { MarketState } from "../markets/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import type { Resource, Scope } from "../model/handles.js";
@@ -52,6 +62,8 @@ export interface Snapshot<N> {
   readonly tasks: Readonly<Record<string, TaskState<N>>>;
   readonly calendars: Readonly<Record<string, CalendarState>>;
   readonly markets: Readonly<Record<string, MarketState<N>>>;
+  readonly records?: Readonly<Record<string, RecordState>>;
+  readonly domainEventJournal?: EventJournal;
 }
 
 export interface AutomationState {
@@ -112,6 +124,13 @@ export interface Transaction<N> {
   setCalendarState(calendar: CalendarDefinition, state: CalendarState): void;
   getMarketState(id: string): MarketState<N>;
   setMarketState(id: string, state: MarketState<N>): void;
+  getRecord<T extends JsonValue>(definition: RecordDefinition<T>): T;
+  setRecord<T extends JsonValue>(definition: RecordDefinition<T>, value: unknown): void;
+  emit<P extends JsonValue>(
+    definition: DomainEventDefinition<P>,
+    payload: unknown,
+    audience?: EventAudience,
+  ): void;
   reject(error: CommandFailure<N>): never;
 }
 
@@ -139,6 +158,8 @@ export interface Game<N> {
     elapsedMs: number,
     apply: (transaction: Transaction<N>, advancedGameMs: number) => void,
   ): Result<Snapshot<N>, CommandFailure<N>>;
+  readDomainEvents(afterSequence?: bigint): EventReadResult;
+  subscribeDomainEvents(listener: (events: readonly DomainEvent[]) => void): () => void;
   subscribe<T>(
     selector: (snapshot: Snapshot<N>) => T,
     listener: (value: T) => void,

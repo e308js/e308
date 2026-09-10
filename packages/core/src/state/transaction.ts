@@ -1,4 +1,6 @@
 import type { CalendarState } from "../calendar/types.js";
+import { pendingEvent, recordMethods } from "../domain/state.js";
+import type { PendingDomainEvent, RecordState } from "../domain/types.js";
 import { resolveCapacity } from "../economy/entries.js";
 import type { MarketState } from "../markets/types.js";
 import type { GameDefinition } from "../model/definition.js";
@@ -30,6 +32,8 @@ export function makeTransaction<N>(
   tasks: Record<string, TaskState<N>>,
   calendars: Record<string, CalendarState>,
   markets: Record<string, MarketState<N>>,
+  records: Record<string, RecordState>,
+  pendingEvents: PendingDomainEvent[],
   gameTimeMs: number,
   numbers: NonNullable<GameDefinition<N>["numbers"]>,
 ): Transaction<N> {
@@ -81,6 +85,13 @@ export function makeTransaction<N>(
       ),
     ...progressionMethods(progression, numbers, () => clock.value),
     ...timedMethods(owner, tasks, calendars, markets),
+    ...recordMethods(owner, records),
+    emit: (eventType, payload, audience = { kind: "public" }) => {
+      if (ownerOf(eventType) !== owner) throw new InvalidTarget(eventType.id);
+      if (!(definition.domainEvents ?? []).includes(eventType))
+        throw new InvalidTarget(eventType.id);
+      pendingEvents.push(pendingEvent(eventType, clock.value, payload, audience));
+    },
     reject: (error) => {
       throw new OperationRejected(error);
     },

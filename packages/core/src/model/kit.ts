@@ -1,5 +1,12 @@
 import { type CalendarOptions, createCalendar } from "../calendar/builders.js";
 import type { CalendarDefinition } from "../calendar/types.js";
+import {
+  createDomainEventDefinition,
+  createRecordDefinition,
+  type DomainEventOptions,
+  type RecordOptions,
+} from "../domain/builders.js";
+import type { DomainEventDefinition, JsonValue, RecordDefinition } from "../domain/types.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import type { PurchaseCurve } from "../economy/curves.js";
@@ -92,6 +99,11 @@ export interface GameKit<N> {
   task(id: string, options: TaskOptions<N>): TaskDefinition<N>;
   calendar(id: string, options: CalendarOptions): CalendarDefinition;
   market(id: string, options: MarketOptions<N>): MarketDefinition<N>;
+  record<T extends JsonValue>(id: string, options: RecordOptions<T>): RecordDefinition<T>;
+  eventType<P extends JsonValue>(
+    id: string,
+    options: DomainEventOptions<P>,
+  ): DomainEventDefinition<P>;
   scopeActivation(
     id: string,
     options: Omit<ScopeActivationDefinition<N>, "id">,
@@ -127,6 +139,8 @@ export function createGameKit<N>(options: { readonly numbers: NumericAdapter<N> 
     task: (id, value) => createTask(id, value, owner, numbers),
     calendar: (id, value) => createCalendar(id, value, owner),
     market: (id, value) => createMarket(id, value, owner, numbers),
+    record: (id, value) => createRecordDefinition(id, value, owner),
+    eventType: (id, value) => createDomainEventDefinition(id, value, owner),
     scopeActivation: (id, value) => {
       validId(id, "scope activation");
       assertOwner(value.scope, owner, `Scope for ${id}`);

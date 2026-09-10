@@ -1,5 +1,6 @@
 import type { AutomationDefinition } from "../automation/scheduler.js";
 import type { CalendarDefinition } from "../calendar/types.js";
+import type { DomainEventDefinition, RecordDefinition } from "../domain/types.js";
 import type { AllocationDefinition } from "../economy/allocations.js";
 import type { BuyableDefinition } from "../economy/buyables.js";
 import type { RecipeDefinition } from "../economy/recipes.js";
@@ -43,6 +44,9 @@ export interface GameDefinition<N = never> {
   readonly tasks?: readonly TaskDefinition<N>[];
   readonly calendars?: readonly CalendarDefinition[];
   readonly markets?: readonly MarketDefinition<N>[];
+  readonly records?: readonly RecordDefinition[];
+  readonly domainEvents?: readonly DomainEventDefinition[];
+  readonly eventRetention?: number;
 }
 
 export interface GameDefinitionInput {
@@ -69,6 +73,9 @@ export interface GameContentInput<N> extends GameDefinitionInput {
   readonly tasks?: readonly TaskDefinition<N>[];
   readonly calendars?: readonly CalendarDefinition[];
   readonly markets?: readonly MarketDefinition<N>[];
+  readonly records?: readonly RecordDefinition[];
+  readonly domainEvents?: readonly DomainEventDefinition[];
+  readonly eventRetention?: number;
 }
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/;
@@ -127,6 +134,12 @@ export function defineOwnedGame<N>(
   validateOwnedIds(input.tasks ?? [], owner, "Task");
   validateOwnedIds(input.calendars ?? [], owner, "Calendar");
   validateOwnedIds(input.markets ?? [], owner, "Market");
+  validateOwnedIds(input.records ?? [], owner, "Record");
+  validateOwnedIds(input.domainEvents ?? [], owner, "Domain event");
+  const eventRetention = input.eventRetention ?? 2_000;
+  if (!Number.isSafeInteger(eventRetention) || eventRetention < 1) {
+    throw new TypeError("Event retention must be a positive safe integer");
+  }
   for (const calendar of input.calendars ?? []) {
     if (calendar.phases.some((phase) => phase.durationMs % base.stepMs !== 0))
       throw new TypeError(`Calendar ${calendar.id} phase durations must align to stepMs`);
@@ -154,6 +167,9 @@ export function defineOwnedGame<N>(
       tasks: Object.freeze([...(input.tasks ?? [])]),
       calendars: Object.freeze([...(input.calendars ?? [])]),
       markets: Object.freeze([...(input.markets ?? [])]),
+      records: Object.freeze([...(input.records ?? [])]),
+      domainEvents: Object.freeze([...(input.domainEvents ?? [])]),
+      eventRetention,
     },
     owner,
   );
@@ -196,6 +212,7 @@ export function definitionScopes<N>(definition: GameDefinition<N>): readonly Sco
     definition.tasks ?? [],
     definition.calendars ?? [],
     definition.markets ?? [],
+    definition.records ?? [],
   ];
   const scopes = new Map<string, Scope>();
   for (const group of groups) {

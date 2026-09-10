@@ -75,7 +75,12 @@
         "progressionEvents": {
           "type": "array",
           "items": { "$ref": "#/$defs/progressionEvent" }
-        }
+        },
+        "records": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/domainRecord" }
+        },
+        "domainEventJournal": { "$ref": "#/$defs/domainEventJournal" }
       }
     },
     "clock": {
@@ -337,6 +342,62 @@
         "segments": { "type": "array", "items": { "$ref": "#/$defs/segment" } },
         "report": { "$ref": "#/$defs/report" },
         "deliveryCursor": { "$ref": "#/$defs/decimalInteger" }
+      }
+    },
+    "domainRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "value"],
+      "properties": {
+        "version": { "$ref": "#/$defs/positiveInteger" },
+        "value": {}
+      }
+    },
+    "eventAudience": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "enum": ["public", "host"] } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "seatIds"],
+          "properties": {
+            "kind": { "const": "seats" },
+            "seatIds": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/nonempty" }
+            }
+          }
+        }
+      ]
+    },
+    "domainEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "atGameMs", "type", "version", "payload", "audience"],
+      "properties": {
+        "sequence": { "$ref": "#/$defs/decimalInteger" },
+        "atGameMs": { "$ref": "#/$defs/duration" },
+        "type": { "$ref": "#/$defs/nonempty" },
+        "version": { "$ref": "#/$defs/positiveInteger" },
+        "payload": {},
+        "audience": { "$ref": "#/$defs/eventAudience" }
+      }
+    },
+    "domainEventJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nextSequence", "firstRetainedSequence", "events"],
+      "properties": {
+        "nextSequence": { "$ref": "#/$defs/decimalInteger" },
+        "firstRetainedSequence": { "$ref": "#/$defs/decimalInteger" },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/domainEvent" } }
       }
     },
     "resourceReport": {

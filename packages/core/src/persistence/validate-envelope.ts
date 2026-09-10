@@ -1,3 +1,4 @@
+import { normalizeAudience, normalizeJson } from "../domain/value.js";
 import { resolveModules } from "../model/modules.js";
 import type {
   CatchupSession,
@@ -87,9 +88,18 @@ function validateEnvelopeShape(envelope: SaveEnvelope): void {
   exact(envelope.clock, ["wallAnchorMs", "gameTimeMs", "remainderMs", "entitlement"], "clock");
   exact(
     envelope.state,
-    ["scopes", "productionTotals", "rewardLedger", "won", "progressionEvents"],
+    [
+      "scopes",
+      "productionTotals",
+      "rewardLedger",
+      "won",
+      "progressionEvents",
+      "records",
+      "domainEventJournal",
+    ],
     "state",
   );
+  validateDomainShape(envelope);
   for (const scope of Object.values(envelope.state.scopes)) {
     exact(scope, scopeFields, "scope state");
     validateTimedShape(scope);
@@ -105,6 +115,43 @@ function validateEnvelopeShape(envelope: SaveEnvelope): void {
     !duration(envelope.clock.remainderMs)
   ) {
     throw new TypeError("Invalid save clock");
+  }
+}
+
+function validateDomainShape(envelope: SaveEnvelope): void {
+  const records = envelope.state.records ?? {};
+  if (!records || typeof records !== "object" || Array.isArray(records)) {
+    throw new TypeError("Invalid domain record state");
+  }
+  for (const [id, state] of Object.entries(records)) {
+    exact(state, ["version", "value"], `domain record ${id}`);
+    if (!nonempty(id) || !positive(state.version))
+      throw new TypeError("Invalid domain record state");
+    normalizeJson(state.value, `Domain record ${id}`);
+  }
+  const journal = envelope.state.domainEventJournal;
+  if (!journal) return;
+  exact(journal, ["nextSequence", "firstRetainedSequence", "events"], "domain event journal");
+  if (!integerString(journal.nextSequence) || !integerString(journal.firstRetainedSequence)) {
+    throw new TypeError("Invalid domain event journal cursor");
+  }
+  if (!Array.isArray(journal.events)) throw new TypeError("Invalid domain event journal");
+  for (const event of journal.events) {
+    exact(
+      event,
+      ["sequence", "atGameMs", "type", "version", "payload", "audience"],
+      "domain event",
+    );
+    if (
+      !integerString(event.sequence) ||
+      !duration(event.atGameMs) ||
+      !nonempty(event.type) ||
+      !positive(event.version)
+    ) {
+      throw new TypeError("Invalid domain event");
+    }
+    normalizeJson(event.payload, `Domain event ${event.type}`);
+    normalizeAudience(event.audience);
   }
 }
 

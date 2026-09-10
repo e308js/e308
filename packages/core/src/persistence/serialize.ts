@@ -53,23 +53,7 @@ export function serializeCheckpoint<N>(
       numericCodec: { id: numbers.codec.id, version: numbers.codec.version },
     },
     revision: snapshot.revision.toString(),
-    state: {
-      scopes: Object.freeze(scopes),
-      productionTotals: Object.freeze(
-        Object.fromEntries(
-          Object.entries(snapshot.productionTotals).map(([id, value]) => [
-            id,
-            numbers.codec.serialize(value),
-          ]),
-        ),
-      ),
-      rewardLedger: snapshot.progression.rewardLedger,
-      won: snapshot.progression.won,
-      progressionEvents: snapshot.progression.events.map((event) => ({
-        ...event,
-        sequence: event.sequence.toString(),
-      })),
-    },
+    state: serializeState(snapshot, scopes, numbers.codec.serialize),
     clock: {
       wallAnchorMs: metadata.wallAnchorMs,
       gameTimeMs: snapshot.gameTimeMs,
@@ -88,6 +72,42 @@ export function serializeCheckpoint<N>(
     lastDeliveredEvent: metadata.lastDeliveredEvent ?? "0",
   };
   return completeEnvelope(payload);
+}
+
+function serializeState<N>(
+  snapshot: Snapshot<N>,
+  scopes: Record<string, MutableSerializedScope>,
+  encode: (value: N) => string,
+): SaveEnvelope["state"] {
+  return {
+    scopes: Object.freeze(scopes),
+    productionTotals: Object.freeze(
+      Object.fromEntries(
+        Object.entries(snapshot.productionTotals).map(([id, value]) => [id, encode(value)]),
+      ),
+    ),
+    rewardLedger: snapshot.progression.rewardLedger,
+    won: snapshot.progression.won,
+    progressionEvents: snapshot.progression.events.map((event) => ({
+      ...event,
+      sequence: event.sequence.toString(),
+    })),
+    records: Object.freeze({ ...(snapshot.records ?? {}) }),
+    domainEventJournal: serializeDomainEventJournal(snapshot),
+  };
+}
+
+function serializeDomainEventJournal<N>(snapshot: Snapshot<N>) {
+  const journal = snapshot.domainEventJournal ?? {
+    nextSequence: 1n,
+    firstRetainedSequence: 1n,
+    events: [],
+  };
+  return Object.freeze({
+    nextSequence: journal.nextSequence.toString(),
+    firstRetainedSequence: journal.firstRetainedSequence.toString(),
+    events: journal.events.map((event) => ({ ...event, sequence: event.sequence.toString() })),
+  });
 }
 
 function createScopes(
