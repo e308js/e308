@@ -35,6 +35,19 @@ export interface LegalActionQuote<I extends HarnessValue> {
   readonly constraints: readonly ConstraintEvidence[];
 }
 
+export type PressureRelief =
+  | { readonly kind: "action"; readonly actionId: string }
+  | { readonly kind: "investment"; readonly actionId: string; readonly estimatedMs: number }
+  | { readonly kind: "passive"; readonly estimatedMs: number };
+
+export interface PlayabilityPressure {
+  readonly id: string;
+  readonly kind: "capacity" | "prerequisite" | "throughput" | "other";
+  readonly active: boolean;
+  readonly detail: string;
+  readonly relief: readonly PressureRelief[];
+}
+
 export interface BarrierCertificate {
   readonly id: string;
   readonly proofScope: string;
@@ -72,6 +85,7 @@ export interface HarnessScenario<N, O extends HarnessValue, I extends HarnessVal
   command(intent: I, snapshot: Snapshot<N>): Command<N>;
   sample(snapshot: Snapshot<N>): Readonly<Record<string, string>>;
   milestones(snapshot: Snapshot<N>): readonly string[];
+  pressures?(snapshot: Snapshot<N>): readonly PlayabilityPressure[];
   diagnostics(
     before: Snapshot<N>,
     after: Snapshot<N>,
@@ -150,7 +164,7 @@ export interface HarnessSample {
 
 export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly schema: "e308-pacing-report";
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly scenarioId: string;
   readonly contentVersion: string;
   readonly contentDigest: string;
@@ -188,6 +202,9 @@ export interface HarnessReport<I extends HarnessValue = HarnessValue> {
     readonly longestWaitMs: number;
   };
   readonly constraints: Readonly<Record<string, number>>;
+  readonly playability: {
+    readonly pressures: Readonly<Record<string, PressureMetric>>;
+  };
   readonly milestones: Readonly<
     Record<
       string,
@@ -204,4 +221,28 @@ export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly samples: readonly HarnessSample[];
   readonly samplesTruncated: number;
   readonly replayCommand: string;
+}
+
+export interface PressureMetric {
+  readonly kind: PlayabilityPressure["kind"];
+  readonly detail: string;
+  readonly currentlyActive: boolean;
+  readonly observedMs: number;
+  readonly actionableMs: number;
+  readonly savingMs: number;
+  readonly passiveMs: number;
+  readonly noReliefMs: number;
+  readonly longestNoReliefMs: number;
+  readonly maximumPassiveEstimateMs: number;
+}
+
+export interface PlayabilityThresholds {
+  readonly maximumNoReliefMs: number;
+}
+
+export interface PlayabilityFinding {
+  readonly code: "goal-deadlock" | "sustained-no-relief";
+  readonly severity: "p0" | "p1";
+  readonly pressureId: string | null;
+  readonly detail: string;
 }

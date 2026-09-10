@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  assessPlayability,
   type BotPolicy,
   goalPolicy,
   type HarnessRunOptions,
@@ -92,6 +93,72 @@ describe("headless harness", () => {
       discardedRealMs: 1_500,
     });
     expect(replayHarness({ scenario, report }).snapshot.resources.tokens).toBe(1);
+  });
+
+  it("measures player relief separately from passive progress and deadlocks", () => {
+    const blockedBase = harnessScenario({
+      ...baseHarnessParameters,
+      rate: 0,
+      target: 20,
+      noActions: true,
+    });
+    const blocked = runHarness(
+      options({
+        scenario: {
+          ...blockedBase,
+          pressures: () => [
+            {
+              id: "fixed-cap",
+              kind: "capacity" as const,
+              active: true,
+              detail: "The fixed cap blocks the goal.",
+              relief: [],
+            },
+          ],
+        },
+        schedule: [{ kind: "active", durationMs: 3_000 }],
+      }),
+    );
+    expect(blocked.playability.pressures["fixed-cap"]).toMatchObject({
+      observedMs: 3_000,
+      noReliefMs: 3_000,
+      longestNoReliefMs: 3_000,
+    });
+    expect(assessPlayability(blocked, { maximumNoReliefMs: 2_000 })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "goal-deadlock",
+          severity: "p0",
+          pressureId: "fixed-cap",
+        }),
+      ]),
+    );
+
+    const passiveBase = harnessScenario({ ...baseHarnessParameters, target: 20 });
+    const passive = runHarness(
+      options({
+        scenario: {
+          ...passiveBase,
+          pressures: () => [
+            {
+              id: "growth",
+              kind: "prerequisite" as const,
+              active: true,
+              detail: "Production is advancing the prerequisite.",
+              relief: [{ kind: "passive" as const, estimatedMs: 12_000 }],
+            },
+          ],
+        },
+        schedule: [{ kind: "idle-open", durationMs: 2_000 }],
+      }),
+    );
+    expect(passive.playability.pressures.growth).toMatchObject({
+      passiveMs: 2_000,
+      noReliefMs: 0,
+      maximumPassiveEstimateMs: 12_000,
+    });
+    expect(assessPlayability(passive, { maximumNoReliefMs: 0 })).toEqual([]);
+    expect(reportMarkdown(passive)).toContain("| growth | 2000 | 0 | 0 | 2000 | 0 |");
   });
 
   it("distinguishes policy stalls, observed stalls, barriers, schedule end, and work limits", () => {

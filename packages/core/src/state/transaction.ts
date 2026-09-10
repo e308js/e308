@@ -181,6 +181,7 @@ function progressionMethods<N>(
   Transaction<N>,
   | "hasProgress"
   | "setProgress"
+  | "hasActiveChallenges"
   | "isChallengeActive"
   | "setChallengeActive"
   | "getChallengeCompletions"
@@ -198,6 +199,7 @@ function progressionMethods<N>(
       progressFlags(progression, kind)[id] = true;
       recordProgressionEvent(progression, kind, id, gameTimeMs());
     },
+    hasActiveChallenges: () => progression.activeChallenges.size > 0,
     isChallengeActive: (id) => progression.activeChallenges.has(id),
     setChallengeActive: (id, active) => {
       if (active) progression.activeChallenges.add(id);

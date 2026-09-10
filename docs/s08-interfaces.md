@@ -48,6 +48,14 @@ Diagnostics come from actual quotes, dispatch failures, and scenario samples. An
 counterfactual changes one named constraint and records its result as intervention evidence, never
 as proof of a unique cause.
 
+A scenario may project goal-relevant pressure with a stable ID, category, explanation, and relief
+routes. Relief routes identify an immediately available action, an investment action with an
+estimated horizon, or positive passive progress with an estimated horizon. Reports accumulate time
+as actionable, saving, passive, or without relief. `assessPlayability` emits a P0 finding when a goal
+remains pending under sustained active pressure with no route, and a P1 finding for a resolved or
+intermittent no-relief stretch over the configured threshold. Passive progress is recorded as a
+healthy route.
+
 ## Time, traces, and statistics
 
 Schedules are ordered positive-duration `active`, `idle-open`, or `absent` segments. Active and idle

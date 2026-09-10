@@ -1,8 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { cpus, totalmem } from "node:os";
 import { createGame, type GameDefinition, type SaveCodec, type Snapshot } from "@e308/core";
-import { profileAdvancement } from "@e308/core/optimize";
-import { cascadeDefinition, cascadeSaveCodec } from "@e308/game-cascade";
+import { type BulkCapability, profileAdvancement } from "@e308/core/optimize";
+import { cascadeBulkCapability, cascadeDefinition, cascadeSaveCodec } from "@e308/game-cascade";
 import { hearthDefinition, hearthSaveCodec } from "@e308/game-hearth";
 import { wireworksDefinition, wireworksSaveCodec } from "@e308/game-wireworks";
 import { type MachineRecord, type WorkloadRecord, workloadMarkdown } from "./performance-report.js";
@@ -18,12 +18,17 @@ const workloads: WorkloadRecord[] = [];
 const requested = process.argv.slice(2).filter((argument) => argument !== "--");
 const requestedGame = requested[0];
 const requestedCheckpoint = requested[1];
+const requestedDuration = requested[2];
 if (requestedGame && !["wireworks", "cascade", "hearth"].includes(requestedGame))
   throw new TypeError(`Unknown performance scenario: ${requestedGame}`);
 if (requestedCheckpoint && !["beginning", "middle", "ending"].includes(requestedCheckpoint))
   throw new TypeError(`Unknown performance checkpoint: ${requestedCheckpoint}`);
 if (requestedCheckpoint && !requestedGame)
   throw new TypeError("A checkpoint requires a performance scenario");
+if (requestedDuration && !gaps.some(([label]) => label === requestedDuration))
+  throw new TypeError(`Unknown performance duration: ${requestedDuration}`);
+if (requestedDuration && !requestedCheckpoint)
+  throw new TypeError("A duration requires a performance checkpoint");
 const checkpointFile = JSON.parse(
   await readFile(
     new URL("../../../artifacts/finished-games/checkpoints.json", import.meta.url),
@@ -33,7 +38,9 @@ const checkpointFile = JSON.parse(
 if (!requestedGame || requestedGame === "wireworks")
   profileScenario("wireworks", wireworksDefinition, decoded(wireworksSaveCodec, "wireworks"));
 if (!requestedGame || requestedGame === "cascade")
-  profileScenario("cascade", cascadeDefinition, decoded(cascadeSaveCodec, "cascade"));
+  profileScenario("cascade", cascadeDefinition, decoded(cascadeSaveCodec, "cascade"), [
+    cascadeBulkCapability,
+  ]);
 if (!requestedGame || requestedGame === "hearth")
   profileScenario("hearth", hearthDefinition, decoded(hearthSaveCodec, "hearth"));
 
@@ -41,10 +48,12 @@ function profileScenario<N>(
   id: string,
   definition: GameDefinition<N>,
   saves: Checkpoints<N>,
+  capabilities: readonly BulkCapability<N>[] = [],
 ): void {
   for (const [checkpoint, initial] of Object.entries(saves) as Entries<Checkpoints<N>>) {
     if (requestedCheckpoint && checkpoint !== requestedCheckpoint) continue;
     for (const [duration, durationMs] of gaps) {
+      if (requestedDuration && duration !== requestedDuration) continue;
       const releaseTarget = duration === "8 hours";
       const coldRuns = releaseTarget ? 10 : 1;
       const warmRuns = releaseTarget ? 10 : duration === "30 days" ? 1 : 3;
@@ -56,7 +65,8 @@ function profileScenario<N>(
         createGame: () => createGame(definition, { snapshot: initial }),
         advancement: {
           mode: "exact" as const,
-          limits: { maximumWork: 200_000, maximumBulkBatches: 100 },
+          limits: { maximumWork: 200_000, maximumBulkBatches: 20_000 },
+          capabilities,
         },
         now: () => performance.now(),
       };
@@ -106,7 +116,7 @@ const machine: MachineRecord = {
 };
 const output = new URL("../../../artifacts/performance/", import.meta.url);
 const suffix = requestedGame
-  ? `-${requestedGame}${requestedCheckpoint ? `-${requestedCheckpoint}` : ""}`
+  ? `-${requestedGame}${requestedCheckpoint ? `-${requestedCheckpoint}` : ""}${requestedDuration ? `-${requestedDuration.replaceAll(" ", "-")}` : ""}`
   : "";
 await mkdir(output, { recursive: true });
 await Promise.all([

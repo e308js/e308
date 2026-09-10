@@ -17,7 +17,7 @@ import {
 
 export const cascadeDefinition = cascadeKit.defineGame({
   id: "cascade",
-  simulationVersion: 1,
+  simulationVersion: 2,
   stepMs: 1_000,
   resources: [...Object.values(cascadeResources), ...cascadeTiers],
   buyables: cascadeBuyables,

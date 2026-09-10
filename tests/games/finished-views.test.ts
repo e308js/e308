@@ -18,6 +18,7 @@ import {
 } from "@e308/game-wireworks";
 import { createQuantityFormatter, createTextResolver, mountView } from "@e308/ux";
 import { describe, expect, it } from "vitest";
+import { researchPanel } from "../../games/cascade/src/view-research.js";
 import { driveScenario } from "../helpers/finished-games.js";
 
 const resolver = createTextResolver({ quantities: createQuantityFormatter(nativeNumbers) });
@@ -72,7 +73,8 @@ describe("finished-game view states", () => {
     const initial = createCascade();
     const initialView = JSON.stringify(cascadeView(initial.getSnapshot()));
     expect(initialView).toContain("ending-boundary");
-    expect(initialView).toContain("Each point assigned to Speed adds 100% of base production");
+    expect(initialView).toContain("Speed multiplies all production");
+    expect(initialView).toContain("Tier 1 autobuyer");
     const sixtyOwned = {
       ...initial.getSnapshot(),
       purchaseCounts: {
@@ -101,6 +103,16 @@ describe("finished-game view states", () => {
       stop: (snapshot) => snapshot.progression.won,
     }).getSnapshot();
     expect(JSON.stringify(cascadeView(ending))).toContain("Cascade is complete");
+    const { "final-research": _final, ...upgrades } = ending.progression.upgrades;
+    const ready = {
+      ...ending,
+      resources: { ...ending.resources, "eternity-points": cascadeKit.q(1) },
+      progression: { ...ending.progression, upgrades, won: false },
+    };
+    expect(JSON.stringify(cascadeView(ready))).toContain('"enabled":true');
+    const speed = researchPanel(ready).find((node) => node.id === "research-speed");
+    if (speed?.kind !== "range-input") throw new TypeError("speed research input missing");
+    expect(speed.intent(2)).toEqual({ type: "research", target: "speed", amount: 2 });
   }, 30_000);
 
   it("renders Hearth's warning, shortage, recovery, busy projects, and ending", () => {

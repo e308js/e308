@@ -1,4 +1,8 @@
-import type { HarnessSample, HarnessTraceEntry, HarnessValue } from "./types.js";
+import type { HarnessSample, HarnessTraceEntry, HarnessValue, PressureMetric } from "./types.js";
+
+export type MutablePressureMetric = {
+  -readonly [Key in keyof PressureMetric]: PressureMetric[Key];
+} & { currentNoReliefMs: number };
 
 export interface HarnessTotals<I extends HarnessValue> {
   real: number;
@@ -19,6 +23,7 @@ export interface HarnessTotals<I extends HarnessValue> {
   readonly trace: HarnessTraceEntry<I>[];
   readonly samples: HarnessSample[];
   readonly constraints: Record<string, number>;
+  readonly pressures: Record<string, MutablePressureMetric>;
   readonly milestones: Record<
     string,
     { realTimeMs: number; gameTimeMs: number; activeTimeMs: number }
@@ -47,6 +52,7 @@ export function createTotals<I extends HarnessValue>(): HarnessTotals<I> {
     trace: [],
     samples: [],
     constraints: {},
+    pressures: {},
     milestones: {},
     fidelity: new Set(),
     diagnostics: { overflow: 0, resetRecoveries: 0, taskBlocks: 0 },

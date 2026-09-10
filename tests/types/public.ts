@@ -11,7 +11,12 @@ import type { BrowserHost, OwnershipPort } from "@e308/core/browser";
 import { type CalendarDefinition, currentPhase } from "@e308/core/calendar";
 import { type MarketQuote, marketCommand } from "@e308/core/markets";
 import { type CatchupExecution, processCatchupChunk } from "@e308/core/offline";
-import { type AdvancementReport, advanceOptimized, type BulkCapability } from "@e308/core/optimize";
+import {
+  type AdvancementReport,
+  advanceOptimized,
+  type BulkCapability,
+  producerChainBulkCapability,
+} from "@e308/core/optimize";
 import { createSaveCodec, type SaveEnvelope } from "@e308/core/persistence";
 import { MemorySaveStore, type TransactionalSaveStore } from "@e308/core/storage";
 import { queueTaskCommand, type TaskDefinition } from "@e308/core/tasks";
@@ -96,6 +101,7 @@ void (undefined as WorkerTransferCodec<number, { kind: "run" }, string> | undefi
 void (undefined as AdvancementReport<number> | undefined);
 void (undefined as BulkCapability<number> | undefined);
 void advanceOptimized;
+void producerChainBulkCapability;
 void (undefined as HarnessReport | undefined);
 void (undefined as SweepParameterCase<Record<string, string>> | undefined);
 void compareBaseline;

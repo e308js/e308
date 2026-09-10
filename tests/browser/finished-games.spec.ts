@@ -80,6 +80,22 @@ test("keeps primary choices usable at a touch viewport", async ({ page }) => {
   }
 });
 
+test("presents Cascade's connected reset and challenge route", async ({ page }) => {
+  await page.getByRole("button", { name: "Cascade" }).click();
+  await expect(page.locator("#game")).toHaveClass(/cascade/);
+  await page.getByRole("tab", { name: "Reset map" }).click();
+  await expect(page.getByText("Requires 10 purchased generators in every tier.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /collapse for 0/i })).toBeDisabled();
+
+  await page.getByRole("tab", { name: "Challenges" }).click();
+  await expect(page.getByText(/All production runs at 25% speed/)).toBeVisible();
+  await expect(page.getByText(/Reward: Up to 3 research points/)).toBeVisible();
+
+  await page.getByRole("tab", { name: "Automation" }).click();
+  await expect(page.getByRole("button", { name: "Enable Tier 1 autobuyer" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Enable Auto-collapse" })).toBeDisabled();
+});
+
 async function gameTime(page: import("@playwright/test").Page): Promise<number> {
   return page.evaluate(() => {
     const api = (

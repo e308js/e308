@@ -26,9 +26,10 @@ export function advanceProducerChain<N>(
   const numbers = transaction.numbers;
   const start = options.tiers.map((tier) => transaction.get(tier));
   const seconds = numbers.fromNumber(options.seconds);
+  const zero = numbers.fromNumber(0);
   const produced = start.map((amount, index) => {
     const rate = options.rate({ index, amount });
-    if (!numbers.isFinite(rate) || numbers.cmp(rate, numbers.fromNumber(0)) < 0) {
+    if (!numbers.isFinite(rate) || numbers.cmp(rate, zero) < 0) {
       throw new NumericFault(`Producer-chain tier ${index + 1} returned an invalid rate`);
     }
     return numbers.mul(rate, seconds);

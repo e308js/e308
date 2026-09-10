@@ -1,4 +1,5 @@
 export { runHarness } from "./harness.js";
+export { assessPlayability } from "./playability.js";
 export {
   goalPolicy,
   orderedPolicy,

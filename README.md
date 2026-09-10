@@ -174,11 +174,13 @@ particles, safe rich descriptions, and custom render slots. Controls are unstyle
 
 ## Test pacing headlessly
 
-`@e308/core/testing` gives bot policies only a serializable observation and legal, revision-bound
-action quotes. It records reproducible actions, waits, constraints, milestones, offline fidelity, and
-bounded samples. `@e308/core/balance` aggregates runs, sweeps parameters, and compares content
-versions. `@e308/core/optimize` offers validated exact advancement with canonical fallback and
-explicitly labeled approximation contracts.
+`@e308/core/testing` gives bot policies a serializable observation and legal, revision-bound action
+quotes. It records reproducible actions, waits, constraints, milestones, offline fidelity, and
+bounded samples. Scenarios can identify goal-relevant pressure and declare immediate actions,
+investments, or passive progress that relieve it. `assessPlayability` reports sustained pressure with
+no relief and pending-goal deadlocks. `@e308/core/balance` aggregates runs, sweeps parameters, and
+compares content versions. `@e308/core/optimize` offers validated exact advancement with canonical
+fallback and explicitly labeled approximation contracts.
 
 ```ts
 import { orderedPolicy, randomLegalPolicy, runHarness } from "@e308/core/testing";

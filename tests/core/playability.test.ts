@@ -1,0 +1,173 @@
+import { describe, expect, it } from "vitest";
+import {
+  assessPlayability,
+  type HarnessRunOptions,
+  type PlayabilityPressure,
+  type PressureRelief,
+  rankedPolicy,
+  runHarness,
+} from "../../packages/core/src/testing/index.js";
+import {
+  baseHarnessParameters,
+  type HarnessIntent,
+  type HarnessObservation,
+  harnessScenario,
+} from "../helpers/harness-fixture.js";
+
+function options(
+  scenario: HarnessRunOptions<number, HarnessObservation, HarnessIntent>["scenario"],
+  durationMs = 1_000,
+): HarnessRunOptions<number, HarnessObservation, HarnessIntent> {
+  return {
+    scenario,
+    policy: rankedPolicy({ version: "1" }),
+    gameSeed: "00",
+    botSeed: "01",
+    goalId: "tokens",
+    decisionCadenceMs: 1_000,
+    schedule: [{ kind: "idle-open", durationMs }],
+    limits: {
+      maximumDecisions: 10,
+      maximumTraceEntries: 10,
+      maximumSamples: 10,
+      sampleCadenceMs: 1_000,
+    },
+    replayCommand: "pnpm test playability",
+  };
+}
+
+describe("playability pressures", () => {
+  it("separates immediate actions, investments, and passive progress", () => {
+    const base = harnessScenario({ ...baseHarnessParameters, cost: 0, target: 20 });
+    const report = runHarness(
+      options({
+        ...base,
+        pressures: () => [
+          pressure("action", [{ kind: "action", actionId: "buy-token" }]),
+          pressure("investment", [
+            { kind: "investment", actionId: "buy-token", estimatedMs: 5_000 },
+          ]),
+          pressure("passive", [{ kind: "passive", estimatedMs: 8_000 }]),
+          { ...pressure("inactive", []), active: false },
+        ],
+      }),
+    );
+    expect(report.playability.pressures.action?.actionableMs).toBe(1_000);
+    expect(report.playability.pressures.investment).toMatchObject({
+      savingMs: 1_000,
+      maximumPassiveEstimateMs: 5_000,
+    });
+    expect(report.playability.pressures.passive).toMatchObject({
+      passiveMs: 1_000,
+      maximumPassiveEstimateMs: 8_000,
+    });
+    expect(report.playability.pressures.inactive).toBeUndefined();
+  });
+
+  it("tracks separate no-relief episodes and reports resolved pressure", () => {
+    const base = harnessScenario({ ...baseHarnessParameters, target: 20 });
+    const report = runHarness(
+      options(
+        {
+          ...base,
+          pressures: (snapshot) => [
+            { ...pressure("intermittent", []), active: snapshot.gameTimeMs !== 1_000 },
+          ],
+        },
+        3_000,
+      ),
+    );
+    expect(report.playability.pressures.intermittent).toMatchObject({
+      currentlyActive: true,
+      observedMs: 2_000,
+      longestNoReliefMs: 1_000,
+    });
+    const metric = report.playability.pressures.intermittent;
+    if (!metric) throw new TypeError("intermittent pressure missing");
+    const resolved = {
+      ...report,
+      playability: {
+        pressures: {
+          intermittent: {
+            ...metric,
+            currentlyActive: false,
+          },
+        },
+      },
+    };
+    expect(assessPlayability(resolved, { maximumNoReliefMs: 500 })).toEqual([
+      expect.objectContaining({ code: "sustained-no-relief", severity: "p1" }),
+    ]);
+  });
+
+  it("rejects duplicate ids and changing pressure kinds", () => {
+    const base = harnessScenario({ ...baseHarnessParameters, target: 20 });
+    expect(() =>
+      runHarness(
+        options({ ...base, pressures: () => [pressure("same", []), pressure("same", [])] }),
+      ),
+    ).toThrow("Duplicate pressure id");
+    expect(() =>
+      runHarness(
+        options(
+          {
+            ...base,
+            pressures: (snapshot) => [
+              {
+                ...pressure("changing", []),
+                kind: snapshot.gameTimeMs === 0 ? "capacity" : "throughput",
+              },
+            ],
+          },
+          2_000,
+        ),
+      ),
+    ).toThrow("Pressure kind changed");
+  });
+
+  it("validates pressure identifiers and relief estimates", () => {
+    const base = harnessScenario({ ...baseHarnessParameters, target: 20 });
+    expect(() => runHarness(options({ ...base, pressures: () => [pressure("", [])] }))).toThrow(
+      "id and detail",
+    );
+    expect(() =>
+      runHarness(
+        options({
+          ...base,
+          pressures: () => [pressure("bad-action", [{ kind: "action", actionId: "" }])],
+        }),
+      ),
+    ).toThrow("action id");
+    expect(() =>
+      runHarness(
+        options({
+          ...base,
+          pressures: () => [
+            pressure("bad-estimate", [{ kind: "passive", estimatedMs: Number.NaN }]),
+          ],
+        }),
+      ),
+    ).toThrow("finite and non-negative");
+    expect(() =>
+      runHarness(
+        options({
+          ...base,
+          pressures: () => [
+            pressure("bad-investment", [{ kind: "investment", actionId: "", estimatedMs: 1_000 }]),
+          ],
+        }),
+      ),
+    ).toThrow("investment action id");
+  });
+
+  it("keeps an observed policy stall separate from a proven deadlock", () => {
+    const scenario = harnessScenario({ ...baseHarnessParameters, rate: 0, target: 20 });
+    const report = runHarness(options(scenario));
+    expect(report.outcome).toEqual({ kind: "unreached", reason: "observed-stall" });
+    expect(assessPlayability(report, { maximumNoReliefMs: 0 })).toEqual([]);
+  });
+});
+
+function pressure(id: string, relief: readonly PressureRelief[]): PlayabilityPressure {
+  return { id, kind: "capacity", active: true, detail: `${id} pressure`, relief };
+}

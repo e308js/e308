@@ -2,6 +2,11 @@ export { advanceOptimized } from "./advance.js";
 export { nativeAffineCapability } from "./affine.js";
 export { AdvanceBacklog } from "./backlog.js";
 export { eventBoundedCapability } from "./events.js";
+export type {
+  ProducerChainBulkContext,
+  ProducerChainBulkOptions,
+} from "./producer-chain.js";
+export { producerChainBulkCapability } from "./producer-chain.js";
 export { profileAdvancement } from "./profile.js";
 export type {
   AdvancementFidelity,

@@ -82,6 +82,74 @@ describe("finished Cascade", () => {
     ).toBe(0);
   });
 
+  it("requires the full eight-tier route before the first reset", () => {
+    const cascade = createCascade();
+    cascade.game.dispatch({
+      id: "early-collapse-fixture",
+      execute: (transaction) => transaction.set(cascadeResources.currency, cascadeKit.q("1e30")),
+    });
+    expect(cascade.dispatch({ type: "prestige", id: "collapse" })).toMatchObject({
+      ok: false,
+      error: { code: "locked" },
+    });
+    for (let tier = 1; tier <= 8; tier += 1)
+      expect(cascade.dispatch({ type: "buy", tier, count: 10 }).ok).toBe(true);
+    expect(cascade.dispatch({ type: "prestige", id: "collapse" }).ok).toBe(true);
+    expect(
+      eternityNumbers.cmp(
+        cascade.getSnapshot().resources["infinity-points"] as EternityQuantity,
+        cascadeKit.q(0),
+      ),
+    ).toBeGreaterThan(0);
+    expect(
+      encoded(cascade.getSnapshot().resources["prestige-multiplier"] as EternityQuantity),
+    ).toBe(
+      encoded(
+        eternityNumbers.add(
+          cascadeKit.q(1),
+          cascade.getSnapshot().resources["infinity-points"] as EternityQuantity,
+        ),
+      ),
+    );
+  });
+
+  it("updates one prestige multiplier and applies it to the producer cascade", () => {
+    const producedWith = (multiplier: number) => {
+      const game = createGame(cascadeDefinition);
+      game.dispatch({
+        id: "reset-multiplier-fixture",
+        execute(transaction) {
+          transaction.set(cascadeResources.currency, cascadeKit.q(0));
+          transaction.set(cascadeTiers[0] as (typeof cascadeTiers)[number], cascadeKit.q(1));
+          transaction.set(cascadeResources.prestigeMultiplier, cascadeKit.q(multiplier));
+        },
+      });
+      game.advance(1_000);
+      return Number(encoded(game.getSnapshot().resources.currency as EternityQuantity));
+    };
+    expect(producedWith(3)).toBe(producedWith(1) * 3);
+
+    const condenseGame = createCascade();
+    condenseGame.game.dispatch({
+      id: "condense-multiplier-fixture",
+      execute: (transaction) => transaction.set(cascadeResources.infinity, cascadeKit.q(5)),
+    });
+    expect(condenseGame.dispatch({ type: "prestige", id: "condense" }).ok).toBe(true);
+    expect(
+      encoded(condenseGame.getSnapshot().resources["prestige-multiplier"] as EternityQuantity),
+    ).toBe("60");
+
+    const ascendGame = createCascade();
+    ascendGame.game.dispatch({
+      id: "ascend-multiplier-fixture",
+      execute: (transaction) => transaction.set(cascadeResources.cores, cascadeKit.q(3)),
+    });
+    expect(ascendGame.dispatch({ type: "prestige", id: "ascend" }).ok).toBe(true);
+    expect(
+      encoded(ascendGame.getSnapshot().resources["prestige-multiplier"] as EternityQuantity),
+    ).toBe("100");
+  });
+
   it("scales each tier from its own purchased-generator thresholds", () => {
     expect(encoded(purchasedTierMultiplier(cascadeKit.q(9)))).toBe("1");
     expect(encoded(purchasedTierMultiplier(cascadeKit.q(10)))).toBe("2");
@@ -152,6 +220,20 @@ describe("finished Cascade", () => {
     expect(JSON.stringify(view)).toContain("challenge-grid");
   }, 30_000);
 
+  it("explains challenge rules, exposes exit, and shows final prerequisites", () => {
+    const cascade = createCascade();
+    cascade.game.dispatch({
+      id: "challenge-view-fixture",
+      execute: (transaction) => transaction.set(cascadeResources.infinity, cascadeKit.q(1)),
+    });
+    expect(cascade.dispatch({ type: "challenge-enter", id: "slow-foundation" }).ok).toBe(true);
+    const rendered = JSON.stringify(cascadeView(cascade.getSnapshot()));
+    expect(rendered).toContain("All production runs at 25% speed");
+    expect(rendered).toContain("challenge-exit:slow-foundation");
+    expect(rendered).toContain("10 generators in all 8 tiers");
+    expect(rendered).toContain("infinity yield research");
+  });
+
   it("rejects invalid dimensions and challenge IDs without mutation", () => {
     const cascade = createCascade();
     const before = cascade.getSnapshot();
@@ -208,6 +290,32 @@ describe("finished Cascade", () => {
         ] as EternityQuantity,
       ),
     ).toBe("2");
+  });
+
+  it("applies challenge rules and blocks automation during its drought", () => {
+    const challenged = createCascade();
+    challenged.game.dispatch({
+      id: "challenge-rules-fixture",
+      execute: (transaction) => transaction.set(cascadeResources.infinity, cascadeKit.q(2)),
+    });
+    expect(challenged.dispatch({ type: "challenge-enter", id: "reversed-emphasis" }).ok).toBe(true);
+    challenged.game.dispatch({
+      id: "reversed-production-fixture",
+      execute: (transaction) => {
+        transaction.set(cascadeResources.currency, cascadeKit.q(0));
+        transaction.set(cascadeTiers[7] as (typeof cascadeTiers)[number], cascadeKit.q(128));
+      },
+    });
+    challenged.dispatch({ type: "advance", milliseconds: 1_000 });
+    expect(encoded(challenged.getSnapshot().resources["tier-7"] as EternityQuantity)).toBe("1");
+
+    expect(challenged.dispatch({ type: "challenge-exit", id: "reversed-emphasis" }).ok).toBe(true);
+    expect(challenged.dispatch({ type: "challenge-enter", id: "automation-drought" }).ok).toBe(
+      true,
+    );
+    expect(
+      challenged.dispatch({ type: "automation", id: "dimension", enabled: true }),
+    ).toMatchObject({ ok: false, error: { code: "locked" } });
   });
 });
 

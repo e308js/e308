@@ -1,6 +1,7 @@
 import type { FlowDefinition, Rate } from "../economy/types.js";
 import type { GameDefinition } from "../model/definition.js";
 import type { Snapshot, Transaction } from "../state/types.js";
+import { stepsBeforeAutomation } from "./automation-boundary.js";
 import type { BulkCapability, BulkPlanContext, BulkPlanResult } from "./types.js";
 
 interface LinearRate {
@@ -78,18 +79,6 @@ function unsupportedReason(
   if (Object.values(snapshot.resources).some((value) => !isNonnegativeSafe(value)))
     return "unsafe-resource-value";
   return undefined;
-}
-
-function stepsBeforeAutomation(context: BulkPlanContext<number>): number {
-  const definition = context.definition as CompleteOptimizationDefinition;
-  let steps = context.requestedSteps;
-  for (const automation of definition.automation) {
-    const next =
-      context.snapshot.progression.automation[automation.id]?.nextRunMs ?? automation.cadenceMs;
-    const before = Math.floor((next - context.snapshot.gameTimeMs - 1) / context.definition.stepMs);
-    steps = Math.min(steps, Math.max(0, before));
-  }
-  return steps;
 }
 
 function buildTransform(

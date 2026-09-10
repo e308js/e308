@@ -1,5 +1,16 @@
 import { createGame, type EternityQuantity, type Snapshot } from "@e308/core";
-import { cascadeDefinition, cascadeSaveCodec, encoded } from "@e308/game-cascade";
+import { advanceOptimized } from "@e308/core/optimize";
+import {
+  cascadeBulkCapability,
+  cascadeBuyables,
+  cascadeDefinition,
+  cascadeKit,
+  cascadeResources,
+  cascadeSaveCodec,
+  cascadeTiers,
+  encoded,
+  progressionCommand,
+} from "@e308/game-cascade";
 import { createHearth } from "@e308/game-hearth";
 import { createWireworks } from "@e308/game-wireworks";
 import fc from "fast-check";
@@ -66,7 +77,87 @@ describe("finished-game invariants", () => {
       ),
     );
   });
+
+  it("preserves Cascade automation boundaries during exact bulk advancement", () => {
+    const canonical = automatedCascade();
+    const optimized = automatedCascade();
+    canonical.advance(60_000);
+    const report = advanceOptimized(optimized, cascadeDefinition, 60_000, {
+      limits: { maximumWork: 1_000, maximumBulkBatches: 1_000 },
+      capabilities: [cascadeBulkCapability],
+    });
+    expect(report.status).toBe("completed");
+    expect(report.bulkSteps).toBeGreaterThan(0);
+    expect(report.canonicalSteps).toBe(12);
+    expect(economicState(report.snapshot)).toEqual(economicState(canonical.getSnapshot()));
+  });
+
+  it("bulk-advances every Cascade challenge production rule exactly", () => {
+    for (const challenges of [
+      ["composite-trial"],
+      ["slow-foundation", "automation-drought", "reversed-emphasis"],
+      ["reset-pressure"],
+    ]) {
+      const canonical = challengedCascade(challenges);
+      const optimized = challengedCascade(challenges);
+      canonical.advance(5_000);
+      const report = advanceOptimized(optimized, cascadeDefinition, 5_000, {
+        limits: { maximumWork: 100, maximumBulkBatches: 100 },
+        capabilities: [cascadeBulkCapability],
+      });
+      expect(report.fidelity).toBe("validated-bulk");
+      expect(economicState(report.snapshot)).toEqual(economicState(canonical.getSnapshot()));
+    }
+  });
+
+  it("declines Cascade bulk advancement while a purchase milestone is pending", () => {
+    const snapshot = createGame(cascadeDefinition).getSnapshot();
+    const plan = cascadeBulkCapability.plan({
+      definition: cascadeDefinition,
+      snapshot: {
+        ...snapshot,
+        purchaseCounts: {
+          ...snapshot.purchaseCounts,
+          "dimension-1": cascadeKit.q(10),
+        },
+      },
+      requestedSteps: 10,
+    });
+    expect(plan).toEqual({ eligible: false, reason: "pending-progression-trigger" });
+  });
 });
+
+function automatedCascade() {
+  const game = createGame(cascadeDefinition);
+  const tierOne = cascadeTiers[0];
+  const buyable = cascadeBuyables[0];
+  if (!tierOne || !buyable) throw new TypeError("Cascade requires tier one");
+  game.dispatch({
+    id: "seed-automation",
+    execute(transaction) {
+      transaction.set(cascadeResources.currency, cascadeKit.q("1e20"));
+      transaction.set(cascadeResources.infinity, cascadeKit.q(1));
+      transaction.set(tierOne, cascadeKit.q(10));
+      transaction.setPurchase(buyable.id, cascadeKit.q(10));
+    },
+  });
+  game.dispatch(progressionCommand({ type: "automation", id: "dimension", enabled: true }));
+  return game;
+}
+
+function challengedCascade(challenges: readonly string[]) {
+  const game = createGame(cascadeDefinition);
+  const tierTwo = cascadeTiers[1];
+  if (!tierTwo) throw new TypeError("Cascade requires tier two");
+  game.dispatch({
+    id: "seed-challenge",
+    execute(transaction) {
+      transaction.set(tierTwo, cascadeKit.q(2));
+      for (const id of challenges) transaction.setChallengeActive(id, true);
+    },
+  });
+  return game;
+}
 
 function economicState(snapshot: Snapshot<EternityQuantity>) {
   const quantities = (values: Readonly<Record<string, EternityQuantity>>) =>

@@ -96,6 +96,7 @@ export interface Transaction<N> {
   reset(manifest: ResetManifest<N>): void;
   hasProgress(kind: ProgressionFlagKind, id: string): boolean;
   setProgress(kind: ProgressionFlagKind, id: string): void;
+  hasActiveChallenges(): boolean;
   isChallengeActive(id: string): boolean;
   setChallengeActive(id: string, active: boolean): void;
   getChallengeCompletions(id: string): N;

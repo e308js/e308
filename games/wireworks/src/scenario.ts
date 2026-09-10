@@ -4,6 +4,7 @@ import type {
   HarnessScenario,
   HarnessValue,
   LegalActionQuote,
+  PlayabilityPressure,
 } from "@e308/core/testing";
 import { wireworksBuyables, wireworksDefinition, wireworksProjects } from "./content.js";
 import { type WireworksBand, type WireworksIntent, wireworksCommand } from "./runtime.js";
@@ -64,8 +65,60 @@ export function wireworksScenario(
       ...Object.keys(snapshot.progression.upgrades),
       ...(snapshot.progression.won ? ["ending"] : []),
     ],
+    pressures: wireworksPressures,
     diagnostics: () => ({ overflow: 0, resetRecoveries: 0, taskBlocks: 0 }),
   };
+}
+
+function wireworksPressures(snapshot: Snapshot<number>): readonly PlayabilityPressure[] {
+  const pressures: PlayabilityPressure[] = [];
+  const demand = snapshot.resources.demand ?? 0;
+  const clips = snapshot.resources.clips ?? 0;
+  const recovery = 0.2 + (snapshot.resources.reach ?? 0) * 0.03;
+  if (demand < 20 && clips >= 5)
+    pressures.push({
+      id: "market-demand",
+      kind: "throughput",
+      active: true,
+      detail: "Clip sales are waiting for demand to recover.",
+      relief: [{ kind: "passive", estimatedMs: ((20 - demand) / recovery) * 1_000 }],
+    });
+  const capacity = 500 + (snapshot.resources.storage ?? 0) * 500;
+  if (clips >= capacity * 0.95)
+    pressures.push({
+      id: "clip-storage",
+      kind: "capacity",
+      active: true,
+      detail: "Clip inventory is close to its current storage limit.",
+      relief: [
+        { kind: "action", actionId: "sell:volume" },
+        { kind: "action", actionId: "sell:standard" },
+        { kind: "action", actionId: "sell:premium" },
+        { kind: "passive", estimatedMs: Math.max(0, ((5 - demand) / recovery) * 1_000) },
+      ],
+    });
+  const threshold = nextDroneThreshold(snapshot);
+  const drones = snapshot.resources.drones ?? 0;
+  if (threshold > drones)
+    pressures.push({
+      id: "drone-network",
+      kind: "prerequisite",
+      active: true,
+      detail: `The next relay project requires ${threshold} replication drones.`,
+      relief:
+        drones > 0
+          ? [{ kind: "passive", estimatedMs: (Math.log(threshold / drones) / 0.012) * 1_000 }]
+          : [],
+    });
+  return pressures;
+}
+
+function nextDroneThreshold(snapshot: Snapshot<number>): number {
+  if (!snapshot.progression.upgrades["drone-swarm"]) return 0;
+  if (!snapshot.progression.upgrades["orbital-contract"]) return 10;
+  if (!snapshot.progression.upgrades["launch-array"]) return 50;
+  if (!snapshot.progression.upgrades["final-expansion"]) return 200;
+  return 0;
 }
 
 function quotes(

@@ -7,6 +7,7 @@ import {
   normalPrestige,
   prestigeCommand,
   staticPrestige,
+  type Transaction,
   upgradeCommand,
 } from "@e308/core";
 import {
@@ -19,6 +20,11 @@ import {
 
 const q = cascadeKit.q;
 const numbers = cascadeKit.numbers;
+const cascadeMath = (() => {
+  const math = numbers.transcendental;
+  if (!math) throw new TypeError("Cascade requires exponential number operations");
+  return math;
+})();
 const runReset = { clear: [cascadeScopes.run] } as const;
 
 const challengeSpecs = [
@@ -29,6 +35,41 @@ const challengeSpecs = [
   ["automation-drought", 1, "compatible", ["automation"]],
   ["composite-trial", 1, "composite", ["base-speed", "tier-order"]],
 ] as const;
+
+export const cascadeChallengeCopy: Readonly<
+  Record<string, { readonly rule: string; readonly target: string; readonly reward: string }>
+> = {
+  "slow-foundation": {
+    rule: "All production runs at 25% speed.",
+    target: "Reach 1e12 currency. Milestones at 1e7, 1e9, and 1e12 grant three points.",
+    reward: "Up to 3 research points",
+  },
+  "reversed-emphasis": {
+    rule: "Each higher generator tier receives a steeper production penalty.",
+    target: "Reach 1e8 currency.",
+    reward: "1 research point",
+  },
+  "scarce-purchases": {
+    rule: "Group purchases are disabled; generators must be bought one at a time.",
+    target: "Reach 1e7 currency.",
+    reward: "1 research point",
+  },
+  "reset-pressure": {
+    rule: "Production runs at 50% speed and the target is increased.",
+    target: "Reach 1e9 currency.",
+    reward: "1 research point",
+  },
+  "automation-drought": {
+    rule: "Production runs at 50% speed while dimension automation is unavailable.",
+    target: "Reach 1e8 currency.",
+    reward: "1 research point",
+  },
+  "composite-trial": {
+    rule: "Slow Foundation and Reversed Emphasis apply together.",
+    target: "Reach 1e10 currency.",
+    reward: "1 research point and a singularity",
+  },
+};
 
 export const cascadeChallenges: readonly ChallengeDefinition<EternityQuantity>[] =
   challengeSpecs.map(([id, maximum, group, replacementKeys]) =>
@@ -41,7 +82,7 @@ export const cascadeChallenges: readonly ChallengeDefinition<EternityQuantity>[]
       enterReset: runReset,
       exitReset: runReset,
       canEnter: (state) => numbers.cmp(state.get(cascadeResources.infinity), q(1)) >= 0,
-      completionsEarned: (state) => challengeTier(id, state.get(cascadeResources.currency)),
+      completionsEarned: (state) => cascadeChallengeTier(id, state.get(cascadeResources.currency)),
       grantReward(transaction, tier) {
         transaction.add(cascadeResources.research, q(tier));
         if (id === "composite-trial") transaction.add(cascadeResources.singularity, q("1e320"));
@@ -52,7 +93,7 @@ export const cascadeChallenges: readonly ChallengeDefinition<EternityQuantity>[]
 const tierOneBuyable = cascadeBuyables[0];
 if (!tierOneBuyable) throw new TypeError("Cascade requires a tier-one buyable");
 
-const collapsePolicy = normalPrestige(numbers, {
+const baseCollapsePolicy = normalPrestige(numbers, {
   baseResource: cascadeResources.currency,
   requirement: q("1e6"),
   exponent: q(0.5),
@@ -61,7 +102,14 @@ export const collapse = cascadeKit.prestige("collapse", {
   scope: cascadeScopes.infinity,
   reward: cascadeResources.infinity,
   manifest: runReset,
-  ...collapsePolicy,
+  canReset: (state) =>
+    baseCollapsePolicy.canReset(state) &&
+    cascadeBuyables.every((buyable) => numbers.cmp(state.purchaseCount(buyable.id), q(10)) >= 0),
+  rewardFor: (state) =>
+    numbers.mul(
+      baseCollapsePolicy.rewardFor(state),
+      numbers.add(q(1), state.getAllocation(researchAllocation, "retention")),
+    ),
 });
 
 const condensePolicy = staticPrestige(numbers, {
@@ -111,7 +159,9 @@ export const finalResearch = cascadeKit.upgrade("final-research", {
       (challenge) => numbers.cmp(state.challengeCompletions(challenge.id), q(1)) >= 0,
     ) &&
     numbers.cmp(state.get(cascadeResources.singularity), q("1e308")) > 0 &&
-    numbers.cmp(state.get(cascadeResources.respecs), q(1)) >= 0,
+    numbers.cmp(state.get(cascadeResources.eternity), q(1)) >= 0 &&
+    numbers.cmp(state.getAllocation(researchAllocation, "speed"), q(1)) >= 0 &&
+    numbers.cmp(state.getAllocation(researchAllocation, "retention"), q(1)) >= 0,
 });
 
 export const dimensionAutomation = cascadeKit.automation("buy-tier-one", {
@@ -119,7 +169,9 @@ export const dimensionAutomation = cascadeKit.automation("buy-tier-one", {
   priority: 10,
   cadenceMs: 5_000,
   initiallyEnabled: false,
-  unlocked: (state) => numbers.cmp(state.get(cascadeResources.infinity), q(1)) >= 0,
+  unlocked: (state) =>
+    numbers.cmp(state.get(cascadeResources.infinity), q(1)) >= 0 &&
+    !state.isChallengeActive("automation-drought"),
   condition: (state) =>
     numbers.cmp(
       state.get(cascadeResources.currency),
@@ -135,14 +187,21 @@ export const collapseAutomation = cascadeKit.automation("auto-collapse", {
   initiallyEnabled: false,
   unlocked: (state) => numbers.cmp(state.get(cascadeResources.infinity), q(2)) >= 0,
   condition: collapse.canReset,
-  action: () => prestigeCommand(collapse),
+  action: () => cascadePrestigeCommand("collapse"),
 });
 
 export function allocateResearchCommand(
   target: "speed" | "retention",
   amount: EternityQuantity,
 ): Command<EternityQuantity> {
-  return allocationCommand(researchAllocation, target, amount);
+  const base = allocationCommand(researchAllocation, target, amount);
+  return {
+    id: base.id,
+    execute(transaction) {
+      base.execute(transaction);
+      refreshCascadeMultiplier(transaction);
+    },
+  };
 }
 
 export function respecResearchCommand(): Command<EternityQuantity> {
@@ -152,6 +211,7 @@ export function respecResearchCommand(): Command<EternityQuantity> {
       transaction.setAllocation(researchAllocation.id, "speed", q(0));
       transaction.setAllocation(researchAllocation.id, "retention", q(0));
       transaction.add(cascadeResources.respecs, q(1));
+      refreshCascadeMultiplier(transaction);
     },
   };
 }
@@ -176,7 +236,7 @@ export function progressionCommand(
     | { readonly type: "respec" }
     | { readonly type: "final-research" },
 ): Command<EternityQuantity> {
-  if (intent.type === "prestige") return prestigeCommand({ collapse, condense, ascend }[intent.id]);
+  if (intent.type === "prestige") return cascadePrestigeCommand(intent.id);
   if (intent.type === "automation")
     return automationCommand(
       intent.id === "dimension" ? dimensionAutomation : collapseAutomation,
@@ -187,8 +247,34 @@ export function progressionCommand(
   return upgradeCommand(finalResearch);
 }
 
-function challengeTier(id: string, currency: EternityQuantity): number {
-  if (id !== "slow-foundation") return numbers.cmp(currency, q("1e7")) >= 0 ? 1 : 0;
+function cascadePrestigeCommand(id: "collapse" | "condense" | "ascend"): Command<EternityQuantity> {
+  const base = prestigeCommand({ collapse, condense, ascend }[id]);
+  return {
+    id: base.id,
+    execute(transaction) {
+      base.execute(transaction);
+      refreshCascadeMultiplier(transaction);
+    },
+  };
+}
+
+function refreshCascadeMultiplier(transaction: Transaction<EternityQuantity>): void {
+  const research = numbers.add(q(1), transaction.getAllocation(researchAllocation.id, "speed"));
+  const infinity = numbers.add(q(1), transaction.get(cascadeResources.infinity));
+  const cores = cascadeMath.pow(q(10), transaction.get(cascadeResources.cores));
+  const eternity = cascadeMath.pow(q(100), transaction.get(cascadeResources.eternity));
+  transaction.set(
+    cascadeResources.prestigeMultiplier,
+    numbers.mul(numbers.mul(numbers.mul(research, infinity), cores), eternity),
+  );
+}
+
+export function cascadeChallengeTier(id: string, currency: EternityQuantity): number {
+  if (id === "reversed-emphasis" || id === "automation-drought")
+    return numbers.cmp(currency, q("1e8")) >= 0 ? 1 : 0;
+  if (id === "reset-pressure") return numbers.cmp(currency, q("1e9")) >= 0 ? 1 : 0;
+  if (id === "composite-trial") return numbers.cmp(currency, q("1e10")) >= 0 ? 1 : 0;
+  if (id === "scarce-purchases") return numbers.cmp(currency, q("1e7")) >= 0 ? 1 : 0;
   if (numbers.cmp(currency, q("1e12")) >= 0) return 3;
   if (numbers.cmp(currency, q("1e9")) >= 0) return 2;
   return numbers.cmp(currency, q("1e7")) >= 0 ? 1 : 0;

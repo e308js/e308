@@ -182,7 +182,9 @@ kept in the repository as a compatibility fixture.
 Policies receive only a serializable observation and revision-bound legal-action quotes. The harness
 dispatches the quoted intent through the same command path as a player, stops player decisions during
 idle and absent sessions, and records bounded traces, samples, constraints, milestones, offline
-fidelity, and replay inputs.
+fidelity, and replay inputs. A scenario can also project goal-relevant pressures with action,
+investment, and passive relief routes. The report measures time in each relief state, and
+`assessPlayability` identifies sustained pressure with no route and pending-goal deadlocks.
 
 ```ts
 import { orderedPolicy, randomLegalPolicy, runHarness } from "@e308/core/testing";
@@ -241,6 +243,11 @@ preserves unprocessed time; `AdvanceBacklog` owns that pending duration and
 refuses additions beyond a declared bound. Registered build-time capabilities declare dependencies,
 versions, and checked plans. Approximate capabilities also declare error bounds and run only when the
 caller explicitly selects `mode: "approximate"`.
+
+`producerChainBulkCapability` supplies the closed-form path for tiered generators. The game provides
+the output resource, ordered tiers, and each tier's stable per-step coefficient. The capability keeps
+the chain's one-step propagation delay, production totals, partial-tick remainder, and automation
+clock. Enabled automation runs at its normal canonical boundary.
 
 `profileAdvancement` accepts an injected monotonic clock. The workspace's
 `pnpm report:performance` command records machine/runtime identity, cold and warm timing samples,

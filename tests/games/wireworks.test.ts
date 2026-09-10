@@ -85,6 +85,26 @@ describe("finished Wireworks", () => {
     expect(report.actions.successful).toBeGreaterThanOrEqual(13);
   });
 
+  it("describes drone prerequisites as passive progress rather than a deadlock", () => {
+    const wireworks = createWireworks();
+    wireworks.game.dispatch({
+      id: "drone-pressure-fixture",
+      execute(transaction) {
+        transaction.setProgress("upgrade", "drone-swarm");
+        transaction.set(wireworksResources.drones, 5);
+      },
+    });
+    const pressure = wireworksScenario().pressures?.(wireworks.getSnapshot());
+    expect(pressure).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "drone-network",
+          relief: [expect.objectContaining({ kind: "passive", estimatedMs: expect.any(Number) })],
+        }),
+      ]),
+    );
+  });
+
   it("reports materially different price strategies", () => {
     const hybrid = completion("hybrid");
     const premium = completion("premium");

@@ -6,6 +6,7 @@ import {
   type EternityQuantity,
   eternityNumbers,
   geometricCurve,
+  type Transaction,
 } from "@e308/core";
 
 export const cascadeKit = createGameKit({ numbers: eternityNumbers });
@@ -24,7 +25,6 @@ const cascadeMath = (() => {
 const tierMultiplierCache = new WeakMap<object, EternityQuantity>();
 export const cascadeResources = {
   currency: cascadeKit.resource("currency", { scope: cascadeScopes.run, initial: q(10) }),
-  multiplier: cascadeKit.resource("multiplier", { scope: cascadeScopes.run, initial: q(1) }),
   infinity: cascadeKit.resource("infinity-points", {
     scope: cascadeScopes.infinity,
     initial: q(0),
@@ -46,6 +46,10 @@ export const cascadeResources = {
     initial: q(0),
   }),
   respecs: cascadeKit.resource("respecs", { scope: cascadeScopes.eternity, initial: q(0) }),
+  prestigeMultiplier: cascadeKit.resource("prestige-multiplier", {
+    scope: cascadeScopes.eternity,
+    initial: q(1),
+  }),
 } as const;
 
 export const cascadeTiers = Array.from({ length: 8 }, (_, index) =>
@@ -90,27 +94,38 @@ export const cascadeProductionRule = cascadeKit.steppedRule("cascade-production"
   scope: cascadeScopes.run,
   priority: 10,
   update(transaction, stepSeconds) {
-    let sharedMultiplier = transaction.get(cascadeResources.multiplier);
-    sharedMultiplier = eternityNumbers.mul(
-      sharedMultiplier,
-      eternityNumbers.add(q(1), transaction.getAllocation("research", "speed")),
-    );
-    if (transaction.isChallengeActive("slow-foundation"))
-      sharedMultiplier = eternityNumbers.div(sharedMultiplier, q(4));
-    if (transaction.isChallengeActive("automation-drought"))
-      sharedMultiplier = eternityNumbers.div(sharedMultiplier, q(2));
+    const sharedMultiplier = transaction.get(cascadeResources.prestigeMultiplier);
+    const challenged = transaction.hasActiveChallenges();
+    const slow = challenged && activeRule(transaction, "slow-foundation");
+    const halfSpeed =
+      challenged &&
+      (transaction.isChallengeActive("automation-drought") ||
+        transaction.isChallengeActive("reset-pressure"));
+    const reversed = challenged && activeRule(transaction, "reversed-emphasis");
     advanceProducerChain(transaction, {
       output: cascadeResources.currency,
       tiers: cascadeTiers,
       seconds: stepSeconds,
-      rate: ({ index, amount }) =>
-        eternityNumbers.mul(
+      rate: ({ index, amount }) => {
+        let rate = eternityNumbers.mul(
           eternityNumbers.mul(amount, sharedMultiplier),
           purchasedTierMultiplier(transaction.getPurchase(cascadeBuyables[index]?.id ?? "")),
-        ),
+        );
+        if (slow) rate = eternityNumbers.div(rate, q(4));
+        if (halfSpeed) rate = eternityNumbers.div(rate, q(2));
+        if (reversed) rate = eternityNumbers.div(rate, q(2 ** index));
+        return rate;
+      },
     });
   },
 });
+
+function activeRule(
+  transaction: Transaction<EternityQuantity>,
+  id: "slow-foundation" | "reversed-emphasis",
+): boolean {
+  return transaction.isChallengeActive(id) || transaction.isChallengeActive("composite-trial");
+}
 
 export function buyDimensionCommand(index: number, count = 1): Command<EternityQuantity> {
   const buyable = cascadeBuyables[index];

@@ -1,5 +1,6 @@
 import { deriveRandomState, Xoshiro128 } from "../random/xoshiro.js";
 import type { Game, Snapshot } from "../state/types.js";
+import { accumulatePressures, pressureReport } from "./playability.js";
 import { createTotals, type HarnessTotals } from "./run-state.js";
 import type {
   BotDecision,
@@ -190,6 +191,12 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
     before: Snapshot<N>,
     after: Snapshot<N>,
   ) {
+    if (this.options.scenario.pressures) {
+      const pressures = this.options.scenario.pressures(before);
+      const quotes = this.options.scenario.quote(before);
+      validateQuotes(quotes);
+      accumulatePressures(this.#totals, pressures, quotes, elapsed);
+    }
     this.#totals.real += elapsed;
     if (kind === "active") this.#totals.active += elapsed;
     else this.#totals.idle += elapsed;
@@ -242,6 +249,13 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
 
   private report(reached: HarnessReport<I>["outcome"] | undefined): HarnessReport<I> {
     const snapshot = this.#game.getSnapshot();
+    if (this.options.scenario.pressures)
+      accumulatePressures(
+        this.#totals,
+        this.options.scenario.pressures(snapshot),
+        this.options.scenario.quote(snapshot),
+        0,
+      );
     const evaluation = this.#goal.evaluate(snapshot);
     const outcome =
       reached ??
@@ -250,7 +264,7 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
     if (!definition.numbers) throw new TypeError("Harness definition has no numeric adapter");
     return {
       schema: "e308-pacing-report",
-      schemaVersion: 1,
+      schemaVersion: 2,
       scenarioId: this.options.scenario.id,
       contentVersion: this.options.scenario.contentVersion,
       contentDigest: this.options.scenario.contentDigest,
@@ -285,6 +299,7 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
         longestWaitMs: this.#totals.longestWait,
       },
       constraints: this.#totals.constraints,
+      playability: { pressures: pressureReport(this.#totals.pressures) },
       milestones: this.#totals.milestones,
       diagnostics: this.#totals.diagnostics,
       trace: this.#totals.trace,

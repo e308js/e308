@@ -37,6 +37,15 @@ export function reportMarkdown(report: HarnessReport): string {
     "",
     ...Object.entries(report.constraints).map(([id, count]) => `- ${id}: ${count}`),
     "",
+    "## Playability pressures",
+    "",
+    "| Pressure | Observed ms | Action ms | Saving ms | Passive ms | No relief ms |",
+    "| --- | ---: | ---: | ---: | ---: | ---: |",
+    ...Object.entries(report.playability.pressures).map(
+      ([id, value]) =>
+        `| ${id} | ${value.observedMs} | ${value.actionableMs} | ${value.savingMs} | ${value.passiveMs} | ${value.noReliefMs} |`,
+    ),
+    "",
   ];
   return `${lines.join("\n")}\n`;
 }

@@ -26,8 +26,8 @@ export function cascadeScenario(
 ): HarnessScenario<EternityQuantity, CascadeObservation, CascadeActionIntent> {
   return {
     id: "cascade",
-    contentVersion: "1.0.0",
-    contentDigest: "cascade-1.0.0-2026-09-09",
+    contentVersion: "1.1.0",
+    contentDigest: "cascade-1.1.0-connected-progression-2026-09-09",
     parameters: { strategy },
     definition: cascadeDefinition,
     goals: [
@@ -117,10 +117,18 @@ function nextQuotes(
         "three condensed cores",
       ),
     ];
-  const assigned = snapshot.allocations.research?.speed;
-  if (!assigned || eternityNumbers.cmp(assigned, q(0)) === 0)
-    return [legal(snapshot, "allocate-research", { type: "research", target: "speed", amount: 1 })];
-  if (!greater(snapshot, "respecs", 0)) return [legal(snapshot, "respec", { type: "respec" })];
+  const speed = snapshot.allocations.research?.speed ?? q(0);
+  if (eternityNumbers.cmp(speed, q(1)) < 0)
+    return [legal(snapshot, "allocate-speed", { type: "research", target: "speed", amount: 1 })];
+  const retention = snapshot.allocations.research?.retention ?? q(0);
+  if (eternityNumbers.cmp(retention, q(1)) < 0)
+    return [
+      legal(snapshot, "allocate-retention", {
+        type: "research",
+        target: "retention",
+        amount: 1,
+      }),
+    ];
   return [legal(snapshot, "final-research", { type: "final-research" })];
 }
 
@@ -213,12 +221,17 @@ function challengeQuotes(
 }
 
 function challengeTargetReached(snapshot: Snapshot<EternityQuantity>, id: string): boolean {
-  return (
-    eternityNumbers.cmp(
-      snapshot.resources.currency as EternityQuantity,
-      q(id === "slow-foundation" ? "1e12" : "1e7"),
-    ) >= 0
-  );
+  const target =
+    id === "slow-foundation"
+      ? "1e12"
+      : id === "composite-trial"
+        ? "1e10"
+        : id === "reset-pressure"
+          ? "1e9"
+          : id === "reversed-emphasis" || id === "automation-drought"
+            ? "1e8"
+            : "1e7";
+  return eternityNumbers.cmp(snapshot.resources.currency as EternityQuantity, q(target)) >= 0;
 }
 
 function legal(
