@@ -72,7 +72,6 @@ export function hearthView(snapshot: Snapshot<number>): ViewDocument<HearthInten
             tone: "positive",
           }
         : shortageNotice(snapshot),
-      { kind: "save", id: "save-status", status: "clean", message: "Settlement save ready" },
     ],
   };
 }

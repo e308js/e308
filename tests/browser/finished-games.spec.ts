@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }, testInfo) => {
     Object.assign(window, { e308LongTasks: durations });
   });
   await page.goto(`/examples/finished-games/index.html?run=${testInfo.testId}`);
-  await expect(page.locator("#host-status")).toContainText("wireworks");
+  await expect(page.locator("#host-status")).toHaveText("Offline progress is on");
 });
 
 test("plays and persists each distinct finished-game composition", async ({ page }) => {

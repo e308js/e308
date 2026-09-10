@@ -105,7 +105,10 @@ button:disabled {
   padding: clamp(1rem, 3vw, 2rem);
   border-radius: 1rem;
 }
-.wireworks {
+.game-shell.wireworks {
+  --e308-bg: #0e1d22;
+  --e308-panel: #132b31;
+  --e308-accent: #69dac9;
   background: #0e1d22;
   border: 1px solid #46d1bd55;
   box-shadow: inset 0 0 80px #21b7a611;
@@ -113,7 +116,10 @@ button:disabled {
 .wireworks button[data-action] {
   margin: 0.25rem 0.35rem 0.25rem 0;
 }
-.cascade {
+.game-shell.cascade {
+  --e308-bg: #151128;
+  --e308-panel: #21183b;
+  --e308-accent: #ad95ff;
   background: #151128;
   border: 1px solid #9d7cff66;
 }
@@ -129,7 +135,10 @@ button:disabled {
   color: #c9c0eb;
   font-size: 0.9rem;
 }
-.hearth {
+.game-shell.hearth {
+  --e308-bg: #271b12;
+  --e308-panel: #362619;
+  --e308-accent: #e2aa68;
   background: #271b12;
   border: 1px solid #d59a5566;
   font-family: Georgia, serif;

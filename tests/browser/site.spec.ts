@@ -19,7 +19,12 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   }
   await page.getByRole("link", { name: "Open Wireworks" }).click();
   await expect(page.locator("#game")).toHaveClass(/wireworks/);
-  await expect(page.locator("#host-status")).toContainText("wireworks");
+  await expect(page.locator("#host-status")).toHaveText("Offline progress is on");
+  await expect(page.getByText("Save and data", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeHidden();
+  const gameTop = await page.locator("#game").boundingBox();
+  expect(gameTop?.y).toBeLessThan(180);
+  await page.getByText("Save and data", { exact: true }).click();
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
   await expect(page.getByRole("button", { name: "Make one clip by hand" })).toBeEnabled();
@@ -48,6 +53,7 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect.poll(() => page.locator("#game").innerText()).not.toBe(wireworksText);
 
   await page.goto("/site-dist/examples/hearth/");
+  await page.getByText("Save and data", { exact: true }).click();
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
   await expect(page.getByText("1 of 4 workers available.", { exact: false })).toBeVisible();
@@ -83,7 +89,8 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.getByText("wood: need 30, have", { exact: false })).toBeVisible();
 
   await page.goto("/site-dist/examples/cascade/");
-  await expect(page.locator("#host-status")).toContainText("cascade");
+  await expect(page.locator("#host-status")).toHaveText("Offline progress is on");
+  await page.getByText("Save and data", { exact: true }).click();
   await page.getByRole("button", { name: "New save" }).click();
   await expect(page.locator("#host-status")).toHaveText("Started a new save");
   await expect(page.getByRole("button", { name: "Buy Tier 1 generator" })).toBeEnabled();

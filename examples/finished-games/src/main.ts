@@ -233,8 +233,8 @@ async function replaceInvalidExampleSave<N>(
 }
 
 function show(value: Session): void {
-  root.className = `game-shell ${value.id}`;
-  status.value = `${value.id}: ${value.host.ownership}; offline progress enabled`;
+  root.className = `game-shell e308-root ${value.id}`;
+  status.value = "Offline progress is on";
 }
 
 function showDispatchResult(result: unknown): void {

@@ -69,7 +69,6 @@ export function cascadeView(
             tone: "positive",
           }
         : { kind: "separator", id: "ending-boundary" },
-      { kind: "save", id: "save-status", status: "clean", message: "Large-number save ready" },
     ],
   };
 }
@@ -158,7 +157,9 @@ function purchaseNode(
   const enabled = eternityNumbers.cmp(currency, cost) >= 0;
   const tier = index + 1;
   const label =
-    count === 1 ? `Buy Tier ${tier} generator` : `Buy ${count} for ×${display(multiplier)}`;
+    count === 1
+      ? `Buy Tier ${tier} generator`
+      : `Buy ${count} → production ×${display(multiplier)}`;
   const tooltip =
     count === 1
       ? `Buy one Tier ${tier} generator.`
@@ -170,6 +171,16 @@ function purchaseNode(
       id: count === 1 ? `buy-${tier}` : `buy-group-${tier}`,
       label,
       tooltip,
+      ...(count === 1
+        ? {}
+        : {
+            description: [
+              {
+                kind: "text" as const,
+                value: "Reach the next group of ten for this tier's multiplier.",
+              },
+            ],
+          }),
       enabled,
       intent: { type: "buy", tier, count },
       blockers: enabled

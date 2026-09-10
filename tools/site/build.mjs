@@ -32,10 +32,7 @@ const pages = [
   ["index.html", landingPage()],
   ["docs/index.html", docsPage()],
   ["examples/index.html", examplesPage()],
-  ...games.map(({ id, title, summary }) => [
-    `examples/${id}/index.html`,
-    gamePage(id, title, summary),
-  ]),
+  ...games.map(({ id, title }) => [`examples/${id}/index.html`, gamePage(id, title)]),
 ];
 for (const [path, html] of pages) {
   assertPublicPage(html);
@@ -137,15 +134,15 @@ function examplesPage() {
   );
 }
 
-function gamePage(id, title, summary) {
+function gamePage(id, title) {
   return page(
     title,
     `${title} is a complete incremental game built with e308.`,
     "examples",
     `<main class="play-page">
-      <header class="play-heading"><div><a href="../">← All examples</a><p class="eyebrow">Original game</p><h1>${title}</h1><p>${summary}</p></div><output id="host-status">Opening local save…</output></header>
-      <aside class="save-tools" aria-label="Save controls"><button type="button" id="save">Save</button><button type="button" id="export">Export</button><button type="button" id="import">Import</button><button type="button" id="reset">New save</button><textarea id="save-data" aria-label="Exported save" rows="3" placeholder="Exported save data"></textarea></aside>
+      <header class="play-heading"><a href="../">← All examples</a><output id="host-status">Opening local save…</output></header>
       <div id="game" class="game-shell" aria-live="polite"></div>
+      <details class="save-tools"><summary>Save and data</summary><div class="save-controls" aria-label="Save controls"><button type="button" id="save">Save</button><button type="button" id="export">Export</button><button type="button" id="import">Import</button><button type="button" id="reset">New save</button></div><textarea id="save-data" aria-label="Exported save" rows="3" placeholder="Paste a save here, or export the current save"></textarea></details>
       <details id="developer-tools" class="developer-tools"><summary>Developer tools</summary><p>Open this panel to show the manual time control inside the game.</p></details>
     </main>
     <script>document.body.dataset.game = "${id}"; document.body.classList.add("public-game");</script>

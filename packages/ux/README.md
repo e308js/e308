@@ -36,6 +36,7 @@ const project = (state: State): ViewDocument<Intent, number> => ({
 
 const root = document.querySelector<HTMLElement>("#game");
 if (!root) throw new Error("missing game root");
+root.classList.add("e308-root");
 const mounted = mountView(root, { source, project, resolver });
 
 // mounted.dispose() removes the subscription and keyboard listener.
@@ -44,7 +45,7 @@ const mounted = mountView(root, { source, project, resolver });
 `ViewSource` is a three-method structural interface, so the renderer works with an e308 `Game`, a
 small adapter, or another state store. Use `fromSelectableSource` for stores with selector-based
 subscriptions. Controls are semantic and unstyled by default. Add the exported `starterTheme` CSS
-or supply your own styles and control overrides.
+and the `e308-root` class for the baseline theme, or supply your own styles and control overrides.
 
 Subpath exports are available for `@e308/ux/dom`, `/effects`, `/format`, `/localization`, and
 `/views`. The feature gallery under `examples/gallery` demonstrates two layouts observing one

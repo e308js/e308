@@ -8,6 +8,8 @@ Require **at least 80% statements, branches, functions, and lines** for each pub
 
 Include numerical adapters, custom mechanics, serializers, migrations, offline processors, UX controllers and browser/worker hosts. Test host behavior through instrumentable integration seams; Playwright walkthroughs do not automatically contribute to Vitest coverage. Exclude tests, declaration-only files, generated outputs, inert data, and unchanged third-party reference sources identified in a manifest. Authored reference wrappers, e308 ports/clones, runtime tools and hand-written fixture logic remain first-party. Directory names such as `examples` or `fixtures` are not blanket exemptions.
 
+Run wall-clock performance assertions in an uninstrumented CI lane. Coverage instrumentation changes timing, while the same implementation source remains in the coverage denominator and is exercised by deterministic reference tests.
+
 Check aggregate and per-file coverage explicitly using the pinned Vitest configuration/report reader. Do not assume one setting enforces both. Vitest exposes thresholds for all four metrics and per-file checks. [Vitest CLI reference](https://vitest.dev/guide/cli.html).
 
 The gate applies from the first runtime-bearing slice, including S00's executable quality tooling. A genuinely type-only project reports “no executable source” with its source inventory, not synthetic 100%. Empty coverage fails when executable source exists. A dedicated expected-failure fixture must prove insufficient coverage is rejected.

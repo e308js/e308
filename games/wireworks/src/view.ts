@@ -73,7 +73,6 @@ export function wireworksView(snapshot: Snapshot<number>): ViewDocument<Wirework
             tone: "positive",
           }
         : { kind: "separator", id: "before-ending" },
-      { kind: "save", id: "save-status", status: "clean", message: "Local save available" },
     ],
   };
 }

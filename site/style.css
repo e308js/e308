@@ -196,34 +196,40 @@ pre {
   border-color: #d59a5577;
 }
 .play-page {
-  padding: 2rem 0 4rem;
+  padding: 1rem 0 4rem;
 }
 .play-heading {
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  gap: 2rem;
-  margin-bottom: 1rem;
-}
-.play-heading h1 {
-  font-size: clamp(2.2rem, 5vw, 3.8rem);
-}
-.play-heading p {
-  color: #afc0c9;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.5rem;
 }
 #host-status {
   color: #8ed8ce;
   text-align: right;
 }
 .save-tools {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #ffffff22;
+  border-radius: 0.6rem;
+  background: #0e1922;
+}
+.save-tools summary,
+.developer-tools summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.save-controls {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  padding: 0.8rem 0;
-  border-block: 1px solid #ffffff20;
+  margin-top: 0.8rem;
 }
 .save-tools textarea {
   width: 100%;
+  margin-top: 0.5rem;
   padding: 0.7rem;
   border: 1px solid #49616e;
   border-radius: 0.4rem;
@@ -231,26 +237,49 @@ pre {
   color: #dbe8ed;
 }
 .game-shell {
-  margin: 1rem 0;
+  margin: 0.5rem 0 1rem;
   padding: clamp(0.8rem, 3vw, 2rem);
   border-radius: 0.8rem;
 }
-.wireworks {
+.game-shell.wireworks {
+  --e308-bg: #0e1d22;
+  --e308-panel: #132b31;
+  --e308-accent: #69dac9;
+  --e308-muted: #bad1d0;
   background: #0e1d22;
   border: 1px solid #46d1bd55;
 }
 .wireworks button[data-action] {
-  margin: 0.25rem 0.35rem 0.25rem 0;
+  min-width: min(100%, 13rem);
 }
-.cascade {
+.game-shell.wireworks .e308-infobox > button,
+.game-shell.wireworks [role="tabpanel"] > button {
+  display: inline-grid;
+  margin: 0.3rem 0.4rem 0.3rem 0;
+  vertical-align: top;
+}
+.game-shell.cascade {
+  --e308-bg: #151128;
+  --e308-panel: #21183b;
+  --e308-accent: #ad95ff;
+  --e308-muted: #c8c0df;
   background: #151128;
   border: 1px solid #9d7cff66;
 }
 .cascade .e308-row {
   display: grid;
-  grid-template-columns: minmax(10rem, 1fr) 1fr;
+  grid-template-columns: minmax(12rem, 1fr) minmax(17rem, 1.2fr) repeat(2, minmax(12rem, 1fr));
+  padding-block: 0.7rem;
+  border-bottom: 1px solid #ffffff18;
 }
-.hearth {
+.cascade .e308-row > button {
+  height: 100%;
+}
+.game-shell.hearth {
+  --e308-bg: #271b12;
+  --e308-panel: #362619;
+  --e308-accent: #e2aa68;
+  --e308-muted: #dcc9b6;
   background: #271b12;
   border: 1px solid #d59a5566;
   font-family: Georgia, serif;
@@ -264,18 +293,45 @@ pre {
   background: #173b39;
   font-weight: 700;
 }
+.game-shell > .e308-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  align-items: stretch;
+  margin-block: 1rem;
+}
+.game-shell > .e308-row > div,
+.game-shell > .e308-row .e308-resource {
+  height: 100%;
+}
+.hearth .e308-tabs [role="tabpanel"] {
+  display: grid;
+  gap: 0.65rem;
+}
+.hearth .e308-input {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #ffffff1d;
+  border-radius: 0.45rem;
+  background: #302116;
+}
+.hearth table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.hearth th,
+.hearth td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #ffffff18;
+  text-align: start;
+}
 .public-game:not(.debug-open) [data-action="wait"] {
   display: none;
 }
 .developer-tools {
+  margin-top: 0.75rem;
   padding: 0.9rem 1rem;
   border: 1px solid #ffffff22;
   border-radius: 0.6rem;
   background: #0e1922;
-}
-.developer-tools summary {
-  cursor: pointer;
-  font-weight: 700;
 }
 .developer-tools p {
   color: #afc0c9;
@@ -306,9 +362,7 @@ footer {
     padding: 3rem 0;
   }
   .play-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0;
+    align-items: center;
   }
   #host-status {
     text-align: left;

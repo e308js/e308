@@ -47,6 +47,15 @@ jobs:
           name: coverage-${{ github.sha }}
           path: coverage/
 
+  reference_performance:
+    name: Reference performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm test:reference-performance
+
   browser:
     name: Browser behavior
     runs-on: ubuntu-latest
@@ -134,7 +143,7 @@ jobs:
   quality:
     name: quality
     if: always()
-    needs: [static, coverage, browser, pacing, performance_report]
+    needs: [static, coverage, reference_performance, browser, pacing, performance_report]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -163,12 +172,14 @@ jobs:
         env:
           STATIC_RESULT: ${{ needs.static.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
+          REFERENCE_PERFORMANCE_RESULT: ${{ needs.reference_performance.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
           PACING_RESULT: ${{ needs.pacing.result }}
           PERFORMANCE_RESULT: ${{ needs.performance_report.result }}
         run: |
           test "$STATIC_RESULT" = success
           test "$COVERAGE_RESULT" = success
+          test "$REFERENCE_PERFORMANCE_RESULT" = success
           test "$BROWSER_RESULT" = success
           test "$PACING_RESULT" = success
           test "$PERFORMANCE_RESULT" = success

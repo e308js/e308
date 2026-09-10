@@ -161,14 +161,16 @@ const resolver = createTextResolver({
   quantities: createQuantityFormatter(nativeNumbers),
 });
 
-const mount = mountView(document.querySelector("#game")!, { source, project, resolver });
+const root = document.querySelector("#game")!;
+root.classList.add("e308-root");
+const mount = mountView(root, { source, project, resolver });
 // mount.dispose() removes subscriptions and input listeners.
 ```
 
 View nodes include semantic actions, resources, cost lines, reset/offline/save summaries, nested
 tabs, positioned trees, grids, progress bars, infoboxes, typed inputs, notifications, hotkeys,
 particles, safe rich descriptions, and custom render slots. Controls are unstyled by default;
-`starterTheme` is an optional baseline.
+`starterTheme` and the `e308-root` class provide the optional baseline.
 
 ## Test pacing headlessly
 
