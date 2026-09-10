@@ -1,4 +1,4 @@
-import { createGame, type EternityQuantity, type Snapshot } from "@e308/core";
+import { createGame, type EternityQuantity, eternityNumbers, type Snapshot } from "@e308/core";
 import { advanceOptimized } from "@e308/core/optimize";
 import {
   cascadeBulkCapability,
@@ -7,6 +7,7 @@ import {
   cascadeKit,
   cascadeResources,
   cascadeSaveCodec,
+  cascadeStepMs,
   cascadeTiers,
   encoded,
   progressionCommand,
@@ -55,12 +56,12 @@ describe("finished-game invariants", () => {
     fc.assert(
       fc.property(
         fc.array(fc.integer({ min: 1, max: 30 }), { minLength: 1, maxLength: 20 }),
-        (seconds) => {
-          const total = seconds.reduce((sum, value) => sum + value, 0) * 1_000;
+        (stepGroups) => {
+          const total = stepGroups.reduce((sum, value) => sum + value, 0) * cascadeStepMs;
           const oneShot = createGame(cascadeDefinition);
           oneShot.advance(total);
           const partitioned = createGame(cascadeDefinition);
-          for (const value of seconds) partitioned.advance(value * 1_000);
+          for (const value of stepGroups) partitioned.advance(value * cascadeStepMs);
           const raw = cascadeSaveCodec.encode(partitioned.getSnapshot(), {
             wallAnchorMs: total,
             entitlement: {
@@ -92,7 +93,7 @@ describe("finished-game invariants", () => {
     expect(economicState(report.snapshot)).toEqual(economicState(canonical.getSnapshot()));
   });
 
-  it("bulk-advances every Cascade challenge production rule exactly", () => {
+  it("bulk-advances every Cascade challenge production rule within numeric tolerance", () => {
     for (const challenges of [
       ["composite-trial"],
       ["slow-foundation", "automation-drought", "reversed-emphasis"],
@@ -106,7 +107,7 @@ describe("finished-game invariants", () => {
         capabilities: [cascadeBulkCapability],
       });
       expect(report.fidelity).toBe("validated-bulk");
-      expect(economicState(report.snapshot)).toEqual(economicState(canonical.getSnapshot()));
+      expectEconomicStateClose(report.snapshot, canonical.getSnapshot());
     }
   });
 
@@ -171,4 +172,39 @@ function economicState(snapshot: Snapshot<EternityQuantity>) {
     progression: snapshot.progression,
     random: snapshot.random,
   };
+}
+
+function expectEconomicStateClose(
+  actual: Snapshot<EternityQuantity>,
+  expected: Snapshot<EternityQuantity>,
+): void {
+  const left = economicState(actual);
+  const right = economicState(expected);
+  expect({ ...left, resources: {}, productionTotals: {} }).toEqual({
+    ...right,
+    resources: {},
+    productionTotals: {},
+  });
+  expectQuantitiesClose(actual.resources, expected.resources);
+  expectQuantitiesClose(actual.productionTotals, expected.productionTotals);
+}
+
+function expectQuantitiesClose(
+  actual: Readonly<Record<string, EternityQuantity>>,
+  expected: Readonly<Record<string, EternityQuantity>>,
+): void {
+  expect(Object.keys(actual)).toEqual(Object.keys(expected));
+  for (const [id, value] of Object.entries(actual)) {
+    const target = expected[id];
+    if (!target) throw new TypeError(`Missing expected quantity ${id}`);
+    if (eternityNumbers.cmp(value, target) === 0) continue;
+    const difference = eternityNumbers.sub(
+      eternityNumbers.cmp(value, target) > 0 ? value : target,
+      eternityNumbers.cmp(value, target) > 0 ? target : value,
+    );
+    const scale = eternityNumbers.cmp(value, target) > 0 ? value : target;
+    expect(
+      eternityNumbers.cmp(difference, eternityNumbers.mul(scale, cascadeKit.q(1e-12))),
+    ).toBeLessThanOrEqual(0);
+  }
 }

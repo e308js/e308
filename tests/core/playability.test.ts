@@ -44,6 +44,27 @@ function options(
 }
 
 describe("playability pressures", () => {
+  it("identifies action loops paced by a slow canonical step", () => {
+    const scenario = harnessScenario({ ...baseHarnessParameters, cost: 0, target: 20 });
+    const report = runHarness({
+      ...options(scenario, 1_000),
+      decisionCadenceMs: 100,
+      schedule: [{ kind: "active", durationMs: 1_000 }],
+    });
+    expect(report.playability.actionCadence).toMatchObject({
+      positiveIntervals: 9,
+      oneStepIntervals: 9,
+      oneStepFraction: 1,
+    });
+    expect(
+      assessPlayability(report, {
+        maximumNoReliefMs: 1_000,
+        maximumTickBoundStepMs: 50,
+        minimumTickBoundIntervals: 5,
+      }),
+    ).toEqual([expect.objectContaining({ code: "slow-tick-action-loop", severity: "p1" })]);
+  });
+
   it("separates immediate actions, investments, and passive progress", () => {
     const base = harnessScenario({ ...baseHarnessParameters, cost: 0, target: 20 });
     const report = runHarness(
@@ -108,6 +129,35 @@ describe("playability pressures", () => {
     ]);
   });
 
+  it("reports instant, brief, and low-interaction challenge episodes", () => {
+    const report = runHarness(options(harnessScenario(baseHarnessParameters)));
+    const challenged = {
+      ...report,
+      playability: {
+        ...report.playability,
+        progression: {
+          ...report.playability.progression,
+          challengeEpisodes: [
+            challengeEpisode("instant", 0, 1),
+            challengeEpisode("brief", 5_000, 2),
+          ],
+        },
+      },
+    };
+    expect(
+      assessPlayability(challenged, {
+        maximumNoReliefMs: 10_000,
+        minimumChallengeDurationMs: 10_000,
+        minimumChallengeActions: 3,
+      }).map((finding) => finding.code),
+    ).toEqual([
+      "instant-challenge",
+      "low-interaction-challenge",
+      "brief-challenge",
+      "low-interaction-challenge",
+    ]);
+  });
+
   it("reports reset layers crossed without simulated time between them", () => {
     const kit = createGameKit({ numbers: nativeNumbers });
     const run = kit.scope("run");
@@ -165,6 +215,7 @@ describe("playability pressures", () => {
     expect(compressed.playability.progression).toEqual({
       resetTransitions: 3,
       maximumResetTransitionsAtSameGameTime: 3,
+      challengeEpisodes: [],
     });
     expect(
       assessPlayability(compressed, {
@@ -244,4 +295,19 @@ describe("playability pressures", () => {
 
 function pressure(id: string, relief: readonly PressureRelief[]): PlayabilityPressure {
   return { id, kind: "capacity", active: true, detail: `${id} pressure`, relief };
+}
+
+function challengeEpisode(challengeId: string, gameDurationMs: number, successfulActions: number) {
+  return {
+    challengeId,
+    enteredAtRealMs: 0,
+    enteredAtGameMs: 0,
+    completedAtRealMs: gameDurationMs,
+    completedAtGameMs: gameDurationMs,
+    realDurationMs: gameDurationMs,
+    gameDurationMs,
+    activeDurationMs: gameDurationMs,
+    successfulActions,
+    completionGain: "1",
+  };
 }

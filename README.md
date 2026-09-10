@@ -131,6 +131,9 @@ session. `@e308/core/browser` adds IndexedDB, autosave, suspension reconciliatio
 and cross-tab single-writer ownership. `@e308/core/worker` provides a versioned worker protocol with
 revision fencing and chunk-boundary cancellation.
 
+Games can supply a validated bulk callback through `catchupExecution`. The callback uses the same
+work budget and records its fidelity in the resumable offline report.
+
 ## Render a game
 
 `@e308/ux` consumes a small structural source: `getSnapshot`, `subscribe`, and `dispatch`. A game owns
@@ -179,11 +182,14 @@ quotes. It records reproducible actions, waits, constraints, milestones, offline
 bounded samples. Complete-action-space sessions execute bounded bursts of immediately available
 actions before game time advances. Scenarios can provide `quoteAll` with the complete action catalog.
 Action quotes can tag progression-reset effects; the harness verifies the corresponding scope reset
-and records reset transitions that occur at the same game time. Scenarios can identify goal-relevant pressure and declare immediate actions,
-investments, or passive progress that relieve it. `assessPlayability` reports sustained pressure with
-no relief and pending-goal deadlocks. `@e308/core/balance` aggregates runs, sweeps parameters, and
-compares content versions. `@e308/core/optimize` offers validated exact advancement with canonical
-fallback and explicitly labeled approximation contracts.
+and records reset transitions that occur at the same game time. Reports measure challenge episodes,
+completion actions, and action intervals tied to one simulation step. Scenarios can supply an exact
+advancement adapter for fast-tick simulations. Scenarios can also identify goal-relevant pressure
+and declare immediate actions, investments, or passive progress that relieve it.
+`assessPlayability` evaluates challenge pacing, action cadence, sustained pressure, and pending-goal
+deadlocks. `@e308/core/balance` aggregates runs, sweeps parameters, and compares content versions.
+`@e308/core/optimize` offers validated exact advancement with canonical fallback and explicitly
+labeled approximation contracts.
 
 ```ts
 import { orderedPolicy, randomLegalPolicy, runHarness } from "@e308/core/testing";

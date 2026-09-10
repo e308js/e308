@@ -1,6 +1,6 @@
 import { type EternityQuantity, eternityNumbers, type Snapshot } from "@e308/core";
 import type { ActionBlocker, GridCellView, ViewNode } from "@e308/ux";
-import { cascadeKit, cascadeResources, encoded } from "./economy.js";
+import { cascadeBuyables, cascadeKit, cascadeResources, encoded } from "./economy.js";
 import { cascadeChallengeCopy, cascadeChallenges, cascadeChallengeTier } from "./progression.js";
 import type { CascadeIntent } from "./runtime.js";
 
@@ -9,7 +9,21 @@ const q = cascadeKit.q;
 export function challengePanel(
   snapshot: Snapshot<EternityQuantity>,
 ): ViewNode<CascadeIntent, EternityQuantity>[] {
-  return [challengeGrid(snapshot), ...activeChallengeControls(snapshot)];
+  return [
+    {
+      kind: "description",
+      id: "challenge-power-rule",
+      content: [
+        {
+          kind: "text",
+          value:
+            "Inside challenges, permanent power is distributed across the eight-tier chain. Each reward requires the first buy-ten multiplier in all eight tiers.",
+        },
+      ],
+    },
+    challengeGrid(snapshot),
+    ...activeChallengeControls(snapshot),
+  ];
 }
 
 function challengeGrid(
@@ -59,7 +73,11 @@ function activeChallengeControls(
     const challenge = cascadeChallenges.find((entry) => entry.id === id);
     if (!challenge) return [];
     const currency = snapshot.resources.currency as EternityQuantity;
-    const earned = cascadeChallengeTier(id, currency);
+    const routeComplete = cascadeBuyables.every(
+      (buyable) =>
+        eternityNumbers.cmp(snapshot.purchaseCounts[buyable.id] as EternityQuantity, q(10)) >= 0,
+    );
+    const earned = cascadeChallengeTier(id, currency, routeComplete);
     const completed = snapshot.progression.challengeCompletions[id] ?? q(0);
     const fullyComplete = eternityNumbers.cmp(completed, q(challenge.maxCompletions)) >= 0;
     const canComplete = eternityNumbers.cmp(q(earned), completed) > 0;

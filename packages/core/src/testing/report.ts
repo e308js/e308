@@ -24,6 +24,8 @@ export function reportMarkdown(report: HarnessReport): string {
     `- Time: ${report.timing.realElapsedMs} ms real, ${report.timing.gameAdvancedMs} ms game, ${report.timing.activePlayerMs} ms active`,
     `- Actions: ${report.actions.successful}/${report.actions.attempts} successful; ${report.actions.waits} waits`,
     `- Reset progression: ${report.playability.progression.resetTransitions} transitions; maximum immediate chain ${report.playability.progression.maximumResetTransitionsAtSameGameTime}`,
+    `- Challenge episodes: ${report.playability.progression.challengeEpisodes.length}`,
+    `- Action cadence: ${report.playability.actionCadence.oneStepIntervals}/${report.playability.actionCadence.positiveIntervals} positive intervals took one simulation step`,
     `- Replay: \`${report.replayCommand}\``,
     "",
     "## First passage",
@@ -45,6 +47,15 @@ export function reportMarkdown(report: HarnessReport): string {
     ...Object.entries(report.playability.pressures).map(
       ([id, value]) =>
         `| ${id} | ${value.observedMs} | ${value.actionableMs} | ${value.savingMs} | ${value.passiveMs} | ${value.noReliefMs} |`,
+    ),
+    "",
+    "## Challenge episodes",
+    "",
+    "| Challenge | Game ms | Active ms | Actions | Completion gain |",
+    "| --- | ---: | ---: | ---: | ---: |",
+    ...report.playability.progression.challengeEpisodes.map(
+      (episode) =>
+        `| ${episode.challengeId} | ${episode.gameDurationMs} | ${episode.activeDurationMs} | ${episode.successfulActions} | ${episode.completionGain} |`,
     ),
     "",
   ];

@@ -1,11 +1,17 @@
-import type { EternityQuantity } from "@e308/core";
-import { type BulkCapability, producerChainBulkCapability } from "@e308/core/optimize";
+import type { CatchupExecution, EternityQuantity, Game } from "@e308/core";
+import {
+  advanceOptimized,
+  type BulkCapability,
+  producerChainBulkCapability,
+} from "@e308/core/optimize";
+import { cascadeDefinition } from "./definition.js";
 import {
   cascadeBuyables,
   cascadeKit,
   cascadeResources,
+  cascadeStepMs,
+  cascadeTierCoefficient,
   cascadeTiers,
-  purchasedTierMultiplier,
 } from "./economy.js";
 
 const numbers = cascadeKit.numbers;
@@ -19,18 +25,19 @@ export const cascadeBulkCapability: BulkCapability<EternityQuantity> = producerC
   dependencies: ["cascade-production", "dimension-purchases", "challenges", "automation-clock"],
   coefficient: ({ snapshot, index }) => {
     const buyable = cascadeBuyables[index] as (typeof cascadeBuyables)[number];
-    let value = numbers.mul(
-      snapshot.resources[cascadeResources.prestigeMultiplier.id] as EternityQuantity,
-      purchasedTierMultiplier(snapshot.purchaseCounts[buyable.id] as EternityQuantity),
-    );
     const active = new Set(snapshot.progression.activeChallenges);
-    if (active.has("slow-foundation") || active.has("composite-trial"))
-      value = numbers.div(value, q(4));
-    if (active.has("automation-drought") || active.has("reset-pressure"))
-      value = numbers.div(value, q(2));
-    if (active.has("reversed-emphasis") || active.has("composite-trial"))
-      value = numbers.div(value, q(2 ** index));
-    return value;
+    return numbers.mul(
+      cascadeTierCoefficient({
+        sharedMultiplier: snapshot.resources[
+          cascadeResources.prestigeMultiplier.id
+        ] as EternityQuantity,
+        purchaseCount: snapshot.purchaseCounts[buyable.id] as EternityQuantity,
+        index,
+        challenged: active.size > 0,
+        isChallengeActive: (id) => active.has(id),
+      }),
+      q(cascadeStepMs / 1_000),
+    );
   },
   ineligibleReason: (snapshot) =>
     cascadeBuyables.every((buyable) => {
@@ -41,3 +48,28 @@ export const cascadeBulkCapability: BulkCapability<EternityQuantity> = producerC
       ? undefined
       : "pending-progression-trigger",
 });
+
+export function advanceCascadeOptimized(
+  game: Game<EternityQuantity>,
+  durationMs: number,
+  maximumWork: number,
+) {
+  return advanceOptimized(game, cascadeDefinition, durationMs, {
+    mode: "exact",
+    capabilities: [cascadeBulkCapability],
+    limits: { maximumWork, maximumBulkBatches: maximumWork },
+  });
+}
+
+export const cascadeCatchupExecution: CatchupExecution<EternityQuantity> = {
+  kind: "optimized",
+  advance: (game, pendingRealMs, maximumWork) => {
+    const durationMs = Math.min(pendingRealMs, maximumWork * cascadeStepMs);
+    const report = advanceCascadeOptimized(game, durationMs, maximumWork);
+    return {
+      ...report,
+      status:
+        report.status === "completed" && durationMs < pendingRealMs ? "pending" : report.status,
+    };
+  },
+};

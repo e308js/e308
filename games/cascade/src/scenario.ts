@@ -1,4 +1,10 @@
-import { createGame, type EternityQuantity, eternityNumbers, type Snapshot } from "@e308/core";
+import {
+  createGame,
+  type EternityQuantity,
+  eternityNumbers,
+  type Game,
+  type Snapshot,
+} from "@e308/core";
 import type {
   ConstraintEvidence,
   HarnessScenario,
@@ -7,7 +13,13 @@ import type {
 } from "@e308/core/testing";
 import { cascadeDefinition } from "./definition.js";
 import { cascadeBuyables, cascadeKit, encoded } from "./economy.js";
-import { cascadeBalance, cascadeChallenges, nextCoreCost } from "./progression.js";
+import { advanceCascadeOptimized } from "./optimization.js";
+import {
+  cascadeBalance,
+  cascadeChallenges,
+  cascadeChallengeTargets,
+  nextCoreCost,
+} from "./progression.js";
 import { type CascadeActionIntent, cascadeCommand } from "./runtime.js";
 import { completeCascadeQuotes } from "./scenario-actions.js";
 
@@ -27,8 +39,8 @@ export function cascadeScenario(
 ): HarnessScenario<EternityQuantity, CascadeObservation, CascadeActionIntent> {
   return {
     id: "cascade",
-    contentVersion: "1.2.0",
-    contentDigest: "cascade-1.2.0-reset-separation-2026-09-10",
+    contentVersion: "1.3.0",
+    contentDigest: "cascade-1.3.0-challenge-pacing-2026-09-10",
     parameters: { strategy },
     definition: cascadeDefinition,
     goals: [
@@ -71,7 +83,19 @@ export function cascadeScenario(
         Object.values(before.scopeGenerations).reduce((sum, value) => sum + Number(value), 0),
       taskBlocks: 0,
     }),
+    advanceTime: advanceCascadeTime,
   };
+}
+
+function advanceCascadeTime(game: Game<EternityQuantity>, durationMs: number) {
+  const report = advanceCascadeOptimized(game, durationMs, 10_000);
+  if (report.status !== "completed")
+    throw new TypeError(
+      `Cascade harness advancement ${report.status}: ${report.error ?? "pending"}`,
+    );
+  if (report.fidelity === "approximate")
+    throw new TypeError("Cascade exact harness advancement returned approximate fidelity");
+  return { snapshot: report.snapshot, fidelity: report.fidelity } as const;
 }
 
 function nextQuotes(
@@ -239,17 +263,16 @@ function challengeQuotes(
 }
 
 function challengeTargetReached(snapshot: Snapshot<EternityQuantity>, id: string): boolean {
-  const target =
-    id === "slow-foundation"
-      ? "1e12"
-      : id === "composite-trial"
-        ? "1e10"
-        : id === "reset-pressure"
-          ? "1e9"
-          : id === "reversed-emphasis" || id === "automation-drought"
-            ? "1e8"
-            : "1e7";
-  return eternityNumbers.cmp(snapshot.resources.currency as EternityQuantity, q(target)) >= 0;
+  const targets = cascadeChallengeTargets[id as keyof typeof cascadeChallengeTargets];
+  const target = targets?.at(-1);
+  return (
+    cascadeBuyables.every(
+      (buyable) =>
+        eternityNumbers.cmp(snapshot.purchaseCounts[buyable.id] as EternityQuantity, q(10)) >= 0,
+    ) &&
+    target !== undefined &&
+    eternityNumbers.cmp(snapshot.resources.currency as EternityQuantity, target) >= 0
+  );
 }
 
 function legal(

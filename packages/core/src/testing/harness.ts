@@ -1,6 +1,11 @@
 import { deriveRandomState, Xoshiro128 } from "../random/xoshiro.js";
 import type { Game, Snapshot } from "../state/types.js";
 import { accumulatePressures } from "./playability.js";
+import {
+  recordActionCadence,
+  recordChallengeTransitions,
+  recordResetTransition,
+} from "./progression-metrics.js";
 import { buildHarnessReport } from "./report-builder.js";
 import { createTotals, type HarnessTotals } from "./run-state.js";
 import type {
@@ -65,15 +70,28 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
         if (reached) return reached;
       }
       const before = this.#game.getSnapshot();
-      const result = this.#game.advance(chunk);
-      if (!result.ok) throw new TypeError(`Harness advance failed: ${result.error.code}`);
-      this.addTime(kind, chunk, before, result.value);
+      const after = this.advanceTime(chunk);
+      this.addTime(kind, chunk, before, after);
       remaining -= chunk;
-      this.recordState(result.value);
+      this.recordState(after);
       const reached = this.reachedOutcome();
       if (reached) return reached;
     }
     return undefined;
+  }
+
+  private advanceTime(durationMs: number): Snapshot<N> {
+    const custom = this.options.scenario.advanceTime?.(this.#game, durationMs);
+    if (custom) {
+      if (custom.snapshot !== this.#game.getSnapshot())
+        throw new TypeError("Time adapter must advance and return the supplied game snapshot");
+      this.#totals.fidelity.add(custom.fidelity);
+      return custom.snapshot;
+    }
+    const result = this.#game.advance(durationMs);
+    if (!result.ok) throw new TypeError(`Harness advance failed: ${result.error.code}`);
+    this.#totals.fidelity.add("canonical");
+    return result.value;
   }
 
   private decideBurst(elapsedMs: number): void {
@@ -152,7 +170,17 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
     if (result.ok) {
       const after = this.#game.getSnapshot();
       this.addDiagnostics(snapshot, after);
-      this.recordResetTransition(snapshot, after, quote);
+      recordResetTransition(this.#totals, snapshot, after, quote);
+      const numbers = this.options.scenario.definition.numbers;
+      if (!numbers) throw new TypeError("Harness definition has no numeric adapter");
+      recordChallengeTransitions({
+        totals: this.#totals,
+        before: snapshot,
+        after,
+        numbers,
+        successfulActions: this.#totals.successful + 1,
+      });
+      recordActionCadence(this.#totals, after.gameTimeMs, this.options.scenario.definition.stepMs);
       this.#totals.successful += 1;
       this.#totals.currentWait = 0;
       this.recordAttempt(snapshot, quote.id, quote, "success");
@@ -162,30 +190,6 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
       this.recordAttempt(snapshot, quote.id, quote, result.error.code);
       return false;
     }
-  }
-
-  private recordResetTransition(
-    before: Snapshot<N>,
-    after: Snapshot<N>,
-    quote: LegalActionQuote<I>,
-  ): void {
-    if (!quote.effects?.includes("progression-reset")) return;
-    const scopeIds = new Set([
-      ...Object.keys(before.scopeGenerations),
-      ...Object.keys(after.scopeGenerations),
-    ]);
-    const reset = [...scopeIds].some(
-      (id) => (after.scopeGenerations[id] ?? 0) > (before.scopeGenerations[id] ?? 0),
-    );
-    if (!reset) return;
-    this.#totals.resetTransitions += 1;
-    if (this.#totals.lastResetGameMs === after.gameTimeMs) this.#totals.currentResetBurst += 1;
-    else this.#totals.currentResetBurst = 1;
-    this.#totals.lastResetGameMs = after.gameTimeMs;
-    this.#totals.maximumResetBurst = Math.max(
-      this.#totals.maximumResetBurst,
-      this.#totals.currentResetBurst,
-    );
   }
 
   private recordWait(

@@ -88,7 +88,7 @@ test("presents Cascade's connected reset and challenge route", async ({ page }) 
   await expect(page.getByRole("button", { name: /collapse for 0/i })).toBeDisabled();
 
   await page.getByRole("tab", { name: "Challenges" }).click();
-  await expect(page.getByText(/All production runs at 25% speed/)).toBeVisible();
+  await expect(page.getByText(/full producer chain runs at 25% output/i)).toBeVisible();
   await expect(page.getByText(/Reward: Up to 3 research points/)).toBeVisible();
 
   await page.getByRole("tab", { name: "Automation" }).click();

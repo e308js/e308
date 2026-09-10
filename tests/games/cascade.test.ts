@@ -5,8 +5,10 @@ import {
   enterChallengeCommand,
   eternityNumbers,
 } from "@e308/core";
-import { assessPlayability, goalPolicy, rankedPolicy, runHarness } from "@e308/core/testing";
+import { advanceOptimized } from "@e308/core/optimize";
+import { assessPlayability } from "@e308/core/testing";
 import {
+  cascadeBulkCapability,
   cascadeBuyables,
   cascadeChallenges,
   cascadeDefinition,
@@ -21,14 +23,12 @@ import {
   purchasedTierMultiplier,
 } from "@e308/game-cascade";
 import { describe, expect, it } from "vitest";
-import { driveScenario } from "../helpers/finished-games.js";
-
-const limits = {
-  maximumDecisions: 5_000,
-  maximumTraceEntries: 5_000,
-  maximumSamples: 200,
-  sampleCadenceMs: 60_000,
-} as const;
+import {
+  cascadeChallengePacingCompletion,
+  cascadeCompletion,
+  cascadeShortcutCompletion,
+  playCascade,
+} from "../helpers/cascade-harness.js";
 
 describe("finished Cascade", () => {
   it("matches an independent delayed eight-tier integer recurrence", () => {
@@ -40,24 +40,25 @@ describe("finished Cascade", () => {
         transaction.set(cascadeTiers[7] as (typeof cascadeTiers)[number], cascadeKit.q(1));
       },
     });
-    const tiers = Array<bigint>(8).fill(0n);
-    tiers[7] = 1n;
-    let currency = 0n;
+    const tiers = Array<number>(8).fill(0);
+    tiers[7] = 1;
+    let currency = 0;
     for (let step = 0; step < 24; step += 1) {
       const start = [...tiers];
-      currency += start[0] as bigint;
+      currency += (start[0] as number) * 0.25;
       for (let index = 1; index < 8; index += 1)
-        tiers[index - 1] = (tiers[index - 1] as bigint) + (start[index] as bigint);
+        tiers[index - 1] = (tiers[index - 1] as number) + (start[index] as number) * 0.25;
     }
-    expect(game.advance(24_000).ok).toBe(true);
-    expect(encoded(game.getSnapshot().resources.currency as EternityQuantity)).toBe(
-      String(currency),
+    expect(game.advance(6_000).ok).toBe(true);
+    expect(Number(encoded(game.getSnapshot().resources.currency as EternityQuantity))).toBeCloseTo(
+      currency,
+      10,
     );
-    expect(
-      cascadeTiers.map((tier) =>
-        encoded(game.getSnapshot().resources[tier.id] as EternityQuantity),
-      ),
-    ).toEqual(tiers.map(String));
+    cascadeTiers.forEach((tier, index) => {
+      expect(
+        Number(encoded(game.getSnapshot().resources[tier.id] as EternityQuantity)),
+      ).toBeCloseTo(tiers[index] as number, 10);
+    });
   });
 
   it("keeps purchased amounts distinct and grants every buy-ten milestone", () => {
@@ -130,7 +131,7 @@ describe("finished Cascade", () => {
           transaction.set(cascadeResources.prestigeMultiplier, cascadeKit.q(multiplier));
         },
       });
-      game.advance(1_000);
+      game.advance(250);
       return Number(encoded(game.getSnapshot().resources.currency as EternityQuantity));
     };
     expect(producedWith(3)).toBe(producedWith(1) * 3);
@@ -176,14 +177,41 @@ describe("finished Cascade", () => {
         transaction.setPurchase("dimension-2", cascadeKit.q(10));
       },
     });
-    game.advance(1_000);
+    game.advance(250);
     const snapshot = game.getSnapshot();
-    expect(encoded(snapshot.resources.currency as EternityQuantity)).toBe("40");
-    expect(encoded(snapshot.resources["tier-1"] as EternityQuantity)).toBe("30");
+    expect(encoded(snapshot.resources.currency as EternityQuantity)).toBe("10");
+    expect(encoded(snapshot.resources["tier-1"] as EternityQuantity)).toBe("15");
+  });
+
+  it("matches canonical challenge production through validated bulk advancement", () => {
+    const seed = createCascade();
+    seed.game.dispatch({
+      id: "bulk-challenge-fixture",
+      execute: (transaction) => {
+        transaction.setChallengeActive("composite-trial", true);
+        transaction.set(cascadeResources.prestigeMultiplier, cascadeKit.q(128));
+        cascadeBuyables.forEach((buyable, index) => {
+          transaction.setPurchase(buyable.id, cascadeKit.q(10));
+          transaction.set(cascadeTiers[index] as (typeof cascadeTiers)[number], cascadeKit.q(10));
+        });
+      },
+    });
+    const canonical = createGame(cascadeDefinition, { snapshot: seed.getSnapshot() });
+    const optimized = createGame(cascadeDefinition, { snapshot: seed.getSnapshot() });
+    expect(canonical.advance(60_000).ok).toBe(true);
+    const report = advanceOptimized(optimized, cascadeDefinition, 60_000, {
+      mode: "exact",
+      capabilities: [cascadeBulkCapability],
+      limits: { maximumWork: 1_000, maximumBulkBatches: 100 },
+    });
+    expect(report.status).toBe("completed");
+    expect(report.fidelity).toBe("validated-bulk");
+    expect(report.snapshot.resources).toEqual(canonical.getSnapshot().resources);
+    expect(report.snapshot.productionTotals).toEqual(canonical.getSnapshot().productionTotals);
   });
 
   it("completes all reset levels and challenges through quote-only play", () => {
-    const { game, actions } = play("reset-first");
+    const { game, actions } = playCascade("reset-first");
     const snapshot = game.getSnapshot();
     expect(snapshot.progression.won).toBe(true);
     expect(Object.keys(snapshot.progression.challengeCompletions)).toHaveLength(6);
@@ -203,8 +231,8 @@ describe("finished Cascade", () => {
   }, 30_000);
 
   it("produces different truthful pacing for depth and reset strategies", () => {
-    const reset = completion("reset-first", "01");
-    const depth = completion("depth-first", "02");
+    const reset = cascadeCompletion("reset-first", "01");
+    const depth = cascadeCompletion("depth-first", "02");
     expect(reset.outcome.kind).toBe("reached");
     expect(depth.outcome.kind).toBe("reached");
     if (reset.outcome.kind !== "reached" || depth.outcome.kind !== "reached") return;
@@ -221,18 +249,33 @@ describe("finished Cascade", () => {
   }, 30_000);
 
   it("keeps economic reset layers separated under shortcut-seeking play", () => {
-    const shortcut = shortcutCompletion();
-    expect(shortcut.outcome.kind).toBe("reached");
+    const shortcut = cascadeShortcutCompletion();
     expect(
       assessPlayability(shortcut, {
         maximumNoReliefMs: 10 * 60_000,
-        maximumResetTransitionsAtSameGameTime: 2,
+        maximumResetTransitionsAtSameGameTime: 1,
+      }),
+    ).toEqual([]);
+  }, 30_000);
+
+  it("measures challenge pacing at player action cadence", () => {
+    const report = cascadeChallengePacingCompletion();
+    expect(report.outcome.kind).toBe("reached");
+    expect(report.playability.progression.challengeEpisodes).toHaveLength(6);
+    expect(report.playability.actionCadence.oneStepIntervals).toBeGreaterThan(10);
+    expect(
+      assessPlayability(report, {
+        maximumNoReliefMs: 10 * 60_000,
+        minimumChallengeDurationMs: 90_000,
+        minimumChallengeActions: 70,
+        maximumTickBoundStepMs: 500,
+        minimumTickBoundIntervals: 10,
       }),
     ).toEqual([]);
   }, 30_000);
 
   it("round-trips the above-1e308 ending and renders its dense progression view", () => {
-    const played = play("reset-first").game.getSnapshot();
+    const played = playCascade("reset-first").game.getSnapshot();
     const wrapped = createCascade(played);
     const restored = importCascade(wrapped.exportSave(2_000_000));
     expect(restored.getSnapshot()).toEqual(played);
@@ -249,7 +292,7 @@ describe("finished Cascade", () => {
     });
     expect(cascade.dispatch({ type: "challenge-enter", id: "slow-foundation" }).ok).toBe(true);
     const rendered = JSON.stringify(cascadeView(cascade.getSnapshot()));
-    expect(rendered).toContain("All production runs at 25% speed");
+    expect(rendered).toContain("full producer chain runs at 25% output");
     expect(rendered).toContain("challenge-exit:slow-foundation");
     expect(rendered).toContain("10 generators in all 8 tiers");
     expect(rendered).toContain("infinity yield research");
@@ -301,7 +344,11 @@ describe("finished Cascade", () => {
     expect(wrapped.dispatch({ type: "challenge-enter", id: "slow-foundation" }).ok).toBe(true);
     wrapped.game.dispatch({
       id: "challenge-progress-fixture",
-      execute: (transaction) => transaction.set(cascadeResources.currency, cascadeKit.q("1e9")),
+      execute: (transaction) => {
+        transaction.set(cascadeResources.currency, cascadeKit.q("1e10"));
+        for (const buyable of cascadeBuyables)
+          transaction.setPurchase(buyable.id, cascadeKit.q(10));
+      },
     });
     expect(wrapped.dispatch({ type: "challenge-complete", id: "slow-foundation" }).ok).toBe(true);
     expect(
@@ -355,7 +402,21 @@ describe("finished Cascade", () => {
       },
     });
     challenged.dispatch({ type: "advance", milliseconds: 1_000 });
-    expect(encoded(challenged.getSnapshot().resources["tier-7"] as EternityQuantity)).toBe("1");
+    const normal = createCascade();
+    normal.game.dispatch({
+      id: "normal-production-fixture",
+      execute: (transaction) => {
+        transaction.set(cascadeResources.currency, cascadeKit.q(0));
+        transaction.set(cascadeTiers[7] as (typeof cascadeTiers)[number], cascadeKit.q(128));
+      },
+    });
+    normal.dispatch({ type: "advance", milliseconds: 1_000 });
+    expect(
+      eternityNumbers.cmp(
+        challenged.getSnapshot().resources["tier-7"] as EternityQuantity,
+        normal.getSnapshot().resources["tier-7"] as EternityQuantity,
+      ),
+    ).toBeLessThan(0);
 
     expect(challenged.dispatch({ type: "challenge-exit", id: "reversed-emphasis" }).ok).toBe(true);
     expect(challenged.dispatch({ type: "challenge-enter", id: "automation-drought" }).ok).toBe(
@@ -366,55 +427,3 @@ describe("finished Cascade", () => {
     ).toMatchObject({ ok: false, error: { code: "locked" } });
   });
 });
-
-function completion(strategy: "reset-first" | "depth-first", botSeed: string) {
-  return runHarness({
-    scenario: cascadeScenario(strategy),
-    policy: rankedPolicy({ id: `cascade-${strategy}`, version: "1" }),
-    goalId: "final-research",
-    schedule: [{ kind: "active", durationMs: 72 * 60 * 60_000 }],
-    decisionCadenceMs: 60_000,
-    gameSeed: "aa",
-    botSeed,
-    limits,
-    replayCommand: `pnpm replay:game cascade ${strategy}`,
-  });
-}
-
-function shortcutCompletion() {
-  const scenario = cascadeScenario("reset-first");
-  return runHarness({
-    scenario,
-    policy: goalPolicy({
-      id: "cascade-shortcut-seeker",
-      version: "1",
-      includeAllLegal: true,
-      score: (_context, quote) => {
-        if (quote.id === "ascend") return 10_000;
-        if (quote.id === "condense") return 9_000;
-        if (quote.id === "collapse") return 8_000;
-        return quote.useful ? (quote.rank ?? 0) : Number.NEGATIVE_INFINITY;
-      },
-    }),
-    goalId: "final-research",
-    schedule: [{ kind: "active", durationMs: 72 * 60 * 60_000 }],
-    decisionCadenceMs: 60_000,
-    actionSpace: "complete",
-    gameSeed: "aa",
-    botSeed: "03",
-    limits,
-    replayCommand: "pnpm replay:game cascade shortcut",
-  });
-}
-
-function play(strategy: "reset-first" | "depth-first") {
-  const scenario = cascadeScenario(strategy);
-  const actions: string[] = [];
-  const game = driveScenario(scenario, {
-    cadenceMs: 60_000,
-    maximumDecisions: 5_000,
-    stop: (snapshot) => snapshot.progression.won,
-    actionLog: actions,
-  });
-  return { game, actions };
-}

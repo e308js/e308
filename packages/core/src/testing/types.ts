@@ -75,6 +75,11 @@ export interface AwayResult<N> {
   readonly bankedRealMs: number;
 }
 
+export interface HarnessAdvanceResult<N> {
+  readonly snapshot: Snapshot<N>;
+  readonly fidelity: "canonical" | "validated-bulk";
+}
+
 export interface HarnessScenario<N, O extends HarnessValue, I extends HarnessValue> {
   readonly id: string;
   readonly contentVersion: string;
@@ -94,6 +99,7 @@ export interface HarnessScenario<N, O extends HarnessValue, I extends HarnessVal
     before: Snapshot<N>,
     after: Snapshot<N>,
   ): { readonly overflow: number; readonly resetRecoveries: number; readonly taskBlocks: number };
+  advanceTime?(game: Game<N>, durationMs: number): HarnessAdvanceResult<N>;
   advanceAway?(game: Game<N>, durationMs: number): AwayResult<N>;
 }
 
@@ -170,7 +176,7 @@ export interface HarnessSample {
 
 export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly schema: "e308-pacing-report";
-  readonly schemaVersion: 3;
+  readonly schemaVersion: 4;
   readonly scenarioId: string;
   readonly contentVersion: string;
   readonly contentDigest: string;
@@ -213,6 +219,7 @@ export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly playability: {
     readonly pressures: Readonly<Record<string, PressureMetric>>;
     readonly progression: ProgressionMetric;
+    readonly actionCadence: ActionCadenceMetric;
   };
   readonly milestones: Readonly<
     Record<
@@ -248,10 +255,22 @@ export interface PressureMetric {
 export interface PlayabilityThresholds {
   readonly maximumNoReliefMs: number;
   readonly maximumResetTransitionsAtSameGameTime?: number;
+  readonly minimumChallengeDurationMs?: number;
+  readonly minimumChallengeActions?: number;
+  readonly maximumTickBoundStepMs?: number;
+  readonly minimumTickBoundIntervals?: number;
+  readonly minimumTickBoundFraction?: number;
 }
 
 export interface PlayabilityFinding {
-  readonly code: "compressed-reset-chain" | "goal-deadlock" | "sustained-no-relief";
+  readonly code:
+    | "brief-challenge"
+    | "compressed-reset-chain"
+    | "goal-deadlock"
+    | "instant-challenge"
+    | "low-interaction-challenge"
+    | "slow-tick-action-loop"
+    | "sustained-no-relief";
   readonly severity: "p0" | "p1";
   readonly pressureId: string | null;
   readonly detail: string;
@@ -260,4 +279,26 @@ export interface PlayabilityFinding {
 export interface ProgressionMetric {
   readonly resetTransitions: number;
   readonly maximumResetTransitionsAtSameGameTime: number;
+  readonly challengeEpisodes: readonly ChallengeEpisodeMetric[];
+}
+
+export interface ChallengeEpisodeMetric {
+  readonly challengeId: string;
+  readonly enteredAtRealMs: number;
+  readonly enteredAtGameMs: number;
+  readonly completedAtRealMs: number;
+  readonly completedAtGameMs: number;
+  readonly realDurationMs: number;
+  readonly gameDurationMs: number;
+  readonly activeDurationMs: number;
+  readonly successfulActions: number;
+  readonly completionGain: string;
+}
+
+export interface ActionCadenceMetric {
+  readonly positiveIntervals: number;
+  readonly oneStepIntervals: number;
+  readonly oneStepFraction: number;
+  readonly meanIntervalMs: number;
+  readonly longestIntervalMs: number;
 }

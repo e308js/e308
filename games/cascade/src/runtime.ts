@@ -37,9 +37,9 @@ export type CascadeResult =
   | ReturnType<Game<EternityQuantity>["advance"]>;
 
 export const cascadeSaveCodec = createSaveCodec(cascadeDefinition, {
-  stateSchemaVersion: 3,
-  contentVersion: "1.2.0",
-  contentDigest: "cascade-1.2.0-reset-separation-2026-09-10",
+  stateSchemaVersion: 4,
+  contentVersion: "1.3.0",
+  contentDigest: "cascade-1.3.0-challenge-pacing-2026-09-10",
 });
 
 export function createCascade(snapshot?: Snapshot<EternityQuantity>): CascadeGame {

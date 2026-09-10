@@ -21,7 +21,10 @@ export function driveScenario<N, O extends HarnessValue, I extends HarnessValue>
       options.actionLog?.push(intentLabel(quote.intent, quote.id));
       game.dispatch(scenario.command(quote.intent, game.getSnapshot()));
     }
-    game.advance(options.cadenceMs);
+    const advanced = scenario.advanceTime?.(game, options.cadenceMs);
+    if (advanced && advanced.snapshot !== game.getSnapshot())
+      throw new TypeError("Scenario time adapter returned a foreign snapshot");
+    if (!advanced) game.advance(options.cadenceMs);
   }
   return game;
 }

@@ -23,7 +23,7 @@ export function buildHarnessReport<N, O extends HarnessValue, I extends HarnessV
   if (!definition.numbers) throw new TypeError("Harness definition has no numeric adapter");
   return {
     schema: "e308-pacing-report",
-    schemaVersion: 3,
+    schemaVersion: 4,
     scenarioId: run.scenario.id,
     contentVersion: run.scenario.contentVersion,
     contentDigest: run.scenario.contentDigest,
@@ -64,9 +64,23 @@ export function buildHarnessReport<N, O extends HarnessValue, I extends HarnessV
     constraints: totals.constraints,
     playability: {
       pressures: pressureReport(totals.pressures),
+      actionCadence: {
+        positiveIntervals: totals.positiveActionIntervals,
+        oneStepIntervals: totals.oneStepActionIntervals,
+        oneStepFraction:
+          totals.positiveActionIntervals === 0
+            ? 0
+            : totals.oneStepActionIntervals / totals.positiveActionIntervals,
+        meanIntervalMs:
+          totals.positiveActionIntervals === 0
+            ? 0
+            : totals.totalActionIntervalMs / totals.positiveActionIntervals,
+        longestIntervalMs: totals.longestActionIntervalMs,
+      },
       progression: {
         resetTransitions: totals.resetTransitions,
         maximumResetTransitionsAtSameGameTime: totals.maximumResetBurst,
+        challengeEpisodes: totals.challengeEpisodes,
       },
     },
     milestones: totals.milestones,

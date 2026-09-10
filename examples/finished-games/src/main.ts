@@ -1,4 +1,5 @@
 import {
+  type CatchupExecution,
   createGame,
   eternityNumbers,
   type GameDefinition,
@@ -17,6 +18,7 @@ import {
 } from "@e308/core/browser";
 import {
   type CascadeIntent,
+  cascadeCatchupExecution,
   cascadeCommand,
   cascadeDefinition,
   cascadeSaveCodec,
@@ -126,7 +128,12 @@ async function wireworksSession(): Promise<Session> {
 }
 
 async function cascadeSession(): Promise<Session> {
-  const host = await hostFor("cascade", cascadeDefinition, cascadeSaveCodec);
+  const host = await hostFor(
+    "cascade",
+    cascadeDefinition,
+    cascadeSaveCodec,
+    cascadeCatchupExecution,
+  );
   const source = new HostSource<ReturnType<typeof eternityNumbers.fromNumber>, CascadeIntent>(
     host,
     (_snapshot, intent) => cascadeCommand(intent),
@@ -172,6 +179,7 @@ async function hostFor<N>(
   id: string,
   definition: GameDefinition<N>,
   codec: SaveCodec<N>,
+  catchupExecution?: CatchupExecution<N>,
 ): Promise<BrowserHost<N>> {
   const initial = createGame(definition).getSnapshot();
   const store = new IndexedDbSaveStore({ databaseName: `e308-finished-${id}-${instanceId}` });
@@ -201,6 +209,7 @@ async function hostFor<N>(
     tickMs: 250,
     autosaveMs: 30_000,
     catchupStepsPerChunk: 20_000,
+    ...(catchupExecution ? { catchupExecution } : {}),
   });
   bindBrowserLifecycle(host);
   return host;

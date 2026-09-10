@@ -257,6 +257,38 @@ describe("offline policy and sessions", () => {
       processCatchupChunk(fixture.definition, fixture.game, resumed, 1, { kind: "canonical" }),
     ).toThrow("cannot change");
   });
+
+  it("lets optimized catch-up consume many simulation steps within one work unit", () => {
+    const fixture = persistenceFixture();
+    const checkpoint = loadCheckpoint(fixture, 0, { ...fixture.entitlement, capMs: 1_000 });
+    const started = beginCatchup(fixture.definition, checkpoint, 1_000, "optimized");
+    const game = createGame(fixture.definition, { snapshot: started.snapshot });
+    const result = processCatchupChunk(
+      fixture.definition,
+      game,
+      requiredSession(started.catchup),
+      1,
+      {
+        kind: "optimized",
+        advance: (subject, durationMs) => {
+          const advanced = subject.advance(durationMs);
+          if (!advanced.ok) throw new TypeError("Fixture advancement failed");
+          return {
+            status: "completed",
+            snapshot: advanced.value,
+            processedRealMs: durationMs,
+            fidelity: "validated-bulk",
+          };
+        },
+      },
+    );
+    if (!result.ok) throw new TypeError("Expected optimized catch-up completion");
+    expect(result.value.session.report).toMatchObject({
+      processedRealMs: 1_000,
+      pendingRealMs: 0,
+      fidelity: "validated-bulk",
+    });
+  });
 });
 
 function loadCheckpoint(

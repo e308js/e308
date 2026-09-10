@@ -1,6 +1,17 @@
-import { createGame, type GameDefinition, type SaveCodec, type Snapshot } from "@e308/core";
+import {
+  type CatchupExecution,
+  createGame,
+  type GameDefinition,
+  type SaveCodec,
+  type Snapshot,
+} from "@e308/core";
 import { beginCatchup, processCatchupChunk, resolveEntitlement } from "@e308/core/offline";
-import { cascadeDefinition, cascadeSaveCodec, cascadeScenario } from "@e308/game-cascade";
+import {
+  cascadeCatchupExecution,
+  cascadeDefinition,
+  cascadeSaveCodec,
+  cascadeScenario,
+} from "@e308/game-cascade";
 import { hearthDefinition, hearthSaveCodec, hearthScenario } from "@e308/game-hearth";
 import { wireworksDefinition, wireworksSaveCodec, wireworksScenario } from "@e308/game-wireworks";
 import { describe, expect, it } from "vitest";
@@ -12,13 +23,24 @@ const workSteps = 10_000;
 describe("finished-game offline matrix", () => {
   it("accounts every checkpoint, gap, and entitlement without dropping time", () => {
     verifyMatrix("wireworks", wireworksDefinition, wireworksSaveCodec, wireworksCheckpoints());
-    verifyMatrix("cascade", cascadeDefinition, cascadeSaveCodec, cascadeCheckpoints());
+    verifyMatrix(
+      "cascade",
+      cascadeDefinition,
+      cascadeSaveCodec,
+      cascadeCheckpoints(),
+      cascadeCatchupExecution,
+    );
     verifyMatrix("hearth", hearthDefinition, hearthSaveCodec, hearthCheckpoints());
   }, 90_000);
 
   it("resumes interrupted eight-hour sessions exactly for every game", () => {
     verifyResume(wireworksDefinition, wireworksSaveCodec, middle(wireworksCheckpoints()));
-    verifyResume(cascadeDefinition, cascadeSaveCodec, middle(cascadeCheckpoints()));
+    verifyResume(
+      cascadeDefinition,
+      cascadeSaveCodec,
+      middle(cascadeCheckpoints()),
+      cascadeCatchupExecution,
+    );
     verifyResume(hearthDefinition, hearthSaveCodec, middle(hearthCheckpoints()));
   }, 30_000);
 });
@@ -28,6 +50,7 @@ function verifyMatrix<N>(
   definition: GameDefinition<N>,
   codec: SaveCodec<N>,
   checkpoints: readonly Snapshot<N>[],
+  execution?: CatchupExecution<N>,
 ): void {
   for (const [checkpointIndex, snapshot] of checkpoints.entries()) {
     for (const gap of gaps) {
@@ -46,7 +69,7 @@ function verifyMatrix<N>(
         );
         if (!started.catchup) throw new TypeError("catch-up session was not created");
         const game = createGame(definition, { snapshot: started.snapshot });
-        const result = processCatchupChunk(definition, game, started.catchup, workSteps);
+        const result = processCatchupChunk(definition, game, started.catchup, workSteps, execution);
         const eligible = entitlement.enabled
           ? entitlement.capMs === null
             ? gap
@@ -68,6 +91,7 @@ function verifyResume<N>(
   definition: GameDefinition<N>,
   codec: SaveCodec<N>,
   snapshot: Snapshot<N>,
+  execution?: CatchupExecution<N>,
 ): void {
   const duration = 8 * 60 * 60_000;
   const entitlement = resolveEntitlement(
@@ -85,7 +109,7 @@ function verifyResume<N>(
   const started = beginCatchup(definition, initial, 10_000 + duration, "resume");
   if (!started.catchup) throw new TypeError("catch-up session was not created");
   const interrupted = createGame(definition, { snapshot });
-  const first = processCatchupChunk(definition, interrupted, started.catchup, 1_000);
+  const first = processCatchupChunk(definition, interrupted, started.catchup, 1_000, execution);
   if (first.ok) throw new TypeError("first bounded chunk unexpectedly completed");
   const persisted = codec.decode(
     codec.encode(first.error.snapshot, {
@@ -101,10 +125,18 @@ function verifyResume<N>(
     resumed,
     persisted.catchup,
     Math.ceil(duration / definition.stepMs),
+    execution,
   );
   expect(second.ok).toBe(true);
   const uninterrupted = createGame(definition, { snapshot });
-  uninterrupted.advance(duration);
+  if (execution?.kind === "optimized") {
+    const advanced = execution.advance(
+      uninterrupted,
+      duration,
+      Math.ceil(duration / definition.stepMs),
+    );
+    expect(advanced.status).toBe("completed");
+  } else uninterrupted.advance(duration);
   expect(withoutRevision(resumed.getSnapshot())).toEqual(
     withoutRevision(uninterrupted.getSnapshot()),
   );

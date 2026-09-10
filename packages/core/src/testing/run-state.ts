@@ -1,4 +1,18 @@
-import type { HarnessSample, HarnessTraceEntry, HarnessValue, PressureMetric } from "./types.js";
+import type {
+  ChallengeEpisodeMetric,
+  HarnessSample,
+  HarnessTraceEntry,
+  HarnessValue,
+  PressureMetric,
+} from "./types.js";
+
+export interface ActiveChallengeEpisode {
+  readonly challengeId: string;
+  readonly enteredAtRealMs: number;
+  readonly enteredAtGameMs: number;
+  readonly enteredAtActiveMs: number;
+  readonly successfulActionsBefore: number;
+}
 
 export type MutablePressureMetric = {
   -readonly [Key in keyof PressureMetric]: PressureMetric[Key];
@@ -17,6 +31,11 @@ export interface HarnessTotals<I extends HarnessValue> {
   waits: number;
   currentWait: number;
   longestWait: number;
+  lastSuccessfulActionGameMs: number | null;
+  positiveActionIntervals: number;
+  oneStepActionIntervals: number;
+  totalActionIntervalMs: number;
+  longestActionIntervalMs: number;
   traceTruncated: number;
   samplesTruncated: number;
   workLimited: boolean;
@@ -24,6 +43,8 @@ export interface HarnessTotals<I extends HarnessValue> {
   currentResetBurst: number;
   resetTransitions: number;
   maximumResetBurst: number;
+  readonly activeChallengeEpisodes: Map<string, ActiveChallengeEpisode>;
+  readonly challengeEpisodes: ChallengeEpisodeMetric[];
   readonly trace: HarnessTraceEntry<I>[];
   readonly samples: HarnessSample[];
   readonly constraints: Record<string, number>;
@@ -50,6 +71,11 @@ export function createTotals<I extends HarnessValue>(): HarnessTotals<I> {
     waits: 0,
     currentWait: 0,
     longestWait: 0,
+    lastSuccessfulActionGameMs: null,
+    positiveActionIntervals: 0,
+    oneStepActionIntervals: 0,
+    totalActionIntervalMs: 0,
+    longestActionIntervalMs: 0,
     traceTruncated: 0,
     samplesTruncated: 0,
     workLimited: false,
@@ -57,6 +83,8 @@ export function createTotals<I extends HarnessValue>(): HarnessTotals<I> {
     currentResetBurst: 0,
     resetTransitions: 0,
     maximumResetBurst: 0,
+    activeChallengeEpisodes: new Map(),
+    challengeEpisodes: [],
     trace: [],
     samples: [],
     constraints: {},

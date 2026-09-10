@@ -54,37 +54,46 @@ const challengeSpecs = [
   ["composite-trial", 1, "composite", ["base-speed", "tier-order"]],
 ] as const;
 
+export const cascadeChallengeTargets = {
+  "slow-foundation": [q("1e9"), q("1e10"), q("1e11")],
+  "reversed-emphasis": [q("1e12")],
+  "scarce-purchases": [q("1e12")],
+  "reset-pressure": [q("1e13")],
+  "automation-drought": [q("1e13")],
+  "composite-trial": [q("1e14")],
+} as const;
+
 export const cascadeChallengeCopy: Readonly<
   Record<string, { readonly rule: string; readonly target: string; readonly reward: string }>
 > = {
   "slow-foundation": {
-    rule: "All production runs at 25% speed.",
-    target: "Reach 1e12 currency. Milestones at 1e7, 1e9, and 1e12 grant three points.",
+    rule: "The full producer chain runs at 25% output.",
+    target: "Reach 1e11 currency. Milestones at 1e9, 1e10, and 1e11 grant three points.",
     reward: "Up to 3 research points",
   },
   "reversed-emphasis": {
     rule: "Each higher generator tier receives a steeper production penalty.",
-    target: "Reach 1e8 currency.",
+    target: "Reach 1e12 currency.",
     reward: "1 research point",
   },
   "scarce-purchases": {
     rule: "Group purchases are disabled; generators must be bought one at a time.",
-    target: "Reach 1e7 currency.",
+    target: "Reach 1e12 currency.",
     reward: "1 research point",
   },
   "reset-pressure": {
-    rule: "Production runs at 50% speed and the target is increased.",
-    target: "Reach 1e9 currency.",
+    rule: "The full producer chain runs at 50% output and the target is increased.",
+    target: "Reach 1e13 currency.",
     reward: "1 research point",
   },
   "automation-drought": {
-    rule: "Production runs at 50% speed while dimension automation is unavailable.",
-    target: "Reach 1e8 currency.",
+    rule: "The full producer chain runs at 50% output while dimension automation is unavailable.",
+    target: "Reach 1e13 currency.",
     reward: "1 research point",
   },
   "composite-trial": {
     rule: "Slow Foundation and Reversed Emphasis apply together.",
-    target: "Reach 1e10 currency.",
+    target: "Reach 1e14 currency.",
     reward: "1 research point and a singularity",
   },
 };
@@ -100,7 +109,14 @@ export const cascadeChallenges: readonly ChallengeDefinition<EternityQuantity>[]
       enterReset: runReset,
       exitReset: runReset,
       canEnter: (state) => numbers.cmp(state.get(cascadeResources.infinity), q(1)) >= 0,
-      completionsEarned: (state) => cascadeChallengeTier(id, state.get(cascadeResources.currency)),
+      completionsEarned: (state) =>
+        cascadeChallengeTier(
+          id,
+          state.get(cascadeResources.currency),
+          cascadeBuyables.every(
+            (buyable) => numbers.cmp(state.purchaseCount(buyable.id), q(10)) >= 0,
+          ),
+        ),
       grantReward(transaction) {
         transaction.add(cascadeResources.research, q(1));
         if (id === "composite-trial") transaction.add(cascadeResources.singularity, q("1e320"));
@@ -304,13 +320,13 @@ function refreshCascadeMultiplier(transaction: Transaction<EternityQuantity>): v
   );
 }
 
-export function cascadeChallengeTier(id: string, currency: EternityQuantity): number {
-  if (id === "reversed-emphasis" || id === "automation-drought")
-    return numbers.cmp(currency, q("1e8")) >= 0 ? 1 : 0;
-  if (id === "reset-pressure") return numbers.cmp(currency, q("1e9")) >= 0 ? 1 : 0;
-  if (id === "composite-trial") return numbers.cmp(currency, q("1e10")) >= 0 ? 1 : 0;
-  if (id === "scarce-purchases") return numbers.cmp(currency, q("1e7")) >= 0 ? 1 : 0;
-  if (numbers.cmp(currency, q("1e12")) >= 0) return 3;
-  if (numbers.cmp(currency, q("1e9")) >= 0) return 2;
-  return numbers.cmp(currency, q("1e7")) >= 0 ? 1 : 0;
+export function cascadeChallengeTier(
+  id: string,
+  currency: EternityQuantity,
+  routeComplete = true,
+): number {
+  if (!routeComplete) return 0;
+  const targets = cascadeChallengeTargets[id as keyof typeof cascadeChallengeTargets];
+  if (!targets) return 0;
+  return targets.filter((target) => numbers.cmp(currency, target) >= 0).length;
 }

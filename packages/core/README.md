@@ -133,6 +133,12 @@ resolved and saved before an absence. It is applied once even if catch-up needs 
 restarts. `MemorySaveStore` and `commitCatchupChunk` in `@e308/core/storage` demonstrate atomic
 compare-and-swap recovery.
 
+Games with validated bulk capabilities can pass an optimized catch-up execution. Its callback
+receives the pending duration and work budget, advances the supplied game, and returns its processed
+duration and fidelity. Catch-up reports combine canonical, validated-bulk, and approximate segments
+across interrupted sessions. `BrowserHostOptions.catchupExecution` applies the same execution path
+during page restoration.
+
 ## Browser host and workers
 
 `@e308/core/browser` connects a game to explicit lifecycle events, IndexedDB, autosave, and
@@ -186,9 +192,11 @@ fidelity, and replay inputs. Complete-action-space sessions execute bounded burs
 available actions before game time advances. A scenario can expose `quoteAll` with its complete
 action catalog; guided pacing uses `quote`. Quotes can tag progression-reset effects. The harness
 verifies the corresponding scope reset and reports reset transitions at the same game time.
-A scenario can also project goal-relevant pressures with action,
-investment, and passive relief routes. The report measures time in each relief state, and
-`assessPlayability` identifies sustained pressure with no route and pending-goal deadlocks.
+Reports measure challenge duration, successful actions within each challenge, and action intervals
+tied to one simulation step. A scenario can provide `advanceTime` to use a validated exact
+advancement capability during active and idle simulation. A scenario can also project goal-relevant
+pressures with action, investment, and passive relief routes. `assessPlayability` evaluates these
+challenge, cadence, pressure, and goal metrics against explicit thresholds.
 
 ```ts
 import { orderedPolicy, randomLegalPolicy, runHarness } from "@e308/core/testing";

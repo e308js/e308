@@ -5,6 +5,7 @@ import {
   cascadeKit,
   cascadeProductionRule,
   cascadeResources,
+  cascadeStepMs,
   cascadeTiers,
 } from "./economy.js";
 import {
@@ -17,8 +18,8 @@ import {
 
 export const cascadeDefinition = cascadeKit.defineGame({
   id: "cascade",
-  simulationVersion: 3,
-  stepMs: 1_000,
+  simulationVersion: 4,
+  stepMs: cascadeStepMs,
   resources: [...Object.values(cascadeResources), ...cascadeTiers],
   buyables: cascadeBuyables,
   allocations: [researchAllocation],
