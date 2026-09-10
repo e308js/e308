@@ -182,7 +182,11 @@ kept in the repository as a compatibility fixture.
 Policies receive only a serializable observation and revision-bound legal-action quotes. The harness
 dispatches the quoted intent through the same command path as a player, stops player decisions during
 idle and absent sessions, and records bounded traces, samples, constraints, milestones, offline
-fidelity, and replay inputs. A scenario can also project goal-relevant pressures with action,
+fidelity, and replay inputs. Complete-action-space sessions execute bounded bursts of immediately
+available actions before game time advances. A scenario can expose `quoteAll` with its complete
+action catalog; guided pacing uses `quote`. Quotes can tag progression-reset effects. The harness
+verifies the corresponding scope reset and reports reset transitions at the same game time.
+A scenario can also project goal-relevant pressures with action,
 investment, and passive relief routes. The report measures time in each relief state, and
 `assessPlayability` identifies sustained pressure with no route and pending-goal deadlocks.
 

@@ -20,6 +20,10 @@ export interface HarnessTotals<I extends HarnessValue> {
   traceTruncated: number;
   samplesTruncated: number;
   workLimited: boolean;
+  lastResetGameMs: number | null;
+  currentResetBurst: number;
+  resetTransitions: number;
+  maximumResetBurst: number;
   readonly trace: HarnessTraceEntry<I>[];
   readonly samples: HarnessSample[];
   readonly constraints: Record<string, number>;
@@ -49,6 +53,10 @@ export function createTotals<I extends HarnessValue>(): HarnessTotals<I> {
     traceTruncated: 0,
     samplesTruncated: 0,
     workLimited: false,
+    lastResetGameMs: null,
+    currentResetBurst: 0,
+    resetTransitions: 0,
+    maximumResetBurst: 0,
     trace: [],
     samples: [],
     constraints: {},

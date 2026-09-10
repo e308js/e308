@@ -113,6 +113,10 @@ function gridCell<Intent, N>(
   wrapper.setAttribute("role", "gridcell");
   wrapper.style.gridRow = String(cell.row);
   wrapper.style.gridColumn = String(cell.column);
+  const label = context.document.createElement("span");
+  label.className = "e308-grid-cell-label";
+  label.textContent = context.resolver.text(cell.label);
+  wrapper.append(label);
   if (cell.action)
     wrapper.append(
       renderAction(
@@ -123,7 +127,6 @@ function gridCell<Intent, N>(
         context.startHold,
       ),
     );
-  else wrapper.append(context.document.createTextNode(context.resolver.text(cell.label)));
   appendMark(wrapper, cell.mark, context.resolver);
   return wrapper;
 }

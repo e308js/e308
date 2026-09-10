@@ -32,6 +32,7 @@ function options(
     botSeed: "01",
     goalId: "tokens",
     decisionCadenceMs: 1_000,
+    maximumImmediateActions: 1,
     schedule: [{ kind: "active", durationMs: 10_000 }],
     limits: {
       maximumDecisions: 20,
@@ -363,6 +364,8 @@ describe("headless harness", () => {
     expect(() => runHarness(options({ botSeed: "bad" }))).toThrow("Bot seed");
     expect(() => runHarness(options({ schedule: [] }))).toThrow("schedule");
     expect(() => runHarness(options({ decisionCadenceMs: 0 }))).toThrow("cadence");
+    expect(() => runHarness(options({ maximumImmediateActions: 0 }))).toThrow("cadence");
+    expect(() => runHarness(options({ actionSpace: "complete" }))).toThrow("scenario.quoteAll");
     const base = harnessScenario(baseHarnessParameters);
     const divergent = {
       ...base,

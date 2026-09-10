@@ -78,6 +78,7 @@ export function orderedPolicy<O extends HarnessValue, I extends HarnessValue>(op
 export function goalPolicy<O extends HarnessValue, I extends HarnessValue>(options: {
   readonly id: string;
   readonly version: string;
+  readonly includeAllLegal?: boolean;
   readonly score: (context: BotContext<O, I>, quote: LegalActionQuote<I>) => number;
 }): BotPolicy<O, I> {
   return {
@@ -85,7 +86,7 @@ export function goalPolicy<O extends HarnessValue, I extends HarnessValue>(optio
     version: options.version,
     decide: (context) => {
       const scored = context.quotes
-        .filter((quote) => quote.legal && quote.useful)
+        .filter((quote) => quote.legal && (quote.useful || options.includeAllLegal))
         .map((quote) => ({ quote, score: options.score(context, quote) }))
         .filter((entry) => Number.isFinite(entry.score))
         .sort(

@@ -1,3 +1,10 @@
+import {
+  createGame,
+  createGameKit,
+  nativeNumbers,
+  prestigeCommand,
+  type Snapshot,
+} from "@e308/core";
 import { describe, expect, it } from "vitest";
 import {
   assessPlayability,
@@ -87,6 +94,7 @@ describe("playability pressures", () => {
     const resolved = {
       ...report,
       playability: {
+        ...report.playability,
         pressures: {
           intermittent: {
             ...metric,
@@ -98,6 +106,72 @@ describe("playability pressures", () => {
     expect(assessPlayability(resolved, { maximumNoReliefMs: 500 })).toEqual([
       expect.objectContaining({ code: "sustained-no-relief", severity: "p1" }),
     ]);
+  });
+
+  it("reports reset layers crossed without simulated time between them", () => {
+    const kit = createGameKit({ numbers: nativeNumbers });
+    const run = kit.scope("run");
+    const permanent = kit.scope("permanent");
+    const points = kit.resource("points", { scope: run, initial: 1 });
+    const resets = kit.resource("resets", { scope: permanent, initial: 0 });
+    const resetLayer = kit.prestige("reset-layer", {
+      scope: permanent,
+      reward: resets,
+      manifest: { clear: [run] },
+      canReset: () => true,
+      rewardFor: () => 1,
+    });
+    const definition = kit.defineGame({
+      id: "compressed-resets",
+      simulationVersion: 1,
+      stepMs: 100,
+      resources: [points, resets],
+      prestiges: [resetLayer],
+    });
+    const scenario = {
+      ...harnessScenario(baseHarnessParameters),
+      id: "compressed-resets",
+      definition,
+      create: () => createGame(definition),
+      goals: [
+        {
+          id: "tokens",
+          evaluate: (snapshot: Snapshot<number>) =>
+            (snapshot.resources.resets ?? 0) >= 3
+              ? ({ kind: "reached" } as const)
+              : ({ kind: "pending", constraints: [] } as const),
+        },
+      ],
+      quote: (snapshot: Snapshot<number>) => [
+        {
+          id: "reset",
+          revision: snapshot.revision.toString(),
+          intent: { kind: "buy-token" as const },
+          legal: true,
+          useful: true,
+          effects: ["progression-reset" as const],
+          constraints: [],
+        },
+      ],
+      command: () => prestigeCommand(resetLayer),
+      milestones: () => [],
+      diagnostics: () => ({ overflow: 0, resetRecoveries: 0, taskBlocks: 0 }),
+    };
+    const compressed = runHarness({
+      ...options(scenario),
+      maximumImmediateActions: 8,
+      schedule: [{ kind: "active", durationMs: 1_000 }],
+    });
+    expect(compressed.playability.progression).toEqual({
+      resetTransitions: 3,
+      maximumResetTransitionsAtSameGameTime: 3,
+    });
+    expect(
+      assessPlayability(compressed, {
+        maximumNoReliefMs: 10_000,
+        maximumResetTransitionsAtSameGameTime: 1,
+      }),
+    ).toEqual([expect.objectContaining({ code: "compressed-reset-chain", severity: "p1" })]);
   });
 
   it("rejects duplicate ids and changing pressure kinds", () => {

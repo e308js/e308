@@ -7,8 +7,9 @@ import type {
 } from "@e308/core/testing";
 import { cascadeDefinition } from "./definition.js";
 import { cascadeBuyables, cascadeKit, encoded } from "./economy.js";
-import { cascadeChallenges } from "./progression.js";
+import { cascadeBalance, cascadeChallenges, nextCoreCost } from "./progression.js";
 import { type CascadeActionIntent, cascadeCommand } from "./runtime.js";
+import { completeCascadeQuotes } from "./scenario-actions.js";
 
 export interface CascadeObservation extends Readonly<Record<string, HarnessValue>> {
   readonly currency: string;
@@ -26,8 +27,8 @@ export function cascadeScenario(
 ): HarnessScenario<EternityQuantity, CascadeObservation, CascadeActionIntent> {
   return {
     id: "cascade",
-    contentVersion: "1.1.0",
-    contentDigest: "cascade-1.1.0-connected-progression-2026-09-09",
+    contentVersion: "1.2.0",
+    contentDigest: "cascade-1.2.0-reset-separation-2026-09-10",
     parameters: { strategy },
     definition: cascadeDefinition,
     goals: [
@@ -48,6 +49,7 @@ export function cascadeScenario(
       completedChallenges: completedChallenges(snapshot),
     }),
     quote: (snapshot) => nextQuotes(snapshot, strategy),
+    quoteAll: (snapshot) => completeCascadeQuotes(snapshot, nextQuotes(snapshot, strategy)),
     command: (intent) => cascadeCommand(intent),
     sample: (snapshot) => ({
       currency: resource(snapshot, "currency"),
@@ -76,26 +78,28 @@ function nextQuotes(
   snapshot: Snapshot<EternityQuantity>,
   strategy: CascadeStrategy,
 ): readonly LegalActionQuote<CascadeActionIntent>[] {
-  if (!greater(snapshot, "infinity-points", 0)) return openingQuotes(snapshot, strategy);
-  if (!greater(snapshot, "condensed-cores", 0)) {
-    if (!snapshot.progression.automation["buy-tier-one"]?.enabled)
-      return [
-        legal(snapshot, "enable-dimension-auto", {
-          type: "automation",
-          id: "dimension",
-          enabled: true,
-        }),
-      ];
-    return [
-      conditional(
-        snapshot,
-        "condense",
-        { type: "prestige", id: "condense" },
-        greater(snapshot, "infinity-points", 4),
-        "five infinity points",
-      ),
-    ];
+  if (
+    !greater(snapshot, "eternity-points", 0) &&
+    eternityNumbers.cmp(
+      snapshot.resources["condensed-cores"] as EternityQuantity,
+      cascadeBalance.ascendRequirement,
+    ) < 0
+  ) {
+    const coreCost = nextCoreCost(snapshot.resources["condensed-cores"] as EternityQuantity);
+    if (
+      eternityNumbers.cmp(snapshot.resources["infinity-points"] as EternityQuantity, coreCost) >= 0
+    )
+      return [legal(snapshot, "condense", { type: "prestige", id: "condense" })];
+    return openingQuotes(snapshot, strategy);
   }
+  if (snapshot.progression.automation["buy-tier-one"]?.enabled)
+    return [
+      legal(snapshot, "disable-dimension-auto", {
+        type: "automation",
+        id: "dimension",
+        enabled: false,
+      }),
+    ];
   if (cascadeChallenges.some((challenge) => !isComplete(snapshot, challenge.id))) {
     if (snapshot.progression.automation["buy-tier-one"]?.enabled)
       return [
@@ -113,7 +117,10 @@ function nextQuotes(
         snapshot,
         "ascend",
         { type: "prestige", id: "ascend" },
-        greater(snapshot, "condensed-cores", 2),
+        eternityNumbers.cmp(
+          snapshot.resources["condensed-cores"] as EternityQuantity,
+          cascadeBalance.ascendRequirement,
+        ) >= 0,
         "three condensed cores",
       ),
     ];
@@ -154,23 +161,34 @@ function nextPurchase(
   strategy: CascadeStrategy,
 ): LegalActionQuote<CascadeActionIntent> | undefined {
   const pending = cascadeBuyables
-    .map((buyable, index) => ({ buyable, index }))
-    .filter(
-      ({ buyable }) =>
-        eternityNumbers.cmp(snapshot.purchaseCounts[buyable.id] as EternityQuantity, q(10)) < 0,
-    );
+    .map((buyable, index) => {
+      const count = snapshot.purchaseCounts[buyable.id] as EternityQuantity;
+      const remaining = 10 - (Number(encoded(count)) % 10);
+      return { buyable, index, count, remaining };
+    })
+    .filter(({ count }) => eternityNumbers.cmp(count, q(10)) < 0);
   const ordered = strategy === "depth-first" ? [...pending].reverse() : pending;
-  const next = ordered.find(
-    ({ buyable }) =>
-      eternityNumbers.cmp(
-        snapshot.resources.currency as EternityQuantity,
-        buyable.curve.unitCost(snapshot.purchaseCounts[buyable.id] as EternityQuantity),
-      ) >= 0,
+  const currency = snapshot.resources.currency as EternityQuantity;
+  const singleOnly = snapshot.progression.activeChallenges.includes("scarce-purchases");
+  const group = singleOnly
+    ? undefined
+    : ordered.find(
+        ({ buyable, count, remaining }) =>
+          eternityNumbers.cmp(currency, buyable.curve.totalCost(count, q(remaining))) >= 0,
+      );
+  if (group)
+    return legal(snapshot, `buy-group-tier-${group.index + 1}`, {
+      type: "buy",
+      tier: group.index + 1,
+      count: group.remaining,
+    });
+  const single = ordered.find(
+    ({ buyable, count }) => eternityNumbers.cmp(currency, buyable.curve.unitCost(count)) >= 0,
   );
-  return next
-    ? legal(snapshot, `buy-tier-${next.index + 1}`, {
+  return single
+    ? legal(snapshot, `buy-tier-${single.index + 1}`, {
         type: "buy",
-        tier: next.index + 1,
+        tier: single.index + 1,
         count: 1,
       })
     : undefined;
@@ -246,6 +264,7 @@ function legal(
     legal: true,
     useful: true,
     rank: 100,
+    ...(intent.type === "prestige" ? { effects: ["progression-reset"] as const } : {}),
     constraints: [],
   };
 }

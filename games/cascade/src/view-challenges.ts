@@ -34,7 +34,7 @@ function challengeCell(
     id: challenge.id,
     row: Math.floor(index / 3) + 1,
     column: (index % 3) + 1,
-    label: `${challenge.id.replaceAll("-", " ")} (${completions ? encoded(completions) : "0"}/${challenge.maxCompletions})`,
+    label: `${title(challenge.id)} (${completions ? encoded(completions) : "0"}/${challenge.maxCompletions})`,
     action: {
       id: `challenge-enter:${challenge.id}`,
       label: active ? "Active" : "Enter challenge",
@@ -61,6 +61,7 @@ function activeChallengeControls(
     const currency = snapshot.resources.currency as EternityQuantity;
     const earned = cascadeChallengeTier(id, currency);
     const completed = snapshot.progression.challengeCompletions[id] ?? q(0);
+    const fullyComplete = eternityNumbers.cmp(completed, q(challenge.maxCompletions)) >= 0;
     const canComplete = eternityNumbers.cmp(q(earned), completed) > 0;
     return [
       {
@@ -68,12 +69,14 @@ function activeChallengeControls(
         id: `challenge-complete:${id}`,
         action: {
           id: `challenge-complete:${id}`,
-          label: `Claim ${id.replaceAll("-", " ")} reward`,
+          label: fullyComplete ? `${title(id)} complete` : `Claim ${title(id)} reward`,
           enabled: canComplete,
           intent: { type: "challenge-complete" as const, id },
           blockers: canComplete
             ? []
-            : [{ kind: "locked" as const, prerequisiteIds: ["challenge target"] }],
+            : fullyComplete
+              ? [{ kind: "disabled" as const, actionId: id, reasonKey: "all-rewards-claimed" }]
+              : [{ kind: "locked" as const, prerequisiteIds: ["challenge target"] }],
         },
       },
       {
@@ -81,7 +84,7 @@ function activeChallengeControls(
         id: `challenge-exit:${id}`,
         action: {
           id: `challenge-exit:${id}`,
-          label: `Exit ${id.replaceAll("-", " ")}`,
+          label: `Exit ${title(id)}`,
           enabled: true,
           intent: { type: "challenge-exit" as const, id },
           blockers: [],
@@ -89,6 +92,13 @@ function activeChallengeControls(
       },
     ];
   });
+}
+
+function title(id: string): string {
+  return id
+    .split("-")
+    .map((word) => `${word[0]?.toUpperCase() ?? ""}${word.slice(1)}`)
+    .join(" ");
 }
 
 function canEnter(

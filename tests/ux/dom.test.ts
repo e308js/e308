@@ -361,6 +361,9 @@ describe("DOM renderer", () => {
       "Choose a quantity",
     );
     expect(root.querySelectorAll(".e308-tree-branches line")).toHaveLength(2);
+    expect(root.querySelector("[data-e308-key=cell-a] .e308-grid-cell-label")?.textContent).toBe(
+      "A",
+    );
     expect(root.querySelector(".e308-tree-node img")?.getAttribute("alt")).toBe("Start");
     expect(root.querySelector("[data-action=locked] .e308-action-blockers")?.textContent).toBe(
       "requires known",

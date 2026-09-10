@@ -176,7 +176,10 @@ particles, safe rich descriptions, and custom render slots. Controls are unstyle
 
 `@e308/core/testing` gives bot policies a serializable observation and legal, revision-bound action
 quotes. It records reproducible actions, waits, constraints, milestones, offline fidelity, and
-bounded samples. Scenarios can identify goal-relevant pressure and declare immediate actions,
+bounded samples. Complete-action-space sessions execute bounded bursts of immediately available
+actions before game time advances. Scenarios can provide `quoteAll` with the complete action catalog.
+Action quotes can tag progression-reset effects; the harness verifies the corresponding scope reset
+and records reset transitions that occur at the same game time. Scenarios can identify goal-relevant pressure and declare immediate actions,
 investments, or passive progress that relieve it. `assessPlayability` reports sustained pressure with
 no relief and pending-goal deadlocks. `@e308/core/balance` aggregates runs, sweeps parameters, and
 compares content versions. `@e308/core/optimize` offers validated exact advancement with canonical

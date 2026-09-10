@@ -5,6 +5,7 @@ export function validateHarnessOptions<N, O extends HarnessValue, I extends Harn
 ): void {
   const positive = [
     options.decisionCadenceMs,
+    options.maximumImmediateActions ?? (options.actionSpace === "complete" ? 64 : 1),
     options.limits.maximumDecisions,
     options.limits.maximumTraceEntries,
     options.limits.maximumSamples,
@@ -21,6 +22,8 @@ export function validateHarnessOptions<N, O extends HarnessValue, I extends Harn
     throw new TypeError("Harness schedule requires positive safe-integer durations");
   if (!/^(?:[0-9a-f]{2})+$/.test(options.botSeed))
     throw new TypeError("Bot seed must be lowercase even-length hex");
+  if (options.actionSpace === "complete" && !options.scenario.quoteAll)
+    throw new TypeError("Complete action-space runs require scenario.quoteAll");
 }
 
 export function validateQuotes<I extends HarnessValue>(

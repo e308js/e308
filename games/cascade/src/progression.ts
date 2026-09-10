@@ -27,6 +27,24 @@ const cascadeMath = (() => {
 })();
 const runReset = { clear: [cascadeScopes.run] } as const;
 
+export const cascadeBalance = {
+  collapseRequirement: q("1e6"),
+  collapseExponent: q(0.25),
+  collapseSoftcap: { threshold: q(16), power: q(0.1) },
+  firstCoreRequirement: q(100),
+  coreCostBase: q(4),
+  ascendRequirement: q(3),
+  coreProductionBase: q(4),
+  eternityProductionBase: q(10),
+} as const;
+
+export function nextCoreCost(cores: EternityQuantity): EternityQuantity {
+  return numbers.mul(
+    cascadeBalance.firstCoreRequirement,
+    cascadeMath.pow(cascadeBalance.coreCostBase, cores),
+  );
+}
+
 const challengeSpecs = [
   ["slow-foundation", 3, "pace", ["base-speed"]],
   ["reversed-emphasis", 1, "pace", ["tier-order"]],
@@ -83,8 +101,8 @@ export const cascadeChallenges: readonly ChallengeDefinition<EternityQuantity>[]
       exitReset: runReset,
       canEnter: (state) => numbers.cmp(state.get(cascadeResources.infinity), q(1)) >= 0,
       completionsEarned: (state) => cascadeChallengeTier(id, state.get(cascadeResources.currency)),
-      grantReward(transaction, tier) {
-        transaction.add(cascadeResources.research, q(tier));
+      grantReward(transaction) {
+        transaction.add(cascadeResources.research, q(1));
         if (id === "composite-trial") transaction.add(cascadeResources.singularity, q("1e320"));
       },
     }),
@@ -95,8 +113,9 @@ if (!tierOneBuyable) throw new TypeError("Cascade requires a tier-one buyable");
 
 const baseCollapsePolicy = normalPrestige(numbers, {
   baseResource: cascadeResources.currency,
-  requirement: q("1e6"),
-  exponent: q(0.5),
+  requirement: cascadeBalance.collapseRequirement,
+  exponent: cascadeBalance.collapseExponent,
+  softcap: cascadeBalance.collapseSoftcap,
 });
 export const collapse = cascadeKit.prestige("collapse", {
   scope: cascadeScopes.infinity,
@@ -115,9 +134,9 @@ export const collapse = cascadeKit.prestige("collapse", {
 const condensePolicy = staticPrestige(numbers, {
   baseResource: cascadeResources.infinity,
   rewardResource: cascadeResources.cores,
-  requirement: q(5),
+  requirement: cascadeBalance.firstCoreRequirement,
   exponent: q(1),
-  base: q(2),
+  base: cascadeBalance.coreCostBase,
   canBuyMax: true,
 });
 export const condense = cascadeKit.prestige("condense", {
@@ -130,7 +149,7 @@ export const condense = cascadeKit.prestige("condense", {
 
 const ascendPolicy = normalPrestige(numbers, {
   baseResource: cascadeResources.cores,
-  requirement: q(3),
+  requirement: cascadeBalance.ascendRequirement,
   exponent: q(1),
 });
 export const ascend = cascadeKit.prestige("ascend", {
@@ -252,6 +271,16 @@ function cascadePrestigeCommand(id: "collapse" | "condense" | "ascend"): Command
   return {
     id: base.id,
     execute(transaction) {
+      if (
+        id === "ascend" &&
+        cascadeChallenges.some(
+          (challenge) => numbers.cmp(transaction.getChallengeCompletions(challenge.id), q(1)) < 0,
+        )
+      )
+        transaction.reject({
+          code: "locked",
+          prerequisiteIds: ["all six challenge rewards"],
+        });
       base.execute(transaction);
       refreshCascadeMultiplier(transaction);
     },
@@ -261,8 +290,14 @@ function cascadePrestigeCommand(id: "collapse" | "condense" | "ascend"): Command
 function refreshCascadeMultiplier(transaction: Transaction<EternityQuantity>): void {
   const research = numbers.add(q(1), transaction.getAllocation(researchAllocation.id, "speed"));
   const infinity = numbers.add(q(1), transaction.get(cascadeResources.infinity));
-  const cores = cascadeMath.pow(q(10), transaction.get(cascadeResources.cores));
-  const eternity = cascadeMath.pow(q(100), transaction.get(cascadeResources.eternity));
+  const cores = cascadeMath.pow(
+    cascadeBalance.coreProductionBase,
+    transaction.get(cascadeResources.cores),
+  );
+  const eternity = cascadeMath.pow(
+    cascadeBalance.eternityProductionBase,
+    transaction.get(cascadeResources.eternity),
+  );
   transaction.set(
     cascadeResources.prestigeMultiplier,
     numbers.mul(numbers.mul(numbers.mul(research, infinity), cores), eternity),

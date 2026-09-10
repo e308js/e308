@@ -1,13 +1,19 @@
 import type { GameDefinition } from "../model/definition.js";
 import { createGame } from "../state/game.js";
 import type { Command, CommandFailure, Snapshot } from "../state/types.js";
-import type { ConstraintEvidence, HarnessValue, LegalActionQuote } from "./types.js";
+import type {
+  ConstraintEvidence,
+  HarnessValue,
+  LegalActionEffect,
+  LegalActionQuote,
+} from "./types.js";
 
 export interface CommandQuoteCandidate<I extends HarnessValue> {
   readonly id: string;
   readonly intent: I;
   readonly useful?: boolean;
   readonly rank?: number;
+  readonly effects?: readonly LegalActionEffect[];
 }
 
 const failureKinds: Readonly<
@@ -37,6 +43,7 @@ export function quoteCommands<N, I extends HarnessValue>(
       legal: result.ok,
       useful: candidate.useful ?? true,
       ...(candidate.rank === undefined ? {} : { rank: candidate.rank }),
+      ...(candidate.effects === undefined ? {} : { effects: candidate.effects }),
       constraints,
     };
   });

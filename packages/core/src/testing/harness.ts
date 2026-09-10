@@ -1,11 +1,11 @@
 import { deriveRandomState, Xoshiro128 } from "../random/xoshiro.js";
 import type { Game, Snapshot } from "../state/types.js";
-import { accumulatePressures, pressureReport } from "./playability.js";
+import { accumulatePressures } from "./playability.js";
+import { buildHarnessReport } from "./report-builder.js";
 import { createTotals, type HarnessTotals } from "./run-state.js";
 import type {
   BotDecision,
   ConstraintEvidence,
-  GoalEvaluation,
   HarnessReport,
   HarnessRunOptions,
   HarnessTraceEntry,
@@ -58,7 +58,7 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
     while (remaining > 0 && !this.#totals.workLimited) {
       const chunk = Math.min(remaining, this.options.decisionCadenceMs);
       if (kind === "active") {
-        this.decide(chunk);
+        this.decideBurst(chunk);
         if (this.#totals.workLimited) break;
         this.recordState(this.#game.getSnapshot());
         const reached = this.reachedOutcome();
@@ -74,6 +74,14 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
       if (reached) return reached;
     }
     return undefined;
+  }
+
+  private decideBurst(elapsedMs: number): void {
+    const maximum =
+      this.options.maximumImmediateActions ?? (this.options.actionSpace === "complete" ? 64 : 1);
+    for (let action = 0; action < maximum && !this.#totals.workLimited; action += 1) {
+      if (!this.decide(elapsedMs)) return;
+    }
   }
 
   private runAbsent(durationMs: number): HarnessReport<I>["outcome"] | undefined {
@@ -92,13 +100,13 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
     return this.reachedOutcome();
   }
 
-  private decide(elapsedMs: number): void {
+  private decide(elapsedMs: number): boolean {
     if (this.#totals.decisions >= this.options.limits.maximumDecisions) {
       this.#totals.workLimited = true;
-      return;
+      return false;
     }
     const snapshot = this.#game.getSnapshot();
-    const quotes = this.options.scenario.quote(snapshot);
+    const quotes = this.quotes(snapshot);
     validateQuotes(quotes);
     const decision = this.options.policy.decide({
       observation: this.options.scenario.observe(snapshot),
@@ -111,43 +119,73 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
     this.#totals.decisions += 1;
     if (decision.kind === "wait") {
       this.recordWait(elapsedMs, quotes, decision);
-      return;
+      return false;
     }
-    this.executeDecision(snapshot, quotes, decision);
+    return this.executeDecision(snapshot, quotes, decision);
   }
 
   private executeDecision(
     snapshot: Snapshot<N>,
     quotes: readonly LegalActionQuote<I>[],
     decision: BotDecision,
-  ): void {
+  ): boolean {
     this.#totals.attempts += 1;
     const quote = quotes.find((candidate) => candidate.id === decision.actionId);
     if (!quote) {
       this.recordAttempt(snapshot, decision.actionId ?? "", null, "missing-quote");
-      return;
+      return false;
     }
     if (quote.revision !== snapshot.revision.toString()) {
       this.addConstraints([
         { kind: "policy", id: "stale-revision", detail: `quote revision ${quote.revision}` },
       ]);
       this.recordAttempt(snapshot, quote.id, quote, "stale-revision");
-      return;
+      return false;
     }
     if (!quote.legal) {
       this.addConstraints(quote.constraints);
       this.recordAttempt(snapshot, quote.id, quote, "blocked");
-      return;
+      return false;
     }
-    const result = this.#game.dispatch(this.options.scenario.command(quote.intent, snapshot));
+    const command = this.options.scenario.command(quote.intent, snapshot);
+    const result = this.#game.dispatch(command);
     if (result.ok) {
-      this.addDiagnostics(snapshot, this.#game.getSnapshot());
+      const after = this.#game.getSnapshot();
+      this.addDiagnostics(snapshot, after);
+      this.recordResetTransition(snapshot, after, quote);
       this.#totals.successful += 1;
       this.#totals.currentWait = 0;
       this.recordAttempt(snapshot, quote.id, quote, "success");
+      this.recordState(after);
+      return this.#goal.evaluate(after).kind !== "reached";
     } else {
       this.recordAttempt(snapshot, quote.id, quote, result.error.code);
+      return false;
     }
+  }
+
+  private recordResetTransition(
+    before: Snapshot<N>,
+    after: Snapshot<N>,
+    quote: LegalActionQuote<I>,
+  ): void {
+    if (!quote.effects?.includes("progression-reset")) return;
+    const scopeIds = new Set([
+      ...Object.keys(before.scopeGenerations),
+      ...Object.keys(after.scopeGenerations),
+    ]);
+    const reset = [...scopeIds].some(
+      (id) => (after.scopeGenerations[id] ?? 0) > (before.scopeGenerations[id] ?? 0),
+    );
+    if (!reset) return;
+    this.#totals.resetTransitions += 1;
+    if (this.#totals.lastResetGameMs === after.gameTimeMs) this.#totals.currentResetBurst += 1;
+    else this.#totals.currentResetBurst = 1;
+    this.#totals.lastResetGameMs = after.gameTimeMs;
+    this.#totals.maximumResetBurst = Math.max(
+      this.#totals.maximumResetBurst,
+      this.#totals.currentResetBurst,
+    );
   }
 
   private recordWait(
@@ -193,7 +231,7 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
   ) {
     if (this.options.scenario.pressures) {
       const pressures = this.options.scenario.pressures(before);
-      const quotes = this.options.scenario.quote(before);
+      const quotes = this.quotes(before);
       validateQuotes(quotes);
       accumulatePressures(this.#totals, pressures, quotes, elapsed);
     }
@@ -215,6 +253,15 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
       const key = `${value.kind}:${value.id}`;
       this.#totals.constraints[key] = (this.#totals.constraints[key] ?? 0) + 1;
     }
+  }
+
+  private quotes(snapshot: Snapshot<N>): readonly LegalActionQuote<I>[] {
+    if (this.options.actionSpace === "complete") {
+      const quoteAll = this.options.scenario.quoteAll;
+      if (!quoteAll) throw new TypeError("Complete action-space runs require scenario.quoteAll");
+      return quoteAll(snapshot);
+    }
+    return this.options.scenario.quote(snapshot);
   }
 
   private recordState(snapshot: Snapshot<N>): void {
@@ -253,61 +300,18 @@ class HarnessRunner<N, O extends HarnessValue, I extends HarnessValue> {
       accumulatePressures(
         this.#totals,
         this.options.scenario.pressures(snapshot),
-        this.options.scenario.quote(snapshot),
+        this.quotes(snapshot),
         0,
       );
-    const evaluation = this.#goal.evaluate(snapshot);
-    const outcome =
-      reached ??
-      finalOutcome(evaluation, this.options.scenario.quote(snapshot), this.#totals.workLimited);
-    const definition = this.options.scenario.definition;
-    if (!definition.numbers) throw new TypeError("Harness definition has no numeric adapter");
-    return {
-      schema: "e308-pacing-report",
-      schemaVersion: 2,
-      scenarioId: this.options.scenario.id,
-      contentVersion: this.options.scenario.contentVersion,
-      contentDigest: this.options.scenario.contentDigest,
-      parameters: this.options.scenario.parameters,
-      simulationVersion: definition.simulationVersion,
-      stepMs: definition.stepMs,
-      numericAdapter: definition.numbers.id,
-      numericImplementationVersion: definition.numbers.implementationVersion,
-      gameSeed: this.options.gameSeed,
-      botSeed: this.options.botSeed,
-      policy: { id: this.options.policy.id, version: this.options.policy.version },
-      goalId: this.options.goalId,
-      schedule: this.options.schedule,
-      decisionCadenceMs: this.options.decisionCadenceMs,
-      limits: this.options.limits,
-      outcome,
-      timing: {
-        realElapsedMs: this.#totals.real,
-        gameAdvancedMs: snapshot.gameTimeMs - this.#initialGameMs,
-        activePlayerMs: this.#totals.active,
-        idleOpenMs: this.#totals.idle,
-        absentMs: this.#totals.absent,
-        discardedRealMs: this.#totals.discarded,
-        bankedRealMs: this.#totals.banked,
-        fidelity: [...this.#totals.fidelity],
-      },
-      actions: {
-        attempts: this.#totals.attempts,
-        successful: this.#totals.successful,
-        decisions: this.#totals.decisions,
-        waits: this.#totals.waits,
-        longestWaitMs: this.#totals.longestWait,
-      },
-      constraints: this.#totals.constraints,
-      playability: { pressures: pressureReport(this.#totals.pressures) },
-      milestones: this.#totals.milestones,
-      diagnostics: this.#totals.diagnostics,
-      trace: this.#totals.trace,
-      traceTruncated: this.#totals.traceTruncated,
-      samples: this.#totals.samples,
-      samplesTruncated: this.#totals.samplesTruncated,
-      replayCommand: this.options.replayCommand,
-    };
+    return buildHarnessReport({
+      run: this.options,
+      totals: this.#totals,
+      snapshot,
+      initialGameMs: this.#initialGameMs,
+      reached,
+      evaluation: this.#goal.evaluate(snapshot),
+      quotes: this.quotes(snapshot),
+    });
   }
 }
 
@@ -320,18 +324,4 @@ function canonicalAway<N>(game: Game<N>, durationMs: number) {
     discardedRealMs: 0,
     bankedRealMs: 0,
   };
-}
-
-function finalOutcome<I extends HarnessValue>(
-  evaluation: GoalEvaluation,
-  quotes: readonly LegalActionQuote<I>[],
-  workLimited: boolean,
-): HarnessReport<I>["outcome"] {
-  if (evaluation.kind === "certified-barrier")
-    return { kind: "certified-barrier", certificate: evaluation.certificate };
-  if (workLimited) return { kind: "unreached", reason: "work-limit" };
-  if (quotes.some((quote) => quote.legal && quote.useful))
-    return { kind: "unreached", reason: "policy-stall" };
-  if (quotes.length > 0) return { kind: "unreached", reason: "observed-stall" };
-  return { kind: "unreached", reason: "schedule-ended" };
 }

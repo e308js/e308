@@ -32,8 +32,11 @@ export interface LegalActionQuote<I extends HarnessValue> {
   readonly legal: boolean;
   readonly useful: boolean;
   readonly rank?: number;
+  readonly effects?: readonly LegalActionEffect[];
   readonly constraints: readonly ConstraintEvidence[];
 }
+
+export type LegalActionEffect = "progression-reset";
 
 export type PressureRelief =
   | { readonly kind: "action"; readonly actionId: string }
@@ -82,6 +85,7 @@ export interface HarnessScenario<N, O extends HarnessValue, I extends HarnessVal
   create(gameSeed: string): Game<N>;
   observe(snapshot: Snapshot<N>): O;
   quote(snapshot: Snapshot<N>): readonly LegalActionQuote<I>[];
+  quoteAll?(snapshot: Snapshot<N>): readonly LegalActionQuote<I>[];
   command(intent: I, snapshot: Snapshot<N>): Command<N>;
   sample(snapshot: Snapshot<N>): Readonly<Record<string, string>>;
   milestones(snapshot: Snapshot<N>): readonly string[];
@@ -135,6 +139,8 @@ export interface HarnessRunOptions<N, O extends HarnessValue, I extends HarnessV
   readonly botSeed: string;
   readonly goalId: string;
   readonly decisionCadenceMs: number;
+  readonly maximumImmediateActions?: number;
+  readonly actionSpace?: "guided" | "complete";
   readonly schedule: readonly SessionSegment[];
   readonly limits: HarnessLimits;
   readonly replayCommand: string;
@@ -164,7 +170,7 @@ export interface HarnessSample {
 
 export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly schema: "e308-pacing-report";
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly scenarioId: string;
   readonly contentVersion: string;
   readonly contentDigest: string;
@@ -179,6 +185,8 @@ export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly goalId: string;
   readonly schedule: readonly SessionSegment[];
   readonly decisionCadenceMs: number;
+  readonly maximumImmediateActions: number;
+  readonly actionSpace: "guided" | "complete";
   readonly limits: HarnessLimits;
   readonly outcome:
     | { readonly kind: "reached"; readonly atRealMs: number; readonly atGameMs: number }
@@ -204,6 +212,7 @@ export interface HarnessReport<I extends HarnessValue = HarnessValue> {
   readonly constraints: Readonly<Record<string, number>>;
   readonly playability: {
     readonly pressures: Readonly<Record<string, PressureMetric>>;
+    readonly progression: ProgressionMetric;
   };
   readonly milestones: Readonly<
     Record<
@@ -238,11 +247,17 @@ export interface PressureMetric {
 
 export interface PlayabilityThresholds {
   readonly maximumNoReliefMs: number;
+  readonly maximumResetTransitionsAtSameGameTime?: number;
 }
 
 export interface PlayabilityFinding {
-  readonly code: "goal-deadlock" | "sustained-no-relief";
+  readonly code: "compressed-reset-chain" | "goal-deadlock" | "sustained-no-relief";
   readonly severity: "p0" | "p1";
   readonly pressureId: string | null;
   readonly detail: string;
+}
+
+export interface ProgressionMetric {
+  readonly resetTransitions: number;
+  readonly maximumResetTransitionsAtSameGameTime: number;
 }

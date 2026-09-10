@@ -23,6 +23,7 @@ export function reportMarkdown(report: HarnessReport): string {
     `- Goal: ${report.goalId} — ${outcome}`,
     `- Time: ${report.timing.realElapsedMs} ms real, ${report.timing.gameAdvancedMs} ms game, ${report.timing.activePlayerMs} ms active`,
     `- Actions: ${report.actions.successful}/${report.actions.attempts} successful; ${report.actions.waits} waits`,
+    `- Reset progression: ${report.playability.progression.resetTransitions} transitions; maximum immediate chain ${report.playability.progression.maximumResetTransitionsAtSameGameTime}`,
     `- Replay: \`${report.replayCommand}\``,
     "",
     "## First passage",

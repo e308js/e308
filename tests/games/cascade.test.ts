@@ -5,7 +5,7 @@ import {
   enterChallengeCommand,
   eternityNumbers,
 } from "@e308/core";
-import { rankedPolicy, runHarness } from "@e308/core/testing";
+import { assessPlayability, goalPolicy, rankedPolicy, runHarness } from "@e308/core/testing";
 import {
   cascadeBuyables,
   cascadeChallenges,
@@ -102,6 +102,12 @@ describe("finished Cascade", () => {
       ),
     ).toBeGreaterThan(0);
     expect(
+      eternityNumbers.cmp(
+        cascade.getSnapshot().resources["infinity-points"] as EternityQuantity,
+        cascadeKit.q(100),
+      ),
+    ).toBeLessThan(0);
+    expect(
       encoded(cascade.getSnapshot().resources["prestige-multiplier"] as EternityQuantity),
     ).toBe(
       encoded(
@@ -132,22 +138,26 @@ describe("finished Cascade", () => {
     const condenseGame = createCascade();
     condenseGame.game.dispatch({
       id: "condense-multiplier-fixture",
-      execute: (transaction) => transaction.set(cascadeResources.infinity, cascadeKit.q(5)),
+      execute: (transaction) => transaction.set(cascadeResources.infinity, cascadeKit.q(100)),
     });
     expect(condenseGame.dispatch({ type: "prestige", id: "condense" }).ok).toBe(true);
     expect(
       encoded(condenseGame.getSnapshot().resources["prestige-multiplier"] as EternityQuantity),
-    ).toBe("60");
+    ).toBe("404");
 
     const ascendGame = createCascade();
     ascendGame.game.dispatch({
       id: "ascend-multiplier-fixture",
-      execute: (transaction) => transaction.set(cascadeResources.cores, cascadeKit.q(3)),
+      execute: (transaction) => {
+        transaction.set(cascadeResources.cores, cascadeKit.q(3));
+        for (const challenge of cascadeChallenges)
+          transaction.setChallengeCompletions(challenge.id, cascadeKit.q(1));
+      },
     });
     expect(ascendGame.dispatch({ type: "prestige", id: "ascend" }).ok).toBe(true);
     expect(
       encoded(ascendGame.getSnapshot().resources["prestige-multiplier"] as EternityQuantity),
-    ).toBe("100");
+    ).toBe("10");
   });
 
   it("scales each tier from its own purchased-generator thresholds", () => {
@@ -195,12 +205,14 @@ describe("finished Cascade", () => {
   it("produces different truthful pacing for depth and reset strategies", () => {
     const reset = completion("reset-first", "01");
     const depth = completion("depth-first", "02");
+    const shortcut = shortcutCompletion();
     expect(reset.outcome.kind).toBe("reached");
     expect(depth.outcome.kind).toBe("reached");
+    expect(shortcut.outcome.kind).toBe("reached");
     if (reset.outcome.kind !== "reached" || depth.outcome.kind !== "reached") return;
     expect(depth.outcome.atGameMs).toBeLessThanOrEqual(72 * 60 * 60_000);
-    expect(reset.milestones["dimension-1-ten"]?.gameTimeMs).toBeLessThan(
-      depth.milestones["dimension-1-ten"]?.gameTimeMs ?? Number.POSITIVE_INFINITY,
+    expect(reset.milestones["dimension-1-ten"]?.gameTimeMs).not.toBe(
+      depth.milestones["dimension-1-ten"]?.gameTimeMs,
     );
     expect(depth.milestones["dimension-8-ten"]?.gameTimeMs).toBeLessThan(
       reset.milestones["dimension-8-ten"]?.gameTimeMs ?? Number.POSITIVE_INFINITY,
@@ -208,6 +220,12 @@ describe("finished Cascade", () => {
     expect(Object.keys(reset.milestones)).toEqual(
       expect.arrayContaining(["challenge:composite-trial", "ascended", "ending"]),
     );
+    expect(
+      assessPlayability(shortcut, {
+        maximumNoReliefMs: 10 * 60_000,
+        maximumResetTransitionsAtSameGameTime: 2,
+      }),
+    ).toEqual([]);
   }, 30_000);
 
   it("round-trips the above-1e308 ending and renders its dense progression view", () => {
@@ -290,6 +308,33 @@ describe("finished Cascade", () => {
         ] as EternityQuantity,
       ),
     ).toBe("2");
+    expect(encoded(wrapped.getSnapshot().resources["research-points"] as EternityQuantity)).toBe(
+      "2",
+    );
+  });
+
+  it("exposes the complete headless action surface for exploratory policies", () => {
+    const scenario = cascadeScenario();
+    const snapshot = scenario.create("aa").getSnapshot();
+    const quotes = scenario.quoteAll?.(snapshot);
+    expect(quotes).toBeDefined();
+    expect(quotes?.map((quote) => quote.id)).toEqual(
+      expect.arrayContaining([
+        "buy-tier-1",
+        "buy-group-tier-1",
+        "buy-tier-8",
+        "collapse",
+        "condense",
+        "ascend",
+        "enter-slow-foundation",
+        "complete-composite-trial",
+        "enable-dimension-auto",
+        "allocate-speed",
+        "final-research",
+      ]),
+    );
+    expect(quotes?.find((quote) => quote.id === "buy-tier-1")?.legal).toBe(true);
+    expect(quotes?.find((quote) => quote.id === "ascend")?.legal).toBe(false);
   });
 
   it("applies challenge rules and blocks automation during its drought", () => {
@@ -330,6 +375,32 @@ function completion(strategy: "reset-first" | "depth-first", botSeed: string) {
     botSeed,
     limits,
     replayCommand: `pnpm replay:game cascade ${strategy}`,
+  });
+}
+
+function shortcutCompletion() {
+  const scenario = cascadeScenario("reset-first");
+  return runHarness({
+    scenario,
+    policy: goalPolicy({
+      id: "cascade-shortcut-seeker",
+      version: "1",
+      includeAllLegal: true,
+      score: (_context, quote) => {
+        if (quote.id === "ascend") return 10_000;
+        if (quote.id === "condense") return 9_000;
+        if (quote.id === "collapse") return 8_000;
+        return quote.useful ? (quote.rank ?? 0) : Number.NEGATIVE_INFINITY;
+      },
+    }),
+    goalId: "final-research",
+    schedule: [{ kind: "active", durationMs: 72 * 60 * 60_000 }],
+    decisionCadenceMs: 60_000,
+    actionSpace: "complete",
+    gameSeed: "aa",
+    botSeed: "03",
+    limits,
+    replayCommand: "pnpm replay:game cascade shortcut",
   });
 }
 

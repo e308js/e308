@@ -50,6 +50,18 @@ export function assessPlayability<I extends HarnessValue>(
   thresholds: PlayabilityThresholds,
 ): readonly PlayabilityFinding[] {
   const findings: PlayabilityFinding[] = [];
+  const maximumResetBurst = thresholds.maximumResetTransitionsAtSameGameTime;
+  if (
+    maximumResetBurst !== undefined &&
+    report.playability.progression.maximumResetTransitionsAtSameGameTime > maximumResetBurst
+  ) {
+    findings.push({
+      code: "compressed-reset-chain",
+      severity: "p1",
+      pressureId: null,
+      detail: `${report.playability.progression.maximumResetTransitionsAtSameGameTime} reset transitions were available without advancing game time.`,
+    });
+  }
   const pressures = Object.entries(report.playability.pressures);
   const deadlockPressure = pressures.find(
     ([, metric]) =>
