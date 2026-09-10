@@ -205,10 +205,8 @@ describe("finished Cascade", () => {
   it("produces different truthful pacing for depth and reset strategies", () => {
     const reset = completion("reset-first", "01");
     const depth = completion("depth-first", "02");
-    const shortcut = shortcutCompletion();
     expect(reset.outcome.kind).toBe("reached");
     expect(depth.outcome.kind).toBe("reached");
-    expect(shortcut.outcome.kind).toBe("reached");
     if (reset.outcome.kind !== "reached" || depth.outcome.kind !== "reached") return;
     expect(depth.outcome.atGameMs).toBeLessThanOrEqual(72 * 60 * 60_000);
     expect(reset.milestones["dimension-1-ten"]?.gameTimeMs).not.toBe(
@@ -220,6 +218,11 @@ describe("finished Cascade", () => {
     expect(Object.keys(reset.milestones)).toEqual(
       expect.arrayContaining(["challenge:composite-trial", "ascended", "ending"]),
     );
+  }, 30_000);
+
+  it("keeps economic reset layers separated under shortcut-seeking play", () => {
+    const shortcut = shortcutCompletion();
+    expect(shortcut.outcome.kind).toBe("reached");
     expect(
       assessPlayability(shortcut, {
         maximumNoReliefMs: 10 * 60_000,
