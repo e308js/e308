@@ -26,6 +26,7 @@ for (const id of ["first", "second"]) {
           id: "mode-help",
           label: "About play mode",
           preview: id === "first",
+          previewMoveDismissPx: new URLSearchParams(location.search).has("moving") ? 24 : undefined,
           targetId: id === "first" ? "custom-mode" : undefined,
           content: [
             {

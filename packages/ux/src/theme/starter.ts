@@ -105,6 +105,9 @@ export const starterTheme = `
 .e308-help-popover { display: inline-block; position: relative; }
 .e308-help-trigger { align-items: center; border: 1px solid var(--e308-accent); border-radius: 999px; cursor: pointer; display: inline-flex; font-weight: 800; justify-content: center; min-height: 44px; min-width: 44px; padding: .4rem; touch-action: manipulation; }
 .e308-help-trigger::marker { content: ""; }
+.e308-help-trigger { max-width: 100%; width: fit-content; }
+.e308-help-arrow { display: inline-block; margin-inline-start: .35em; }
+.e308-help[data-help-pinned="true"] .e308-help-arrow { transform: rotate(90deg); }
 .e308-help-content { background: var(--e308-panel); border: 1px solid var(--e308-border); border-radius: .55rem; box-shadow: 0 .75rem 2rem #0009; inline-size: min(22rem, calc(100vw - 2rem)); inset-block-start: calc(100% + .35rem); inset-inline-start: 0; padding: .75rem; position: absolute; z-index: 20; }
 .e308-help-content a { color: var(--e308-accent); }
 .e308-help-expanded { background: var(--e308-panel); border-inline-start: .25rem solid var(--e308-accent); padding: .75rem; }

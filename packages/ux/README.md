@@ -58,9 +58,17 @@ inputs and actions:
 
 - `help` renders a named, keyboard- and touch-operable disclosure. Its `popover` presentation closes
   with Escape and returns focus to the trigger when focus was inside; `expanded` keeps help in the document reading order.
-  Set `preview: true` to open popover help on mouse hover or keyboard focus. Moving away closes an
+  Set `preview: true` to open popover help after 120 ms over the actual info trigger (not its
+  surrounding layout box), or immediately on keyboard focus. `previewDelayMs` overrides the mouse
+  delay. Passing across the trigger cancels pending help. A small arrow indicates click/tap pinning.
+  Moving away closes an
   unpinned preview; clicking, tapping, Enter, or Space pins it open. Activate again or press Escape
   to dismiss. Escape also closes hover previews while focus is elsewhere, preserving that focus.
+  For brief, noninteractive game hints, opt into `previewMoveDismissPx: 24` to dismiss an unpinned
+  mouse preview after that much displacement from its opening position, even over the popup itself.
+  Small pointer jitter is ignored. Dismissed previews stay closed until the trigger is re-entered;
+  pinned, keyboard, and touch help are unaffected. This is a deliberate alternative to persistent
+  hoverable content, not the default accessibility policy; avoid it for long or interactive help.
   Preview and pinned state survive live renders. Popovers fit the viewport, scroll long content,
   reposition on scroll/resize, and avoid covering the focused control. The starter theme retains
   44px triggers and visible focus; `preview` is ignored for expanded help.

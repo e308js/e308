@@ -1,6 +1,7 @@
 import type { ActionView } from "../view/models.js";
 import type { HotkeyView, ViewDocument } from "../view/nodes.js";
 import { dismissOutsideHelp } from "./help.js";
+import { observeHelpHover } from "./help-hover.js";
 import { observeHelpPosition, positionOpenHelp } from "./help-position.js";
 import type { InternalRenderContext } from "./internal.js";
 import { reconcileChildren } from "./reconcile.js";
@@ -77,6 +78,11 @@ export function mountView<State, Intent, N>(
   root.ownerDocument.addEventListener("pointerup", hold.stop);
   root.ownerDocument.addEventListener("pointercancel", hold.stop);
   const stopPositioning = observeHelpPosition(root);
+  const stopHelpHover = observeHelpHover(root, context.helpPreviews, (details) => {
+    details.open = false;
+    context.open.set(details.dataset.e308Key ?? "", false);
+    details.querySelector("summary")?.setAttribute("aria-expanded", "false");
+  });
   render();
   return {
     render,
@@ -85,6 +91,7 @@ export function mountView<State, Intent, N>(
       disposed = true;
       unsubscribe();
       stopPositioning();
+      stopHelpHover();
       root.ownerDocument.removeEventListener("keydown", keydown);
       ranges.dispose();
       root.ownerDocument.removeEventListener("pointerup", hold.stop);

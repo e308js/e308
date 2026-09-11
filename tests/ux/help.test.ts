@@ -16,6 +16,7 @@ function fixture(initiallyOpen = false) {
           id: "help",
           label: "Help",
           preview: true,
+          previewDelayMs: 0,
           initiallyOpen,
           content: [
             {
@@ -34,7 +35,9 @@ function fixture(initiallyOpen = false) {
   const trigger = root.querySelector("summary") as HTMLElement;
   const link = root.querySelector("a") as HTMLElement;
   const pointer = (type: string, pointerType = "mouse") =>
-    details.dispatchEvent(new PointerEvent(type, { pointerType }));
+    (type === "pointerenter" ? trigger : details).dispatchEvent(
+      new PointerEvent(type, { pointerType }),
+    );
   const key = (key: string) =>
     trigger.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
   return { root, mount, details, trigger, link, pointer, key };

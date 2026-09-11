@@ -1,6 +1,7 @@
 import type { ViewNode } from "../view/nodes.js";
 import { keyed } from "./elements.js";
 import { bindEvent } from "./events.js";
+import { cancelHelpHover } from "./help-hover.js";
 import { positionHelp } from "./help-position.js";
 import { bindHelpPreview } from "./help-preview.js";
 import type { InternalRenderContext } from "./internal.js";
@@ -41,13 +42,27 @@ export function renderHelp<Intent, N>(
       suppressed: false,
       pointerFocus: false,
     };
+    state.moveDismissPx = node.previewMoveDismissPx;
     context.helpPreviews.set(node.id, state);
-    bindHelpPreview(details, state, (current, open) => {
-      current.open = open;
-      context.open.set(node.id, open);
-      current.querySelector("summary")?.setAttribute("aria-expanded", String(open));
-      positionHelp(current);
-    });
+    details.dataset.helpPinned = String(state.pinned);
+    const arrow = context.document.createElement("span");
+    arrow.className = "e308-help-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "▸";
+    summary.append(arrow);
+    bindHelpPreview(
+      details,
+      summary,
+      state,
+      (current, open) => {
+        current.open = open;
+        current.dataset.helpPinned = String(state.pinned);
+        context.open.set(node.id, open);
+        current.querySelector("summary")?.setAttribute("aria-expanded", String(open));
+        positionHelp(current);
+      },
+      node.previewDelayMs,
+    );
   }
   details.append(summary, content);
   return details;
@@ -94,6 +109,12 @@ export function dismissOutsideHelp<Intent, N>(
   context: InternalRenderContext<Intent, N>,
 ): void {
   if (event.key !== "Escape" || event.defaultPrevented) return;
+  for (const state of context.helpPreviews.values()) {
+    if (!state.cancelHover) continue;
+    cancelHelpHover(state);
+    state.suppressed = true;
+    event.preventDefault();
+  }
   for (const details of Array.from(
     root.querySelectorAll<HTMLDetailsElement>(".e308-help-popover[open]"),
   )) {
@@ -106,6 +127,7 @@ export function dismissOutsideHelp<Intent, N>(
     if (state) {
       state.pinned = false;
       state.suppressed = true;
+      details.dataset.helpPinned = "false";
     }
     details.querySelector("summary")?.setAttribute("aria-expanded", "false");
   }

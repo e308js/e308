@@ -197,6 +197,10 @@ export type ViewNode<Intent = unknown, N = unknown> =
       readonly presentation?: "popover" | "expanded";
       /** Preview on mouse hover or keyboard focus; activation pins it until dismissal. */
       readonly preview?: boolean;
+      /** Mouse-only dwell before previewing; default 120 ms. Keyboard/touch are immediate. */
+      readonly previewDelayMs?: number;
+      /** Opt-in mouse movement dismissal, in CSS pixels from where the preview opened. */
+      readonly previewMoveDismissPx?: number;
       readonly initiallyOpen?: boolean;
     }
   | {
