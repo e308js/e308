@@ -20,10 +20,14 @@ export type EtaView =
 
 export interface ActionView<Intent = unknown, N = unknown> {
   readonly id: string;
+  readonly domId?: string;
   readonly label: TextValue<N>;
   readonly description?: readonly DescriptionNode<N>[];
   readonly tooltip?: TextValue<N>;
   readonly enabled: boolean;
+  /** Visual and assistive state. Pending actions are never dispatched. */
+  readonly state?: "available" | "pending" | "successful" | "rejected";
+  readonly tone?: "primary" | "secondary" | "destructive";
   readonly intent: Intent;
   readonly blockers: readonly ActionBlocker<N>[];
   readonly costs?: readonly QuantityLine<N>[];

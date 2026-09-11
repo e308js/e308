@@ -50,3 +50,36 @@ and the `e308-root` class for the baseline theme, or supply your own styles and 
 Subpath exports are available for `@e308/ux/dom`, `/effects`, `/format`, `/localization`, and
 `/views`. The feature gallery under `examples/gallery` demonstrates two layouts observing one
 kernel, tree and grid controls, nested navigation, hotkeys, progress bars, and a durable collectible.
+
+## Accessible baseline primitives
+
+The public `ViewNode` union includes semantic layout and interaction primitives in addition to basic
+inputs and actions:
+
+- `help` renders a named, keyboard- and touch-operable disclosure. Its `popover` presentation closes
+  with Escape and returns focus to the trigger; `expanded` keeps help in the document reading order.
+  Put structured `description`, `quantities`, and other view nodes in its content instead of relying
+  on a native `title` attribute.
+- `command-feedback` associates `pending`, `success`, or `failure` state with a stable action/form
+  `targetId`. Success and pending use `role="status"`; failures use `role="alert"`. Error summaries
+  can link to controls with public `domId` values, and `focusOnError` opts into one-time error focus.
+  `banner` and `toast` presentations remain viewport-visible for asynchronous Worker or network
+  results.
+- `section` provides `plain`, `card`, and sticky `status-strip` variants. `fieldset` provides a real
+  fieldset and legend for related controls.
+
+`ActionView.blockers` and `actionFromQuote()` remain the canonical availability model. Unavailable
+actions use `aria-disabled` rather than native `disabled`, remain focusable, and expose a visible,
+structured reason list through `aria-describedby`. A game may instead leave an action enabled and
+render contextual rejection with `command-feedback`; legality and blocker authority always belong
+to the game. `ActionView.state` distinguishes pending, successful, and rejected commands, while
+`tone` selects primary, secondary, or destructive hierarchy.
+
+## Starter-theme layout classes
+
+Public `ViewStyle.className` composes the baseline classes. Use `e308-action-group` on a row for a
+wrapping action hierarchy. The rendered section variants provide `e308-section-card` and
+`e308-section-status-strip`; tabs scroll within their tablist at narrow widths. Inputs and action
+targets are at least 44 CSS pixels, toggle checkboxes remain compact inside their larger label target,
+and all controls receive visible focus. The theme also constrains narrow content, maintains dark-theme
+contrast, and disables nonessential animation when `prefers-reduced-motion` is active.

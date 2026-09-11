@@ -57,11 +57,31 @@ export function renderTabs<Intent, N>(
   const list = context.document.createElement("div");
   list.setAttribute("role", "tablist");
   for (const tab of visible) list.append(tabButton(node.id, tab, active?.id, context));
+  bindEvent<KeyboardEvent>(list, "keydown", (event) => {
+    const current = event.target;
+    if (!(current instanceof HTMLButtonElement) || current.getAttribute("role") !== "tab") return;
+    const currentList = event.currentTarget as HTMLElement;
+    const tabs = Array.from(
+      currentList.querySelectorAll<HTMLButtonElement>("[role=tab]:not(:disabled)"),
+    );
+    const index = tabs.indexOf(current);
+    let next: HTMLButtonElement | undefined;
+    if (event.key === "ArrowRight") next = tabs[(index + 1) % tabs.length];
+    else if (event.key === "ArrowLeft") next = tabs[(index - 1 + tabs.length) % tabs.length];
+    else if (event.key === "Home") next = tabs[0];
+    else if (event.key === "End") next = tabs.at(-1);
+    if (!next) return;
+    event.preventDefault();
+    next.focus();
+    context.tabs.set(node.id, next.dataset.tab ?? "");
+    context.requestRender();
+  });
   section.append(list);
   if (active) {
     const panel = context.document.createElement("div");
     panel.id = `e308-panel-${node.id}-${active.id}`;
     panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", `${context.idPrefix}-tab-${node.id}-${active.id}`);
     panel.append(...context.renderMany(active.content));
     section.append(panel);
   }
@@ -76,9 +96,12 @@ function tabButton<Intent, N>(
 ): HTMLButtonElement {
   const button = context.document.createElement("button");
   button.type = "button";
+  button.id = `${context.idPrefix}-tab-${tabsId}-${tab.id}`;
+  button.dataset.e308Key = `tab:${tabsId}:${tab.id}`;
   button.setAttribute("role", "tab");
   button.disabled = tab.disabled ?? false;
   button.setAttribute("aria-selected", String(tab.id === activeId));
+  button.tabIndex = tab.id === activeId ? 0 : -1;
   button.setAttribute("aria-controls", `e308-panel-${tabsId}-${tab.id}`);
   button.textContent = context.resolver.text(tab.label);
   button.dataset.tab = tab.id;
@@ -125,6 +148,7 @@ function gridCell<Intent, N>(
         context.resolver,
         context.dispatch,
         context.startHold,
+        `${context.idPrefix}-${cell.id}`,
       ),
     );
   appendMark(wrapper, cell.mark, context.resolver);
@@ -161,6 +185,7 @@ function treeNode<Intent, N>(
       context.resolver,
       context.dispatch,
       context.startHold,
+      `${context.idPrefix}-${node.id}`,
     );
     if (node.imageUrl) action.prepend(treeImage(node.imageUrl, node.label, context));
     wrapper.append(action);

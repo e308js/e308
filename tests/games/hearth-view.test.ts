@@ -39,7 +39,8 @@ describe("Hearth settlement view", () => {
     const hall = Array.from(root.querySelectorAll("button")).find((button) =>
       button.textContent?.includes("raise great hall"),
     );
-    expect(hall?.disabled).toBe(true);
+    expect(hall?.disabled).toBe(false);
+    expect(hall?.getAttribute("aria-disabled")).toBe("true");
     expect(root.textContent).toContain("wood: need 30, have 10");
     hearth.game.dispatch({
       id: "expedition-view-fixture",

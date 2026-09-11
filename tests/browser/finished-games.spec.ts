@@ -85,15 +85,24 @@ test("presents Cascade's connected reset and challenge route", async ({ page }) 
   await expect(page.locator("#game")).toHaveClass(/cascade/);
   await page.getByRole("tab", { name: "Reset map" }).click();
   await expect(page.getByText("Requires 10 purchased generators in every tier.")).toBeVisible();
-  await expect(page.getByRole("button", { name: /collapse for 0/i })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /collapse for 0/i })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
 
   await page.getByRole("tab", { name: "Challenges" }).click();
   await expect(page.getByText(/full producer chain runs at 25% output/i)).toBeVisible();
   await expect(page.getByText(/Reward: Up to 3 research points/)).toBeVisible();
 
   await page.getByRole("tab", { name: "Automation" }).click();
-  await expect(page.getByRole("button", { name: "Enable Tier 1 autobuyer" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Enable Auto-collapse" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Enable Tier 1 autobuyer" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: "Enable Auto-collapse" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
 });
 
 async function gameTime(page: import("@playwright/test").Page): Promise<number> {

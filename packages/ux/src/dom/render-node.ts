@@ -1,6 +1,7 @@
 import { renderParticleLayer } from "../effects/particles.js";
 import { appendDescription } from "../localization/catalog.js";
 import type { ViewNode } from "../view/nodes.js";
+import { renderBaselineNode } from "./baseline.js";
 import { renderGrid, renderInfobox, renderProgress, renderTabs, renderTree } from "./complex.js";
 import {
   appendMark,
@@ -28,6 +29,12 @@ export function renderNode<Intent, N>(
       return renderHeading(node, context);
     case "description":
       return renderDescription(node, context);
+    case "help":
+    case "section":
+    case "fieldset":
+    case "notification":
+    case "command-feedback":
+      return renderBaselineNode(node, context);
     case "separator":
       return keyed(context.document, "hr", node.id);
     case "image":
@@ -37,19 +44,8 @@ export function renderNode<Intent, N>(
       element.append(renderResource(context.document, node.resource, context.resolver));
       return element;
     }
-    case "action": {
-      const element = renderAction(
-        context.document,
-        node.action,
-        context.resolver,
-        context.dispatch,
-        context.startHold,
-      );
-      element.dataset.e308Key = node.id;
-      appendMark(element, node.mark, context.resolver);
-      applyStyle(element, node.style);
-      return element;
-    }
+    case "action":
+      return renderActionNode(node, context);
     case "quantities":
       return renderQuantities(node, context);
     case "progress":
@@ -67,8 +63,6 @@ export function renderNode<Intent, N>(
     case "select-input":
     case "toggle-input":
       return renderInputNode(node, context);
-    case "notification":
-      return renderNotification(node, context);
     case "particles":
       return renderParticleLayer(node.id, {
         document: context.document,
@@ -96,6 +90,24 @@ export function renderNode<Intent, N>(
   }
 }
 
+function renderActionNode<Intent, N>(
+  node: Extract<ViewNode<Intent, N>, { kind: "action" }>,
+  context: InternalRenderContext<Intent, N>,
+): HTMLElement {
+  const element = renderAction(
+    context.document,
+    node.action,
+    context.resolver,
+    context.dispatch,
+    context.startHold,
+    `${context.idPrefix}-${node.id}`,
+  );
+  element.dataset.e308Key = node.id;
+  appendMark(element, node.mark, context.resolver);
+  applyStyle(element, node.style);
+  return element;
+}
+
 function renderInputNode<Intent, N>(
   node: Extract<ViewNode<Intent, N>, { kind: `${string}-input` }>,
   context: InternalRenderContext<Intent, N>,
@@ -116,6 +128,7 @@ function renderReset<Intent, N>(
       context.resolver,
       context.dispatch,
       context.startHold,
+      `${context.idPrefix}-${node.id}`,
     ),
     ...node.gain.map((line) => renderQuantity(context.document, line, context.resolver)),
   );
@@ -159,6 +172,7 @@ function renderSave<Intent, N>(
           context.resolver,
           context.dispatch,
           context.startHold,
+          `${context.idPrefix}-${node.id}-${action.id}`,
         ),
       );
   }
@@ -214,16 +228,4 @@ function renderQuantities<Intent, N>(
   for (const line of node.lines)
     list.append(renderQuantity(context.document, line, context.resolver));
   return list;
-}
-
-function renderNotification<Intent, N>(
-  node: Extract<ViewNode<Intent, N>, { kind: "notification" }>,
-  context: InternalRenderContext<Intent, N>,
-): HTMLElement {
-  const element = keyed(context.document, "div", node.id);
-  element.className = "e308-notification";
-  element.setAttribute("role", "status");
-  element.dataset.tone = node.tone ?? "neutral";
-  element.textContent = context.resolver.text(node.text);
-  return element;
 }

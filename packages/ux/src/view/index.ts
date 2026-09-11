@@ -10,6 +10,8 @@ export type {
   SaveView,
 } from "./models.js";
 export type {
+  CommandFeedbackError,
+  CommandFeedbackView,
   GridCellView,
   HotkeyView,
   InputView,

@@ -12,15 +12,17 @@ export function renderInput<Intent, N>(
 ): HTMLElement {
   const label = keyed(document, "label", view.id);
   label.className = "e308-input";
+  label.dataset.inputKind = view.kind;
   if (view.tooltip) label.title = resolver.text(view.tooltip);
   const caption = document.createElement("span");
   caption.className = "e308-input-label";
   caption.textContent = resolver.text(view.label);
   label.append(caption);
-  if (view.kind === "toggle-input") return renderToggle(document, view, label, dispatch);
-  if (view.kind === "select-input") return renderSelect(document, view, label, resolver, dispatch);
+  if (view.kind === "toggle-input") return renderToggle(document, view, label, dispatch, idPrefix);
+  if (view.kind === "select-input")
+    return renderSelect(document, view, label, resolver, dispatch, idPrefix);
   const input = document.createElement("input");
-  input.id = `${idPrefix}-${view.id}`;
+  input.id = view.domId ?? `${idPrefix}-${view.id}`;
   input.dataset.e308Key = `${view.id}:control`;
   input.type = view.kind === "text-input" ? "text" : "range";
   input.value = String(view.value);
@@ -80,8 +82,12 @@ function renderToggle<Intent, N>(
   view: Extract<InputView<Intent, N>, { kind: "toggle-input" }>,
   label: HTMLElement,
   dispatch: (intent: Intent) => unknown,
+  idPrefix: string,
 ): HTMLElement {
+  label.classList.add("e308-toggle");
   const input = document.createElement("input");
+  input.id = view.domId ?? `${idPrefix}-${view.id}`;
+  label.setAttribute("for", input.id);
   input.type = "checkbox";
   input.checked = view.value;
   input.dataset.e308Key = `${view.id}:control`;
@@ -98,8 +104,11 @@ function renderSelect<Intent, N>(
   label: HTMLElement,
   resolver: TextResolver<N>,
   dispatch: (intent: Intent) => unknown,
+  idPrefix: string,
 ): HTMLElement {
   const select = document.createElement("select");
+  select.id = view.domId ?? `${idPrefix}-${view.id}`;
+  label.setAttribute("for", select.id);
   select.dataset.e308Key = `${view.id}:control`;
   for (const option of view.options) {
     const element = document.createElement("option");

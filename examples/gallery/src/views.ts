@@ -1,30 +1,6 @@
-import type { ActionView, ViewDocument, ViewNode } from "@e308/ux";
+import type { ViewDocument, ViewNode } from "@e308/ux";
 import type { GalleryIntent, GalleryState } from "./kernel.js";
-
-function gainAction(): ActionView<GalleryIntent, number> {
-  return {
-    id: "gain",
-    label: "Make",
-    enabled: true,
-    intent: { type: "gain" },
-    blockers: [],
-    hold: { intent: { type: "gain" } },
-  };
-}
-
-function hireAction(state: GalleryState): ActionView<GalleryIntent, number> {
-  const enabled = state.points >= 10;
-  return {
-    id: "hire",
-    label: "Hire worker",
-    enabled,
-    intent: { type: "hire" },
-    blockers: enabled
-      ? []
-      : [{ kind: "insufficient", resourceId: "points", required: 10, available: state.points }],
-    costs: [{ resourceId: "points", label: "Points", value: 10 }],
-  };
-}
+import { gainAction, hireAction, workPanel } from "./workshop.js";
 
 export function treeView(state: GalleryState): ViewDocument<GalleryIntent, number> {
   return {
@@ -70,6 +46,7 @@ export function panelView(state: GalleryState): ViewDocument<GalleryIntent, numb
     title: "Panel composition",
     content: [
       { kind: "heading", id: "panel-heading", level: 2, text: "Workshop panels" },
+      statusSection(state),
       {
         kind: "tabs",
         id: "panel-tabs",
@@ -90,6 +67,7 @@ export function panelView(state: GalleryState): ViewDocument<GalleryIntent, numb
         policyLabel: "Canonical catch-up",
       },
       { kind: "save", id: "save-status", status: "saved", message: "Local demo state" },
+      expandedHelp(),
       ...state.notifications.map((text, index) => ({
         kind: "notification" as const,
         id: `notice-${index}`,
@@ -114,57 +92,61 @@ function resource(state: GalleryState): ViewNode<GalleryIntent, number> {
   };
 }
 
-function workPanel(state: GalleryState): ViewNode<GalleryIntent, number>[] {
-  return [
-    resource(state),
-    {
-      kind: "row",
-      id: "actions",
-      children: [
-        {
-          kind: "action",
-          id: "make-action",
-          action: gainAction(),
-          mark: { label: "new", tone: "positive" },
-        },
-        { kind: "action", id: "hire-action", action: hireAction(state) },
-      ],
-    },
-    {
-      kind: "progress",
-      id: "goal-right",
-      label: "Goal right",
-      value: state.points / 50,
-      direction: "right",
-      animated: true,
-    },
-    {
-      kind: "progress",
-      id: "goal-up",
-      label: "Goal up",
-      value: state.points / 50,
-      direction: "up",
-    },
-    {
-      kind: "text-input",
-      id: "workshop-name",
-      label: "Name",
-      value: state.name,
-      intent: (value) => ({ type: "name", value }),
-    },
-    {
-      kind: "infobox",
-      id: "about",
-      title: "About",
-      content: [
-        {
-          kind: "description",
-          id: "about-text",
-          content: [{ kind: "text", value: "This panel reads the same state as the tree." }],
-        },
-      ],
-    },
-  ];
+function statusSection(state: GalleryState): ViewNode<GalleryIntent, number> {
+  return {
+    kind: "section",
+    id: "status",
+    variant: "status-strip",
+    title: "Current status",
+    headingLevel: 3,
+    children: [
+      {
+        kind: "row",
+        id: "status-values",
+        children: [
+          resource(state),
+          {
+            kind: "help",
+            id: "rate-help",
+            label: "About Metal rate",
+            targetId: "points",
+            content: [
+              {
+                kind: "description",
+                id: "rate-help-text",
+                content: [
+                  { kind: "text", value: "Workers produce an exact " },
+                  { kind: "strong", children: [{ kind: "text", value: "1 point per second" }] },
+                  { kind: "text", value: " each." },
+                ],
+              },
+              {
+                kind: "quantities",
+                id: "rate-help-quantity",
+                lines: [{ resourceId: "points", label: "Current rate", value: state.workers }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function expandedHelp(): ViewNode<GalleryIntent, number> {
+  return {
+    kind: "help",
+    id: "expanded-help",
+    label: "Workshop help",
+    presentation: "expanded",
+    content: [
+      {
+        kind: "description",
+        id: "expanded-help-text",
+        content: [{ kind: "text", value: "Expanded help remains in the reading order." }],
+      },
+    ],
+  };
 }
 
 function gridPanel(state: GalleryState): ViewNode<GalleryIntent, number> {

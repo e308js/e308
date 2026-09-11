@@ -15,4 +15,7 @@ export interface InternalRenderContext<Intent, N> extends RenderContext<Intent, 
   readonly startHold: (hold: NonNullable<ActionView<Intent>["hold"]>, event: PointerEvent) => void;
   renderMany(nodes: readonly ViewNode<Intent, N>[]): Node[];
   requestRender(): void;
+  requestFeedbackFocus(id: string): void;
+  clearFeedbackFocus(id: string): void;
+  takeFocusRequest(): string | undefined;
 }

@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 
 const root = process.cwd();
-const port = 4173;
+const port = Number(process.env.E308_TEST_PORT ?? 4173);
 const types = new Map([
   [".html", "text/html; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],

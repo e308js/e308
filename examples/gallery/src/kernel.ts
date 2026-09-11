@@ -5,6 +5,8 @@ export interface GalleryState {
   readonly points: number;
   readonly workers: number;
   readonly name: string;
+  readonly repeat: boolean;
+  readonly riskyRejected: boolean;
   readonly claimedStar: boolean;
   readonly notifications: readonly string[];
 }
@@ -13,6 +15,8 @@ export type GalleryIntent =
   | { readonly type: "gain" }
   | { readonly type: "hire" }
   | { readonly type: "name"; readonly value: string }
+  | { readonly type: "repeat"; readonly value: boolean }
+  | { readonly type: "reject-risky" }
   | { readonly type: "claim-star" };
 
 export class GalleryKernel implements ViewSource<GalleryState, GalleryIntent, boolean> {
@@ -21,6 +25,8 @@ export class GalleryKernel implements ViewSource<GalleryState, GalleryIntent, bo
     points: 12,
     workers: 1,
     name: "Workshop",
+    repeat: true,
+    riskyRejected: false,
     claimedStar: false,
     notifications: [],
   };
@@ -50,6 +56,8 @@ function reduce(state: GalleryState, intent: GalleryIntent): GalleryState {
     return changed(state, { points: state.points - 10, workers: state.workers + 1 });
   }
   if (intent.type === "name") return changed(state, { name: intent.value });
+  if (intent.type === "repeat") return changed(state, { repeat: intent.value });
+  if (intent.type === "reject-risky") return changed(state, { riskyRejected: true });
   if (intent.type === "claim-star" && !state.claimedStar) {
     return changed(state, {
       points: state.points + 25,

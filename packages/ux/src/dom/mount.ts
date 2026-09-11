@@ -50,7 +50,15 @@ export function mountView<State, Intent, N>(
     reconcileChildren(root, context.renderMany(view.content), ranges.active());
     if (view.title) root.setAttribute("aria-label", options.resolver.text(view.title));
     else root.removeAttribute("aria-label");
+    wireRelationships(root);
     restoreFocus(root, focus);
+    const requestedFocus = context.takeFocusRequest();
+    if (requestedFocus) {
+      const candidate = Array.from(root.querySelectorAll<HTMLElement>("[data-e308-key]")).find(
+        (element) => element.dataset.e308Key === requestedFocus,
+      );
+      candidate?.focus({ preventScroll: true });
+    }
     rendering = false;
   };
   ranges = createRangeGestureController(root, render);
@@ -78,6 +86,34 @@ export function mountView<State, Intent, N>(
       root.replaceChildren();
     },
   };
+}
+
+function wireRelationships(root: HTMLElement): void {
+  for (const feedback of Array.from(root.querySelectorAll<HTMLElement>("[data-feedback-for]"))) {
+    const targetId = feedback.dataset.feedbackFor;
+    if (!targetId || !feedback.id) continue;
+    const target = relationshipTarget(root, targetId);
+    if (!target) continue;
+    const describedBy = new Set(
+      (target.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean),
+    );
+    describedBy.add(feedback.id);
+    target.setAttribute("aria-describedby", [...describedBy].join(" "));
+  }
+  for (const help of Array.from(root.querySelectorAll<HTMLElement>("[data-help-for]"))) {
+    const targetId = help.dataset.helpFor;
+    const content = help.querySelector<HTMLElement>(".e308-help-content");
+    if (!targetId || !content?.id) continue;
+    relationshipTarget(root, targetId)?.setAttribute("aria-details", content.id);
+  }
+}
+
+function relationshipTarget(root: HTMLElement, targetId: string): HTMLElement | undefined {
+  const byId = root.ownerDocument.getElementById(targetId);
+  if (byId instanceof HTMLElement && root.contains(byId)) return byId;
+  return Array.from(root.querySelectorAll<HTMLElement>("[data-action], [data-e308-key]")).find(
+    (candidate) => candidate.dataset.action === targetId || candidate.dataset.e308Key === targetId,
+  );
 }
 
 function createRangeGestureController(
@@ -126,6 +162,8 @@ function createContext<State, Intent, N>(
   idPrefix: string,
   requestRender: () => void,
 ): InternalRenderContext<Intent, N> {
+  const focusedFeedback = new Set<string>();
+  const focusRequests: string[] = [];
   const context: InternalRenderContext<Intent, N> = {
     document: root.ownerDocument,
     resolver: options.resolver,
@@ -140,6 +178,15 @@ function createContext<State, Intent, N>(
     renderDisposers,
     startHold,
     requestRender,
+    requestFeedbackFocus(id) {
+      if (focusedFeedback.has(id)) return;
+      focusedFeedback.add(id);
+      focusRequests.push(id);
+    },
+    clearFeedbackFocus(id) {
+      focusedFeedback.delete(id);
+    },
+    takeFocusRequest: () => focusRequests.shift(),
     render: (node) => renderNode(node, context),
     renderMany(nodes) {
       return nodes

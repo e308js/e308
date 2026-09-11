@@ -102,10 +102,31 @@ export interface ViewDocument<Intent = unknown, N = unknown> {
   readonly activeScopeIds?: readonly string[];
 }
 
+export interface CommandFeedbackError<N = unknown> {
+  readonly id: string;
+  /** The DOM id of the affected control, when an error can be corrected there. */
+  readonly targetId?: string;
+  readonly label: TextValue<N>;
+  readonly message: TextValue<N>;
+}
+
+export interface CommandFeedbackView<N = unknown> {
+  readonly kind: "command-feedback";
+  readonly id: string;
+  /** Stable game-authored action or form identifier. */
+  readonly targetId: string;
+  readonly state: "pending" | "success" | "failure";
+  readonly message: TextValue<N>;
+  readonly presentation?: "inline" | "banner" | "toast";
+  readonly focusOnError?: boolean;
+  readonly errors?: readonly CommandFeedbackError<N>[];
+}
+
 export type InputView<Intent, N> =
   | {
       readonly kind: "text-input";
       readonly id: string;
+      readonly domId?: string;
       readonly label: TextValue<N>;
       readonly tooltip?: TextValue<N>;
       readonly value: string;
@@ -114,6 +135,7 @@ export type InputView<Intent, N> =
   | {
       readonly kind: "range-input";
       readonly id: string;
+      readonly domId?: string;
       readonly label: TextValue<N>;
       readonly tooltip?: TextValue<N>;
       readonly value: number;
@@ -127,6 +149,7 @@ export type InputView<Intent, N> =
   | {
       readonly kind: "select-input";
       readonly id: string;
+      readonly domId?: string;
       readonly label: TextValue<N>;
       readonly tooltip?: TextValue<N>;
       readonly value: string;
@@ -136,6 +159,7 @@ export type InputView<Intent, N> =
   | {
       readonly kind: "toggle-input";
       readonly id: string;
+      readonly domId?: string;
       readonly label: TextValue<N>;
       readonly tooltip?: TextValue<N>;
       readonly value: boolean;
@@ -160,6 +184,34 @@ export type ViewNode<Intent = unknown, N = unknown> =
       readonly kind: "description";
       readonly id: string;
       readonly content: readonly DescriptionNode<N>[];
+    }
+  | {
+      readonly kind: "help";
+      readonly id: string;
+      /** Accessible trigger name, for example "About Metal rate". */
+      readonly label: TextValue<N>;
+      /** Stable identifier of the concept or control this help explains. */
+      readonly targetId?: string;
+      readonly triggerLabel?: TextValue<N>;
+      readonly content: readonly ViewNode<Intent, N>[];
+      readonly presentation?: "popover" | "expanded";
+      readonly initiallyOpen?: boolean;
+    }
+  | {
+      readonly kind: "section";
+      readonly id: string;
+      readonly title?: TextValue<N>;
+      readonly headingLevel?: 2 | 3 | 4;
+      readonly children: readonly ViewNode<Intent, N>[];
+      readonly variant?: "plain" | "card" | "status-strip";
+      readonly style?: ViewStyle;
+    }
+  | {
+      readonly kind: "fieldset";
+      readonly id: string;
+      readonly legend: TextValue<N>;
+      readonly children: readonly ViewNode<Intent, N>[];
+      readonly style?: ViewStyle;
     }
   | { readonly kind: "separator"; readonly id: string }
   | {
@@ -220,6 +272,7 @@ export type ViewNode<Intent = unknown, N = unknown> =
       readonly text: TextValue<N>;
       readonly tone?: "neutral" | "positive" | "warning" | "danger";
     }
+  | CommandFeedbackView<N>
   | {
       readonly kind: "particles";
       readonly id: string;

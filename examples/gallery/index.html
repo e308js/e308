@@ -13,6 +13,7 @@
       header { padding: 1rem; }
       #views { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       main { min-width: 0; }
+      @media (max-width: 48rem) { #views { grid-template-columns: minmax(0, 1fr); } }
     </style>
   </head>
   <body class="e308-root">

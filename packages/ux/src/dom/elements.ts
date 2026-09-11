@@ -77,13 +77,20 @@ export function renderAction<Intent, N>(
   resolver: TextResolver<N>,
   dispatch: (intent: Intent) => unknown,
   startHold?: (hold: NonNullable<ActionView<Intent>["hold"]>, event: PointerEvent) => void,
+  domIdPrefix = "e308-action",
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.disabled = !action.enabled;
+  if (action.domId) button.id = action.domId;
+  const state = action.state ?? (action.enabled ? "available" : "unavailable");
+  const interactive = action.enabled && state !== "pending";
   button.textContent = resolver.text(action.label);
   button.dataset.action = action.id;
-  button.setAttribute("aria-disabled", String(!action.enabled));
+  button.dataset.state = state;
+  button.dataset.tone = action.tone ?? "primary";
+  button.setAttribute("aria-disabled", String(!interactive));
+  button.setAttribute("aria-label", resolver.text(action.label));
+  if (state === "pending") button.setAttribute("aria-busy", "true");
   if (action.tooltip) button.title = resolver.text(action.tooltip);
   if (action.description) {
     const description = document.createElement("span");
@@ -94,11 +101,10 @@ export function renderAction<Intent, N>(
   }
   if (action.blockers.length > 0)
     button.dataset.blockers = action.blockers.map((item) => item.kind).join(" ");
-  appendActionDetails(button, action, resolver);
-  bindEvent<MouseEvent>(button, "click", (event) => {
-    const current = event.currentTarget as HTMLButtonElement;
+  appendActionDetails(button, action, resolver, domIdPrefix);
+  bindEvent<MouseEvent>(button, "click", () => {
     if (
-      !current.disabled &&
+      interactive &&
       (!action.confirm || document.defaultView?.confirm(resolver.text(action.confirm)) !== false)
     ) {
       dispatch(action.intent);
@@ -107,8 +113,7 @@ export function renderAction<Intent, N>(
   const hold = action.hold;
   if (hold && startHold) {
     bindEvent<PointerEvent>(button, "pointerdown", (event) => {
-      if (!(event.currentTarget as HTMLButtonElement).disabled && event.button === 0)
-        startHold(hold, event);
+      if (interactive && event.button === 0) startHold(hold, event);
     });
   }
   return button;
@@ -118,6 +123,7 @@ function appendActionDetails<Intent, N>(
   button: HTMLButtonElement,
   action: ActionView<Intent, N>,
   resolver: TextResolver<N>,
+  domIdPrefix: string,
 ): void {
   for (const [kind, lines] of [
     ["costs", action.costs],
@@ -132,7 +138,17 @@ function appendActionDetails<Intent, N>(
   if (action.blockers.length > 0) {
     const blockers = button.ownerDocument.createElement("span");
     blockers.className = "e308-action-blockers";
-    blockers.textContent = action.blockers.map((item) => blockerText(item, resolver)).join("; ");
+    blockers.id = `${domIdPrefix}-blockers`;
+    blockers.setAttribute("role", "list");
+    blockers.setAttribute("aria-label", "Unavailable because");
+    for (const blocker of action.blockers) {
+      const reason = button.ownerDocument.createElement("span");
+      reason.className = "e308-action-blocker";
+      reason.setAttribute("role", "listitem");
+      reason.textContent = blockerText(blocker, resolver);
+      blockers.append(reason);
+    }
+    button.setAttribute("aria-describedby", blockers.id);
     button.append(blockers);
   }
 }

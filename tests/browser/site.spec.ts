@@ -85,7 +85,10 @@ test("publishes distinct library, docs, examples, and original-game routes", asy
   await expect(page.getByRole("button", { name: "build cottage" })).toBeVisible();
   await expect(page.getByText("A cottage adds one worker")).toBeVisible();
   await page.getByRole("tab", { name: "Projects" }).click();
-  await expect(page.getByRole("button", { name: "raise great hall" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "raise great hall" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
   await expect(page.getByText("wood: need 30, have", { exact: false })).toBeVisible();
 
   await page.goto("/site-dist/examples/cascade/");
