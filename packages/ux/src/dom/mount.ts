@@ -49,6 +49,7 @@ export function mountView<State, Intent, N>(
     if (disposed || rendering) return;
     rendering = true;
     const focus = captureFocus(root);
+    captureDisclosureState(root, context.open);
     for (const dispose of renderDisposers.splice(0)) dispose();
     reconcileChildren(root, context.renderMany(view.content), ranges.active());
     if (view.title) root.setAttribute("aria-label", options.resolver.text(view.title));
@@ -101,6 +102,17 @@ export function mountView<State, Intent, N>(
       root.replaceChildren();
     },
   };
+}
+
+function captureDisclosureState(root: HTMLElement, open: Map<string, boolean>): void {
+  // Native details change before their queued toggle event. A synchronous input
+  // dispatch or game tick must not restore the stale cached value in that gap.
+  for (const details of Array.from(
+    root.querySelectorAll<HTMLDetailsElement>("details.e308-infobox"),
+  )) {
+    const id = details.dataset.e308Key;
+    if (id) open.set(id, details.open);
+  }
 }
 
 function wireRelationships(root: HTMLElement): void {

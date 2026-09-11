@@ -56,6 +56,8 @@ kernel, tree and grid controls, nested navigation, hotkeys, progress bars, and a
 The public `ViewNode` union includes semantic layout and interaction primitives in addition to basic
 inputs and actions:
 
+- `infobox` uses native details/summary and retains the user's open/closed state across live
+  updates, including synchronous input dispatch before the browser delivers its queued toggle event.
 - `help` renders a named, keyboard- and touch-operable disclosure. Its `popover` presentation closes
   with Escape and returns focus to the trigger when focus was inside; `expanded` keeps help in the document reading order.
   Set `preview: true` to open popover help after 120 ms over the actual info trigger (not its

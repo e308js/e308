@@ -87,6 +87,41 @@ function input(root: HTMLElement): HTMLInputElement {
 }
 
 describe("keyed DOM reconciliation", () => {
+  it("keeps native disclosure changes before the asynchronous toggle event reaches the renderer", () => {
+    const root = document.createElement("main");
+    const source = new Source();
+    const mounted = mountView(root, {
+      source,
+      resolver,
+      project: (state) => ({
+        content: [
+          {
+            kind: "infobox",
+            id: "settings",
+            title: "Settings",
+            initiallyOpen: false,
+            content: project(state).content,
+          },
+        ],
+      }),
+    });
+    const details = root.querySelector("details");
+    if (!details) throw new Error("missing disclosure");
+    // Native details mutate synchronously; toggle is delivered as a later task.
+    // Suppress happy-dom's synchronous toggle to model that browser task boundary.
+    details.addEventListener("toggle", (event) => event.stopImmediatePropagation(), {
+      capture: true,
+    });
+    details.open = true;
+    source.emit({ points: 13, allocation: 2 });
+    expect(details.open).toBe(true);
+    expect(root.querySelector("details")).toBe(details);
+    details.open = false;
+    source.emit({ points: 14, allocation: 2 });
+    expect(details.open).toBe(false);
+    mounted.dispose();
+  });
+
   it("patches changed values and refreshes behavior on retained controls", async () => {
     const root = document.createElement("main");
     const source = new Source();
