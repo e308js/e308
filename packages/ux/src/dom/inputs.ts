@@ -109,6 +109,11 @@ function renderSelect<Intent, N>(
   const select = document.createElement("select");
   select.id = view.domId ?? `${idPrefix}-${view.id}`;
   label.setAttribute("for", select.id);
+  const caption = label.querySelector(".e308-input-label");
+  if (caption) {
+    caption.id = `${idPrefix}-${view.id}-label`;
+    select.setAttribute("aria-labelledby", caption.id);
+  }
   select.dataset.e308Key = `${view.id}:control`;
   for (const option of view.options) {
     const element = document.createElement("option");
