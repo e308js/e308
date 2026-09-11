@@ -242,6 +242,7 @@ Playwright.
 
 ```sh
 pnpm install --frozen-lockfile
+pnpm exec playwright install --with-deps chromium
 pnpm quality
 ```
 
@@ -250,6 +251,12 @@ gates, all builds and reports, 80% per-file coverage thresholds for statements, 
 and lines, packed-package consumer tests, and browser tests. See the [implementation status](docs/status.md)
 for exact accepted SHAs and CI runs, and the [definition of done](docs/definition-of-done.md) for the
 release evidence contract.
+
+Browser tests use Playwright's pinned Chromium locally and in CI. Gallery screenshot tests
+load the licensed fonts in `tests/browser/fonts` instead of the runner's system fonts; this
+does not change the public theme. To update an intentional visual change on Linux, run
+`pnpm exec playwright test tests/browser/gallery.spec.ts --update-snapshots`, inspect both
+desktop/mobile images, then rerun without the update flag. Keep screenshot tolerances intact.
 
 The [public API reference](docs/api-reference.md) lists package subpaths and contracts. The
 [migration guide](docs/migration-guide.md) covers persistent IDs, save schemas, offline rule changes,

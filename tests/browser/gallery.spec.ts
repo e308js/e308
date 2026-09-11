@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { prepareGalleryFonts } from "./gallery-fonts.js";
 
 test("two renderers stay synchronized through keyboard, touch, tabs, and a collectible", async ({
   page,
 }, testInfo) => {
   const actions: { action: string; points: number; workers: number }[] = [];
   await page.goto("/examples/gallery/index.html");
+  await prepareGalleryFonts(page);
   const tree = page.locator("#tree-view");
   const panels = page.locator("#panel-view");
   await expect(tree.getByText("Points: 12")).toBeVisible();
@@ -107,6 +109,7 @@ test("mobile baseline keeps the toggle attached, touch targets usable, and conte
 }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/examples/gallery/index.html");
+  await prepareGalleryFonts(page);
   const panels = page.locator("#panel-view");
   const repeat = panels.getByRole("checkbox", { name: "Repeat" });
   const label = panels.locator("label.e308-toggle");

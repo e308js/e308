@@ -14,7 +14,6 @@ export default defineConfig({
     hasTouch: true,
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
-    ...(process.env.CI ? {} : { launchOptions: { executablePath: "/usr/bin/google-chrome" } }),
   },
   webServer: {
     command: "node tests/browser/server.mjs",
