@@ -1,6 +1,6 @@
 import type { ViewNode } from "../view/nodes.js";
 import { applyStyle, keyed } from "./elements.js";
-import { bindEvent } from "./events.js";
+import { renderHelp } from "./help.js";
 import type { InternalRenderContext } from "./internal.js";
 
 type BaselineNode<Intent, N> = Extract<
@@ -24,57 +24,6 @@ export function renderBaselineNode<Intent, N>(
     case "command-feedback":
       return renderCommandFeedback(node, context);
   }
-}
-
-function renderHelp<Intent, N>(
-  node: Extract<ViewNode<Intent, N>, { kind: "help" }>,
-  context: InternalRenderContext<Intent, N>,
-): HTMLElement {
-  if (node.presentation === "expanded") {
-    const section = keyed(context.document, "section", node.id);
-    section.className = "e308-help e308-help-expanded";
-    section.setAttribute("aria-label", context.resolver.text(node.label));
-    section.append(...context.renderMany(node.content));
-    return section;
-  }
-  const details = keyed(context.document, "details", node.id) as HTMLDetailsElement;
-  details.className = "e308-help e308-help-popover";
-  details.open = context.open.get(node.id) ?? node.initiallyOpen ?? false;
-  const summary = context.document.createElement("summary");
-  summary.className = "e308-help-trigger";
-  summary.setAttribute("role", "button");
-  summary.setAttribute("aria-label", context.resolver.text(node.label));
-  summary.setAttribute("aria-expanded", String(details.open));
-  summary.textContent = node.triggerLabel ? context.resolver.text(node.triggerLabel) : "i";
-  const content = context.document.createElement("div");
-  content.className = "e308-help-content";
-  content.id = `${context.idPrefix}-${node.id}-content`;
-  summary.setAttribute("aria-controls", content.id);
-  if (node.targetId) details.dataset.helpFor = node.targetId;
-  content.append(...context.renderMany(node.content));
-  bindDisclosureEvents(details, node.id, context);
-  details.append(summary, content);
-  return details;
-}
-
-function bindDisclosureEvents<Intent, N>(
-  details: HTMLDetailsElement,
-  id: string,
-  context: InternalRenderContext<Intent, N>,
-): void {
-  bindEvent<Event>(details, "toggle", (event) => {
-    const current = event.currentTarget as HTMLDetailsElement;
-    context.open.set(id, current.open);
-    current.querySelector("summary")?.setAttribute("aria-expanded", String(current.open));
-  });
-  bindEvent<KeyboardEvent>(details, "keydown", (event) => {
-    const current = event.currentTarget as HTMLDetailsElement;
-    if (event.key !== "Escape" || !current.open) return;
-    event.preventDefault();
-    current.open = false;
-    context.open.set(id, false);
-    current.querySelector<HTMLElement>("summary")?.focus({ preventScroll: true });
-  });
 }
 
 function renderSection<Intent, N>(

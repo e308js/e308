@@ -195,6 +195,8 @@ export type ViewNode<Intent = unknown, N = unknown> =
       readonly triggerLabel?: TextValue<N>;
       readonly content: readonly ViewNode<Intent, N>[];
       readonly presentation?: "popover" | "expanded";
+      /** Preview on mouse hover or keyboard focus; activation pins it until dismissal. */
+      readonly preview?: boolean;
       readonly initiallyOpen?: boolean;
     }
   | {

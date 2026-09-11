@@ -1,5 +1,7 @@
 import type { ActionView } from "../view/models.js";
 import type { HotkeyView, ViewDocument } from "../view/nodes.js";
+import { dismissOutsideHelp } from "./help.js";
+import { observeHelpPosition, positionOpenHelp } from "./help-position.js";
 import type { InternalRenderContext } from "./internal.js";
 import { reconcileChildren } from "./reconcile.js";
 import { renderNode } from "./render-node.js";
@@ -59,6 +61,7 @@ export function mountView<State, Intent, N>(
       );
       candidate?.focus({ preventScroll: true });
     }
+    positionOpenHelp(root);
     rendering = false;
   };
   ranges = createRangeGestureController(root, render);
@@ -66,10 +69,14 @@ export function mountView<State, Intent, N>(
     view = options.project(snapshot);
     render();
   });
-  const keydown = (event: KeyboardEvent): void => dispatchHotkey(event, view, dispatch);
+  const keydown = (event: KeyboardEvent): void => {
+    dismissOutsideHelp(root, event, context);
+    dispatchHotkey(event, view, dispatch);
+  };
   root.ownerDocument.addEventListener("keydown", keydown);
   root.ownerDocument.addEventListener("pointerup", hold.stop);
   root.ownerDocument.addEventListener("pointercancel", hold.stop);
+  const stopPositioning = observeHelpPosition(root);
   render();
   return {
     render,
@@ -77,6 +84,7 @@ export function mountView<State, Intent, N>(
       if (disposed) return;
       disposed = true;
       unsubscribe();
+      stopPositioning();
       root.ownerDocument.removeEventListener("keydown", keydown);
       ranges.dispose();
       root.ownerDocument.removeEventListener("pointerup", hold.stop);
@@ -173,6 +181,7 @@ function createContext<State, Intent, N>(
     clock: options.visualClock ?? browserVisualClock(root.ownerDocument),
     overrides: options.overrides ?? {},
     open: new Map(),
+    helpPreviews: new Map(),
     tabs: new Map(),
     claimed: new Set(),
     renderDisposers,

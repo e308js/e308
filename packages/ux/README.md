@@ -57,7 +57,13 @@ The public `ViewNode` union includes semantic layout and interaction primitives 
 inputs and actions:
 
 - `help` renders a named, keyboard- and touch-operable disclosure. Its `popover` presentation closes
-  with Escape and returns focus to the trigger; `expanded` keeps help in the document reading order.
+  with Escape and returns focus to the trigger when focus was inside; `expanded` keeps help in the document reading order.
+  Set `preview: true` to open popover help on mouse hover or keyboard focus. Moving away closes an
+  unpinned preview; clicking, tapping, Enter, or Space pins it open. Activate again or press Escape
+  to dismiss. Escape also closes hover previews while focus is elsewhere, preserving that focus.
+  Preview and pinned state survive live renders. Popovers fit the viewport, scroll long content,
+  reposition on scroll/resize, and avoid covering the focused control. The starter theme retains
+  44px triggers and visible focus; `preview` is ignored for expanded help.
   Put structured `description`, `quantities`, and other view nodes in its content instead of relying
   on a native `title` attribute.
 - `command-feedback` associates `pending`, `success`, or `failure` state with a stable action/form

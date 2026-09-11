@@ -1,9 +1,11 @@
 import type { TextResolver } from "../localization/types.js";
 import type { ActionView } from "../view/models.js";
 import type { ViewNode } from "../view/nodes.js";
+import type { HelpPreviewState } from "./help-preview.js";
 import type { ControlOverride, RenderContext, VisualClock } from "./types.js";
 
 export interface InternalRenderContext<Intent, N> extends RenderContext<Intent, N> {
+  readonly helpPreviews: Map<string, HelpPreviewState>;
   readonly open: Map<string, boolean>;
   readonly tabs: Map<string, string>;
   readonly claimed: Set<string>;

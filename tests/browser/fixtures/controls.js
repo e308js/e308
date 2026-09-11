@@ -22,6 +22,33 @@ for (const id of ["first", "second"]) {
     project: (selected) => ({
       content: [
         {
+          kind: "help",
+          id: "mode-help",
+          label: "About play mode",
+          preview: id === "first",
+          targetId: id === "first" ? "custom-mode" : undefined,
+          content: [
+            {
+              kind: "description",
+              id: "explanation",
+              content: [
+                {
+                  kind: "text",
+                  value:
+                    `Current mode: ${selected}. Practice lets you learn at your own pace. Online connects you with friends. `.repeat(
+                      new URLSearchParams(location.search).has("long") ? 30 : 1,
+                    ),
+                },
+                {
+                  kind: "link",
+                  href: "#first",
+                  children: [{ kind: "text", value: "Mode settings" }],
+                },
+              ],
+            },
+          ],
+        },
+        {
           kind: "select-input",
           id: "mode",
           ...(id === "first" ? { domId: "custom-mode" } : {}),
@@ -37,3 +64,5 @@ for (const id of ["first", "second"]) {
     }),
   });
 }
+
+Object.assign(window, { refreshControls: () => source.dispatch(value) });
