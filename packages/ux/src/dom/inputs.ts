@@ -44,6 +44,13 @@ export function renderInput<Intent, N>(
         currentOutput.value = control.value;
         currentOutput.textContent = `${control.value} of ${view.max}`;
       }
+      if (view.previewIntent) dispatch(view.previewIntent(control.valueAsNumber));
+    });
+    bindEvent<Event>(input, "pointercancel", () => {
+      if (view.cancelIntent !== undefined) dispatch(view.cancelIntent);
+    });
+    bindEvent<KeyboardEvent>(input, "keydown", (event) => {
+      if (event.key === "Escape" && view.cancelIntent !== undefined) dispatch(view.cancelIntent);
     });
     const ticks = view.showTicks ? createTicks(document, idPrefix, view) : undefined;
     if (ticks) input.setAttribute("list", ticks.id);

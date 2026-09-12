@@ -1,5 +1,11 @@
 # @e308/ux
 
+Range inputs accept optional `previewIntent(value)` and `cancelIntent` hooks. Preview runs on
+native input; the ordinary `intent(value)` still commits only on change. Use preview for local
+linked-slider drafts, never authoritative orders. Cancellation runs on pointer cancellation or
+Escape. The game owns pending-command reconciliation and restores authoritative values on rejection.
+Live renders preserve both the active drag thumb and its displayed value.
+
 Optional, framework-independent views and DOM controls for e308 games. The package renders resolved
 state and dispatches game-authored intents. Simulation time, saves, and economy math remain in the
 game's state source.

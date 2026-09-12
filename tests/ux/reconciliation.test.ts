@@ -87,6 +87,49 @@ function input(root: HTMLElement): HTMLInputElement {
 }
 
 describe("keyed DOM reconciliation", () => {
+  it("previews locally, commits on change, cancels explicitly, and preserves drag output", () => {
+    const root = document.createElement("main");
+    const source = new Source();
+    const mounted = mountView(root, {
+      source,
+      resolver,
+      project: (state) => ({
+        content: [
+          {
+            kind: "range-input",
+            id: "allocation",
+            label: "Allocation",
+            value: state.allocation,
+            min: 0,
+            max: 10,
+            step: 1,
+            previewIntent: (value) => ({ type: "preview", value }),
+            cancelIntent: { type: "cancel", value: 0 },
+            intent: (value) => ({ type: "commit", value }),
+          },
+        ],
+      }),
+    });
+    const range = input(root);
+    range.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    range.value = "7";
+    range.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(source.intents).toEqual([{ type: "preview", value: 7 }]);
+    source.emit({ points: 14, allocation: 2 });
+    expect(range.value).toBe("7");
+    expect(range.closest("label")?.querySelector("output")?.textContent).toBe("7 of 10");
+    range.dispatchEvent(new Event("change", { bubbles: true }));
+    range.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    range.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    range.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
+    expect(source.intents.slice(1)).toEqual([
+      { type: "commit", value: 7 },
+      { type: "cancel", value: 0 },
+      { type: "cancel", value: 0 },
+    ]);
+    mounted.dispose();
+  });
+
   it("keeps native disclosure changes before the asynchronous toggle event reaches the renderer", () => {
     const root = document.createElement("main");
     const source = new Source();

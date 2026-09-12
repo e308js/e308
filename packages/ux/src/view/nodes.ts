@@ -144,6 +144,8 @@ export type InputView<Intent, N> =
       readonly step: number;
       readonly allowedMax?: number;
       readonly showTicks?: boolean;
+      readonly previewIntent?: (value: number) => Intent;
+      readonly cancelIntent?: Intent;
       readonly intent: (value: number) => Intent;
     }
   | {

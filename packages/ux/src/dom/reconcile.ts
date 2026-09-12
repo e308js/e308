@@ -46,6 +46,10 @@ function patchNode(current: Node, next: Node, preserveValue?: HTMLInputElement):
   refreshEvents(current, next);
   reconcileChildren(current, Array.from(next.childNodes), preserveValue);
   syncProperties(current, next, preserveValue);
+  if (preserveValue && current.tagName === "LABEL" && current.contains(preserveValue)) {
+    const output = current.querySelector("output");
+    if (output) output.textContent = `${preserveValue.value} of ${preserveValue.max}`;
+  }
 }
 
 function syncAttributes(current: HTMLElement, next: HTMLElement): void {
