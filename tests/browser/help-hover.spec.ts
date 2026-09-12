@@ -45,10 +45,10 @@ test("short trigger-only dwell and movement dismissal do not trap the pointer", 
   await page.evaluate(() => (window as unknown as { refreshControls(): void }).refreshControls());
   await expect(content).toBeHidden();
   await trigger.locator(".e308-help-arrow").click();
+  await expect(help).toHaveAttribute("data-help-pinned", "true");
   await page.mouse.move(panel.x + panel.width / 2, panel.y + 10);
   await page.clock.runFor(500);
-  await expect(content).toBeVisible();
-  await expect(help).toHaveAttribute("data-help-pinned", "true");
+  await expect(content).toBeHidden();
   await page.keyboard.press("Escape");
   await expect(content).toBeHidden();
 });

@@ -37,6 +37,7 @@ export function bindHelpPreview(
     if (!current.contains(event.relatedTarget as Node | null) && !state.pointerFocus) {
       cancelHelpHover(state);
       state.focused = true;
+      state.anchor = undefined;
       state.suppressed = false;
       sync(current);
     }

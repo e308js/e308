@@ -108,15 +108,14 @@ it("measures displacement at opening and dismisses over content without reopenin
   f.mount.dispose();
 });
 
-it("preserves pinned and keyboard help despite mouse movement", () => {
+it("dismisses mouse-pinned help on displacement but preserves keyboard help", () => {
   const f = fixture();
   f.pointer(f.trigger, "pointerenter");
   f.trigger.click();
   f.pointer(f.content, "pointermove", 400);
   vi.advanceTimersByTime(500);
-  expect(f.details.open).toBe(true);
-  expect(f.details.dataset.helpPinned).toBe("true");
-  f.trigger.click();
+  expect(f.details.open).toBe(false);
+  expect(f.details.dataset.helpPinned).toBe("false");
   f.trigger.focus();
   f.pointer(f.content, "pointermove", 500);
   expect(f.details.open).toBe(true);

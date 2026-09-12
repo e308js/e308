@@ -56,7 +56,7 @@ export function observeHelpHover(
       root.querySelectorAll<HTMLDetailsElement>(".e308-help-popover[open]"),
     )) {
       const state = states.get(details.dataset.e308Key ?? "");
-      if (!state || state.pinned || state.focused) continue;
+      if (!state) continue;
       const limit = state.moveDismissPx;
       const moved =
         state.anchor &&
@@ -64,12 +64,16 @@ export function observeHelpHover(
         Number.isFinite(limit) &&
         limit > 0 &&
         Math.hypot(event.clientX - state.anchor.x, event.clientY - state.anchor.y) >= limit;
+      if (!moved && (state.pinned || state.focused)) continue;
       const target = event.target as Node | null;
       const overControl = details.querySelector("summary")?.contains(target);
       const overContent = details.querySelector(".e308-help-content")?.contains(target);
       if (moved || (!overControl && !overContent)) {
         cancelHelpHover(state);
         state.hovered = false;
+        state.pinned = false;
+        state.focused = false;
+        details.dataset.helpPinned = "false";
         state.suppressed = true;
         close(details);
       }

@@ -66,10 +66,10 @@ inputs and actions:
   Moving away closes an
   unpinned preview; clicking, tapping, Enter, or Space pins it open. Activate again or press Escape
   to dismiss. Escape also closes hover previews while focus is elsewhere, preserving that focus.
-  For brief, noninteractive game hints, opt into `previewMoveDismissPx: 24` to dismiss an unpinned
+  For brief, noninteractive game hints, opt into `previewMoveDismissPx: 24` to dismiss a mouse-opened
   mouse preview after that much displacement from its opening position, even over the popup itself.
   Small pointer jitter is ignored. Dismissed previews stay closed until the trigger is re-entered;
-  pinned, keyboard, and touch help are unaffected. This is a deliberate alternative to persistent
+  mouse-pinned help also closes; keyboard and touch help are unaffected. This is a deliberate alternative to persistent
   hoverable content, not the default accessibility policy; avoid it for long or interactive help.
   Preview and pinned state survive live renders. Popovers fit the viewport, scroll long content,
   reposition on scroll/resize, and avoid covering the focused control. The starter theme retains

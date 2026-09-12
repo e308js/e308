@@ -28,7 +28,12 @@ export function positionHelp(details: HTMLDetailsElement): void {
   const below = Math.max(topEdge, anchor.bottom);
   placeVertically(content, above, below, topEdge, bottomEdge);
   const focused = document.activeElement;
-  if (focused instanceof HTMLElement && focused !== document.body && !details.contains(focused)) {
+  if (
+    focused instanceof HTMLElement &&
+    focused.matches(":focus-visible") &&
+    focused !== document.body &&
+    !details.contains(focused)
+  ) {
     const rect = (focused.closest("label") ?? focused).getBoundingClientRect();
     const panel = content.getBoundingClientRect();
     if (
