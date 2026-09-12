@@ -14,10 +14,9 @@ The repository includes three complete original games with different economies a
 - **Hearth** is a seasonal settlement economy built around workers, storage, crafting, paid tasks,
   shortages, and recovery.
 
-The packages are release candidates. The workspace quality pipeline creates installable archives
-and tests them in clean temporary consumers. npm publication will make installation available as:
-
 **[Play Wireworks, Cascade, and Hearth](https://e308js.github.io/e308/)**
+
+## Install
 
 ```sh
 pnpm add @e308/core
@@ -230,33 +229,6 @@ const randomPolicy = randomLegalPolicy({ version: "1" });
 | [`examples/finished-games`](examples/finished-games) | Browser host for all three original games |
 | [`examples/gallery`](examples/gallery) | Renderer capability gallery with two layouts over one state source |
 | [`examples/pacing`](examples/pacing) | Reproducible pacing, sweep, baseline, checkpoint, and performance reports |
-
-Reference-game fixtures provide private test evidence for bounded mechanics comparisons against
-pinned Array Game, Universal Paperclips, Antimatter Dimensions, and Kittens Game sources. The public game page
-features the three original e308 games.
-
-## Develop e308
-
-This workspace uses Node 24.14.1, pnpm 11.21.0, strict TypeScript, Biome, Vitest with fast-check, and
-Playwright.
-
-```sh
-pnpm install --frozen-lockfile
-pnpm exec playwright install --with-deps chromium
-pnpm quality
-```
-
-`pnpm quality` runs formatting/lint checks, strict types, file/function/duplication/import-boundary
-gates, all builds and reports, 80% per-file coverage thresholds for statements, branches, functions,
-and lines, packed-package consumer tests, and browser tests. See the [implementation status](docs/status.md)
-for exact accepted SHAs and CI runs, and the [definition of done](docs/definition-of-done.md) for the
-release evidence contract.
-
-Browser tests use Playwright's pinned Chromium locally and in CI. Gallery screenshot tests
-load the licensed fonts in `tests/browser/fonts` instead of the runner's system fonts; this
-does not change the public theme. To update an intentional visual change on Linux, run
-`pnpm exec playwright test tests/browser/gallery.spec.ts --update-snapshots`, inspect both
-desktop/mobile images, then rerun without the update flag. Keep screenshot tolerances intact.
 
 The [public API reference](docs/api-reference.md) lists package subpaths and contracts. The
 [migration guide](docs/migration-guide.md) covers persistent IDs, save schemas, offline rule changes,
